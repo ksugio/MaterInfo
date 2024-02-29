@@ -5,7 +5,7 @@ MaterInfo はマテリアルズ・インフォマティクスのためウェブ�
 
 # Windowsでの実行
 
-Docker Desktop for Windowsを[サイト](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe)からダウンロードしてインストールする。
+Docker Desktop for Windowsを[サイト](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/windows/install/)からダウンロードしてインストールする。
 
 [https://github.com/ksugio/MaterInfo](https://github.com/ksugio/MaterInfo) にアクセスして，
 [Code] - [Download ZIP] でソースコードをダウンロードして， それを適当な場所に展開する。
