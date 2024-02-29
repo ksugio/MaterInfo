@@ -6,11 +6,34 @@ It also has extensive research support functions such as diagram creation,
 reference management, document version control, schedule management,
 questionnaire functions, and bulletin boards.
 
-# Testing on Windows
+# Run on Windows
+
+Download and install Docker Desktop for Windows from [site](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe)
+
+Access [https://github.com/ksugio/MaterInfo](https://github.com/ksugio/MaterInfo)
+and Download the source code using [Code] - [Download ZIP] and extract it to an appropriate location.
+Launch a command prompt, move to the extracted folder including compose.yaml,
+and use the following command to create and start a container.
+```
+docker compose up -d
+```
+Once the container has been successfully created and started, launch the materinfo shell.
+````
+docker compose exec materinfo /bin/bash
+````
+Perform migration, create administrative users, and collect static files.
+````
+(materinfo) python manage.py migrate
+(materinfo) python manage.py createsuperuser
+(materinfo) python manage.py collectstatic
+````
+Restart the Docker container.
+When you access [http://localhost:8080/](http://localhost:8080/),
+a login screen will appear, so log in with the administrator user you created.
+
+# Building a development environment on Windows
 
 Download and install the Python (64-bit version) file from [site](https://www.python.org/downloads/windows/)
-
-Download and install Git for windows from [site](https://gitforwindows.org/)
 
 Create a virtual environment from the command prompt and migrate to the virtual environment.
 ```
@@ -56,7 +79,8 @@ You can also install them one by one as follows.
 (venv) pip install onnxruntime
 (venv) pip install shap
 ```
-Download source code.
+Download source code from [https://github.com/ksugio/MaterInfo](https://github.com/ksugio/MaterInfo)
+and extract to venv folder. If you use Git, use following command:
 ````
 git clone https://github.com/ksugio/MaterInfo.git
 ````
@@ -83,7 +107,7 @@ Start up the server.
 If you access [http://127.0.0.1:8000/](http://127.0.0.1:8000/) with a browser and the top page is displayed,
 the installation is successful.
 
-# Testing on Docker
+# Creation of Docker Image
 
 Download and install Docker Desktop for Windows from [site](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe)
 
@@ -126,7 +150,12 @@ Furthermore, configure the following settings to use Nginx X-Accel-Redirect.
 #MEDIA_ACCEL_REDIRECT = False
 MEDIA_ACCEL_REDIRECT = True
 ```
-Launch PowerShell, move to the root folder, and create and start the Docker container.
+Change "image" in the materinfo section of compose.yaml to "build".
+````
+     #image: ksugio/materinfo:latest
+     build: .
+````
+Launch the command prompt, move to the root folder, and create and start the Docker container.
 ````
 docker compose up -d
 ````

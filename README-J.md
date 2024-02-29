@@ -3,11 +3,32 @@ MaterInfo はマテリアルズ・インフォマティクスのためウェブ�
 このアプリケーションを用いてデータの収集，特徴量抽出，特徴量取集，特徴量選択，機械学習および逆解析を実施することができる。
 また，図の作成，参考文献の管理，文章のバージョン管理，スケジュール管理，アンケート機能，掲示板等の研究支援機能も充実している。
 
-# Windowsでのテスト
+# Windowsでの実行
+
+Docker Desktop for Windowsを[サイト](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe)からダウンロードしてインストールする。
+
+[https://github.com/ksugio/MaterInfo](https://github.com/ksugio/MaterInfo) にアクセスして，
+[Code] - [Download ZIP] でソースコードをダウンロードして， それを適当な場所に展開する。
+コマンドプロンプトを立ち上げ， 展開した（compose.yamlのある）フォルダに移動して， 以下のコマンドでコンテナを作成・起動する。
+```
+docker compose up -d
+```
+コンテナの作成・起動が成功したら，materinfoのシェルを立ち上げる。
+```
+docker compose exec materinfo /bin/bash
+```
+マイグレート，管理ユーザー作成，静的ファイル収集を実行する。
+```
+(materinfo) python manage.py migrate
+(materinfo) python manage.py createsuperuser
+(materinfo) python manage.py collectstatic
+```
+Dockerコンテナを再起動して
+[http://localhost:8080/](http://localhost:8080/) にアクセスするとログイン画面が現れるので，作成した管理ユーザーでログインする。
+
+# Windowsでの開発環境の構築
 
 Python（64ビット版）のファイルを[サイト](https://www.python.org/downloads/windows/)からダウンロードしてインストール
-
-Git for windowsを[サイト](https://gitforwindows.org/)からダウンロードしてインストール
 
 コマンドプロンプトから仮想環境を作成して，仮想環境へ移行
 ```
@@ -53,7 +74,8 @@ pip install -r requirements.txt
 (venv) pip install onnxruntime
 (venv) pip install shap
 ```
-ソースコードをダウンロードする
+ソースコードを [https://github.com/ksugio/MaterInfo](https://github.com/ksugio/MaterInfo)
+からダウンロードして venv フォルダーに展開する。 Git を使う場合のコマンドは以下の通り。
 ```
 git clone https://github.com/ksugio/MaterInfo.git
 ```
@@ -79,7 +101,7 @@ git clone https://github.com/ksugio/MaterInfo.git
 ```
 [http://127.0.0.1:8000/](http://127.0.0.1:8000/)にブラウザでアクセスしてトップページが表示されればインストールは成功
 
-# Dockerでのテスト
+# Dockerイメージの作成
 
 Docker Desktop for Windowsを[サイト](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe)からダウンロードしてインストール
 
@@ -122,7 +144,12 @@ DATA_DIR = '/data'
 #MEDIA_ACCEL_REDIRECT = False
 MEDIA_ACCEL_REDIRECT = True
 ```
-PowerShellを立ち上げ， ルートフォルダに移動してコンテナを作成・起動する。
+compose.yaml の materinfo セクションの "image" を "build" に変更する。
+```
+    #image: ksugio/materinfo:latest
+    build: .
+```
+コマンドプロンプトを立ち上げ， ルートフォルダに移動してコンテナを作成・起動する。
 ```
 docker compose up -d
 ```

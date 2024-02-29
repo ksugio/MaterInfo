@@ -1,6 +1,7 @@
 services:
   materinfo:
-    build: .
+    image: ksugio/materinfo:latest
+    #build: .
     environment:
       SECRET_KEY: v7u0d4hc403)rzi253ylbd5r@_oynt-vokf1aqpc8t=w-)0tkn
       DEBUG: True
