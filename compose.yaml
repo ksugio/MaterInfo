@@ -1,0 +1,38 @@
+services:
+  materinfo:
+    build: .
+    environment:
+      SECRET_KEY: v7u0d4hc403)rzi253ylbd5r@_oynt-vokf1aqpc8t=w-)0tkn
+      DEBUG: True
+      DATABASE_ENGINE: django.db.backends.mysql
+      DATABASE_NAME: materinfo
+      DATABASE_USER: materinfouser
+      DATABASE_PASSWORD: materinfopw
+      DATABASE_HOST: db
+      DATABASE_PORT: 3306
+    ports:
+      - "8000:8000"
+    volumes:
+      - materinfo-data:/data
+    depends_on:
+      - db
+  nginx:
+    build: ./nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - materinfo-data:/data
+      - .:/MaterInfo
+  db:
+    image: mariadb:11.3
+    environment:
+      MARIADB_ROOT_PASSWORD: root2pass
+      MARIADB_DATABASE: materinfo
+      MARIADB_USER: materinfouser
+      MARIADB_PASSWORD: materinfopw
+    volumes:
+      - db-data:/var/lib/mysql
+volumes:
+  db-data:
+  materinfo-data:
+

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    {% if object.upper_updated %}
+    <div class="row mt-3 g-0">
+        <h4><font color="red">Upper image or filter updated</font></h4>
+    </div>
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">ID : {{ object.id }}</div>
+        <div class="col">Status : {{ object.get_status_display }}</div>
+        <div class="col">Prefix : {{ object.prefix_display }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">{{ object.note | markdown2html | safe }}</div>
+    </div>
+    <table class="table mt-3 border-bottom">
+        <thead>
+            <tr><th>Item</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Area fraction</td><td>{{ object.areafraction }}</td></tr>
+            <tr><td>Number Density</td><td>{{ object.numberdensity }}</td></tr>
+        </tbody>
+    </table>
+    <table class="table mt-3 border-bottom">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Mean</th>
+                <th>STD</th>
+                <th>Min</th>
+                <th>Median</th>
+                <th>Max</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="{% url 'image:size_plot' object.pk 0 50 %}">Diameter</a></td>
+                <td>{{ object.diameter_mean }}</td>
+                <td>{{ object.diameter_std }}</td>
+                <td>{{ object.diameter_min }}</td>
+                <td>{{ object.diameter_median }}</td>
+                <td>{{ object.diameter_max }}</td>
+            </tr>
+            <tr>
+                <td><a href="{% url 'image:size_plot' object.pk 1 50 %}">LongSide</a></td>
+                <td>{{ object.longside_mean }}</td>
+                <td>{{ object.longside_std }}</td>
+                <td>{{ object.longside_min }}</td>
+                <td>{{ object.longside_median }}</td>
+                <td>{{ object.longside_max }}</td>
+            </tr>
+            <tr>
+                <td><a href="{% url 'image:size_plot' object.pk 2 50 %}">NarrowSide</a></td>
+                <td>{{ object.narrowside_mean }}</td>
+                <td>{{ object.narrowside_std }}</td>
+                <td>{{ object.narrowside_min }}</td>
+                <td>{{ object.narrowside_median }}</td>
+                <td>{{ object.narrowside_max }}</td>
+            </tr>
+            <tr>
+                <td><a href="{% url 'image:size_plot' object.pk 3 20 %}">Aspect Ratio</a></td>
+                <td>{{ object.aspectratio_mean }}</td>
+                <td>{{ object.aspectratio_std }}</td>
+                <td>{{ object.aspectratio_min }}</td>
+                <td>{{ object.aspectratio_median }}</td>
+                <td>{{ object.aspectratio_max }}</td>
+            </tr>
+            <tr>
+                <td><a href="{% url 'image:size_plot' object.pk 4 20 %}">Circularity</a></td>
+                <td>{{ object.circularity_mean }}</td>
+                <td>{{ object.circularity_std }}</td>
+                <td>{{ object.circularity_min }}</td>
+                <td>{{ object.circularity_median }}</td>
+                <td>{{ object.circularity_max }}</td>
+            </tr>
+            <tr>
+                <td><a href="{% url 'image:size_plot' object.pk 5 20 %}">Angle</a></td>
+                <td>{{ object.angle_mean }}</td>
+                <td>{{ object.angle_std }}</td>
+                <td>{{ object.angle_min }}</td>
+                <td>{{ object.angle_median }}</td>
+                <td>{{ object.angle_max }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% if object.file %}
+    <div class="row mt-3 g-0">
+        <div class="col">File : {% url 'image:size_file' object.id %} <a href="{% url 'image:size_file' object.id %}">{% include 'cloud-download-icon.html' %}</a></div>
+    </div>
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+        <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'image:size_edit_note' object.id %}">Edit Note</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'image:size_contours' object.id 1 1 %}">Contours</a>
+        {% if object.get_delete_url %}
+        <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

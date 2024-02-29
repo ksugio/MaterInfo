@@ -1,0 +1,31 @@
+{% load static %}
+{% load django_bootstrap5 %}
+
+<html lang="ja">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
+    <title>{% block title %}{% endblock %}</title>
+
+    {% if style_css %}
+    <style>{{ style_css | safe }}</style>
+    {% endif %}
+
+    {% block script %}{% endblock %}
+  </head>
+  <body>
+
+    {% block contents %}{% endblock %}
+
+    <footer class="footer mt-3">
+      <div class="container">
+        <p class="text-muted text-center">Copyright &copy 2020 MaterInfo</p>
+      </div>
+    </footer>
+  </body>
+</html>

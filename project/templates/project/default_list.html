@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ title }}</h1>
+    {% endif %}
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="mt-3">
+        {% for object in object_list %}
+        <div class="row mt-1 border g-0">
+            <div class="col">
+                <div class="row ms-0 me-0">
+                    <div class="col">
+                        {% if object.get_detail_url %}
+                            <a href="{{ object.get_detail_url }}">{{ object.title }}</a>
+                        {% else %}
+                            {{ object.title }}
+                        {% endif %}
+                    </div>
+                    {% if object.prefix_display %}
+                        <div class="col-4">Prefix : {{ object.prefix_display }}</div>
+                    {% endif %}
+                    {% if object.get_status_display %}
+                        <div class="col-2">{{ object.get_status_display }}</div>
+                    {% endif %}
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col">{{ object.note|truncatechars:200 }}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+                    <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% include 'pagination.html' %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ title }}</h1>
+    {% endif %}
+    <div class="mt-3">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Search</button>
+            <a class="btn btn-primary btn-sm" href="{{ back_url }}">Back</a>
+        </form>
+    </div>
+    <div class="mt-3">
+        {% for reference in results %}
+            <div class="row mt-1 border g-0">
+            <div class="col">
+                <div class="row ms-0 me-0">
+                    <div class="col-10">
+                        <a href="{{ reference.get_detail_url }}">{{ reference.title }}</a>
+                    </div>
+                    <div class="col-2">{{ reference.get_type_display }}</div>
+                </div>
+                {% if reference.author %}
+                <div class="row ms-0 me-0">
+                    <div class="col">{{ reference.author }}</div>
+                </div>
+                {% endif %}
+                {% if reference.journal %}
+                <div class="row ms-0 me-0">
+                    <div class="col-6">{{ reference.journal }}</div>
+                    <div class="col-2">Vol. {{ reference.volume }}</div>
+                    <div class="col-2">({{ reference.year }})</div>
+                    <div class="col-2">pp. {{ reference.page }}</div>
+                </div>
+                {% endif %}
+                {% if reference.url or reference.file %}
+                <div class="row ms-0 me-0">
+                    {% if reference.url %}
+                    <div class="col">URL : <a href="{{ reference.url }}">{{ reference.url }}</a></div>
+                    {% endif %}
+                    {% if reference.file %}
+                    <div class="col">File : <a href="{% url 'reference:file' reference.id %}">{% url 'reference:file' reference.id %}</a></div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                <div class="row ms-0 me-0">
+                    <div class="col">Created by {{ reference.created_by }} at {{ reference.created_at }}</div>
+                    <div class="col">Updated by {{ reference.updated_by }} at {{ reference.updated_at }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% include 'pagination.html' %}
+    </div>
+</div>
+
+{% endblock %}

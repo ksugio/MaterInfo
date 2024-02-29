@@ -1,0 +1,13 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  </head>
+  <body>
+    {% if report %}
+    {{ report | safe }}
+    <br>
+    {% endif %}
+    {{ table | safe }}
+  </body>
+</html>

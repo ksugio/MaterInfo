@@ -1,0 +1,14 @@
+<div class="my-3">
+    {% if header.image %}
+     <div class="p-5 text-dark" style="background-image:url({{ header.url }}); background-size:cover;">
+        {% else %}
+         <div class="p-5 text-dark" style="background-color:{{ header.color }};">
+            {% endif %}
+        <div class="container">
+            <h1 class="display-4">{{ header.title }}</h1>
+            {% if header.note %}
+            <p class="lead">{{ header.note }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ title }}</h1>
+    {% endif %}
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="mt-3">
+        {% for object in object_list %}
+        <div class="row mt-1 border g-0">
+            <div class="col">
+                <div class="row ms-0 me-0">
+                    <div class="col-9">
+                        <a href="{{ object.get_detail_url }}">{{ object.title }}</a>
+                    </div>
+                    <div class="col-3">{{ object.get_status_display }}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col">
+                        Latest File : <a href="{% url 'document:file' object.latest_file.id %}">{% url 'document:file' object.latest_file.id %}</a>
+                    </div>
+                    <div class="col-2">Edition : {{ object.latest_file.edition }}</div>
+                    <div class="col-1"><a href="{% url 'document:file_add' object.id %}">Upload</a></div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col">{{ object.latest_file.note }}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+                    <div class="col">Uploaded by {{ object.latest_file.created_by }} at {{ object.latest_file.created_at }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% include 'pagination.html' %}
+    </div>
+</div>
+
+{% endblock %}

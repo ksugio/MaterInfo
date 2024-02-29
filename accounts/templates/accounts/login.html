@@ -1,0 +1,25 @@
+{% load django_bootstrap5 %}
+
+<html lang="ja">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+      {% bootstrap_css %}
+
+      <title>{{ brand_name }} Login</title>
+  </head>
+  <body>
+    <div class="container">
+        <h1 class="mt-3">{{ brand_name }}</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <button type="submit" class="btn btn-primary btn-sm">Login</button>
+        </form>
+        <a href="{% url 'accounts:password_reset' %}">Forgot your password?</a>
+    </div>
+  </body>
+</html>

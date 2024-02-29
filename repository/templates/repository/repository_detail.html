@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block script %}
+{% include 'highlight.html' %}
+{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }} <a href="{% url 'repository:download' object.id %}">{% include 'cloud-download-icon.html' %}</a></h1>
+    <div class="dropdown">
+        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {{ current_branch }}
+        </button>
+        <ul class="dropdown-menu">
+            {% for branch in branches %}
+            <li><a class="dropdown-item" href="{% url 'repository:detail' object.id branch.0 branch.1 %}">{{ branch.0 }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">URL : {{ url }}</div>
+        <div class="col">Status : {{ object.get_status_display }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+        <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'repository:branches' object.id %}">Branches</a>
+    </div>
+    {% if trees %}
+    {% if parent %}
+        <h3 class="mt-3">/{{ trees.path }} <a href="{% url 'repository:detail' object.id current_branch parent.hexsha %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-square" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm8.5 9.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V11.5z"/>
+            </svg>
+        </a></h3>
+    {% else %}
+        <h3 class="mt-3">/</h3>
+    {% endif %}
+    {% for item in trees %}
+    <div class="row mt-1 g-0 border">
+        <div class="col">
+            <a href="{% url 'repository:detail' object.id current_branch item.hexsha %}">{{ item.name }}</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% if file %}
+    <h3 class="mt-3">/{{ file.path }} <a href="{% url 'repository:detail' object.id current_branch parent.hexsha %}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-square" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm8.5 9.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V11.5z"/>
+        </svg>
+    </a></h3>
+    <div class="row mt-3 g-0 border">
+        <div class="col">{{ file_data | markdown2html | safe }}</div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

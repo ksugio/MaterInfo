@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ comment.title }} : Response{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ comment.title }} : Response</h1>
+    <div class="mt-3">
+        {{ comment.comment }}
+    </div>
+    {% if comment.file %}
+    <div class="mt-3">
+        <a href="{% url 'comment:file' comment.id %}">{{ comment.basename }}</a>
+    </div>
+    {% endif %}
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Response</button>
+            <a class="btn btn-primary btn-sm" href="javascript:history.back()">Back</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

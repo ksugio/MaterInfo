@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    <div class="mt-3">
+        <h3 class="mb-3">Cannot delete the object because of protected lower objects.</h3>
+        <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Cancel</a>
+    </div>
+</div>
+
+{% endblock %}

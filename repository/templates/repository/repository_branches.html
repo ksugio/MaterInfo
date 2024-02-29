@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    {% for branch in branches %}
+    <div class="row mt-1 g-0 border">
+        <div class="col">
+            <a href="{% url 'repository:detail' object.id branch.0 branch.1 %}">{{ branch.0 }}</a>
+        </div>
+        <div class="col">
+            <a href="{% url 'repository:delete_branch' object.id branch.0 %}">Delete</a>
+        </div>
+    </div>
+    {% endfor %}
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{% url 'repository:new_branch' object.id %}">New Branch</a>
+    </div>
+</div>
+
+{% endblock %}

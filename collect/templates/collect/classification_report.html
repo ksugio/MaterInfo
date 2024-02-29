@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ title }}</h1>
+    {% endif %}
+    <table class="table mt-3 border-bottom">
+        <thead>
+            <tr>
+                <th></th>
+                <th>precision</th>
+                <th>recall</th>
+                <th>f1-score</th>
+                <th>support</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for label, precision, recall, f1score, support in report %}
+            <tr>
+                <td>{{ label }}</td>
+                <td>{{ precision }}</td>
+                <td>{{ recall }}</td>
+                <td>{{ f1score }}</td>
+                <td>{{ support }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Back</a>
+    </div>
+</div>
+
+{% endblock %}

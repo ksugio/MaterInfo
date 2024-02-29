@@ -1,0 +1,40 @@
+from django.urls import path
+from .views import poll, question, answer
+
+app_name = 'poll'
+urlpatterns = [
+    path('<int:pk>/add', poll.AddView.as_view(), name='add'),
+    path('<int:pk>/import', poll.ImportView.as_view(), name='import'),
+    path('<int:pk>/clone', poll.CloneView.as_view(), name='clone'),
+    path('<int:pk>/list', poll.ListView.as_view(), name='list'),
+    path('poll/<int:pk>', poll.DetailView.as_view(), name='detail'),
+    path('poll/<int:pk>/update', poll.UpdateView.as_view(), name='update'),
+    path('poll/<int:pk>/edit_note', poll.EditNoteView.as_view(), name='edit_note'),
+    path('poll/<int:pk>/file', poll.FileView.as_view(), name='file'),
+    path('poll/<int:pk>/token/<int:ind>', poll.TokenView.as_view(), name='token'),
+    path('poll/<int:pk>/pull', poll.PullView.as_view(), name='pull'),
+    path('poll/<int:pk>/push', poll.PushView.as_view(), name='push'),
+    path('poll/<int:pk>/set_remote', poll.SetRemoteView.as_view(), name='set_remote'),
+    path('poll/<int:pk>/clear_remote', poll.ClearRemoteView.as_view(), name='clear_remote'),
+    path('poll/<int:pk>/question/add', question.AddView.as_view(), name='question_add'),
+    path('question/<int:pk>/update', question.UpdateView.as_view(), name='question_update'),
+    path('question/<int:pk>/delete', question.DeleteView.as_view(), name='question_delete'),
+    path('question/<int:pk>/upload', question.UploadView.as_view(), name='question_upload'),
+    path('question/<int:pk>/download', question.DownloadView.as_view(), name='question_download'),
+    path('poll/<int:pk>/answer/add', answer.AddView.as_view(), name='answer_add'),
+    # API
+    path('api/<int:pk>/add', poll.AddAPIView.as_view(), name='api_add'),
+    path('api/<int:pk>/list', poll.ListAPIView.as_view(), name='api_list'),
+    path('api/poll/<int:pk>', poll.RetrieveAPIView.as_view(), name='api_retrieve'),
+    path('api/poll/<int:pk>/update', poll.UpdateAPIView.as_view(), name='api_update'),
+    path('api/poll/<int:pk>/file', poll.FileAPIView.as_view(), name='api_file'),
+    path('api/poll/<int:pk>/question/add', question.AddAPIView.as_view(), name='api_question_add'),
+    path('api/poll/<int:pk>/question/list', question.ListAPIView.as_view(), name='api_question_list'),
+    path('api/question/<int:pk>', question.RetrieveAPIView.as_view(), name='api_question_retrieve'),
+    path('api/question/<int:pk>/update', question.UpdateAPIView.as_view(), name='api_question_update'),
+    path('api/question/<int:pk>/delete', question.DeleteAPIView.as_view(), name='api_question_delete'),
+    path('api/question/<int:pk>/answer/add', answer.AddAPIView.as_view(), name='api_answer_add'),
+    path('api/question/<int:pk>/answer/list', answer.ListAPIView.as_view(), name='api_answer_list'),
+    path('api/answer/<int:pk>', answer.RetrieveAPIView.as_view(), name='api_answer_retrieve'),
+    path('api/answer/<int:pk>/update', answer.UpdateAPIView.as_view(), name='api_answer_update'),
+]

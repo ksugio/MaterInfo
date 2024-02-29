@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block script %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    {% if object.updated_by and object.updated_at %}
+    <div class="mt-3">
+        Last updated by {{ object.updated_by }} at {{ object.updated_at }}
+    </div>
+    {% endif %}
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <a class="btn btn-primary btn-sm" href="javascript:history.back()">Back</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script2 %}
+<script>
+    flatpickr('#id_start', {
+        dateFormat: 'Y-m-d H:i',
+        enableTime: true,
+        time_24hr: true
+    });
+    flatpickr('#id_finish', {
+        dateFormat: 'Y-m-d H:i',
+        enableTime: true,
+        time_24hr: true
+    });
+</script>
+{% endblock %}

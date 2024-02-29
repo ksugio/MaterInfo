@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} UserList{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    <div class="mt-3">
+        <h1>User List</h1>
+    </div>
+    <div class="nav border mt-3">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'accounts:user_add' %}">Add</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'accounts:user_upload' %}">Upload</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'accounts:user_download' %}">Download</a>
+        </li>
+    </div>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Firstname</th>
+                <th>Lastname</th>
+                <th>Email</th>
+                <th>Superuser</th>
+                <th>Manager</th>
+                <th>Update</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in customuser_list %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.first_name }}</td>
+                <td>{{ user.last_name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.is_superuser }}</td>
+                <td>{{ user.is_manager }}</td>
+                <td><a href="{% url 'accounts:user_update' pk=user.pk %}">Update</a></td>
+                <td><a href="{% url 'accounts:user_delete' pk=user.pk %}">Delete</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

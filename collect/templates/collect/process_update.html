@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Update</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Back</a>
+        </form>
+        <div class="ratio ratio-16x9 mt-3 g-0">
+            <iframe src="{{ object.get_table_url }}"></iframe>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

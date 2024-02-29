@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ title }}</h1>
+    {% for down in down_list %}
+    <h4><font color="red">Server down: {{ down }}</font></h4>
+    {% endfor %}
+    <div class="mt-3">
+        <table class="table mt-3 border-bottom">
+            <thead>
+                <tr>
+                    <th>Server</th>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>User</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs_list %}
+                <tr>
+                    <td>{{ job.server }}</td>
+                    <td>{{ job.id }}</td>
+                    <td>{{ job.status }}</td>
+                    <td>{{ job.user }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a class="btn btn-primary btn-sm" href="{{ list_url }}">Back</a>
+    </div>
+</div>
+
+{% endblock %}

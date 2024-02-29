@@ -1,0 +1,7 @@
+<div class="nav border mt-3">
+    {% for navigation in navigation_list %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ navigation.url }}">{{ navigation.title }}</a>
+    </li>
+    {% endfor %}
+</div>

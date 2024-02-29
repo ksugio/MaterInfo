@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    {% if object.process_updated_at > object.updated_at %}
+    <div class="row mt-3 g-0">
+        <h4><font color="red">Upper value or process updated</font></h4>
+    </div>
+    {% endif %}
+    <div class="mt-3">
+        Last updated by {{ object.updated_by }} at {{ object.updated_at }}
+    </div>
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Cancel</a>
+        </form>
+    </div>
+    {% if not object.alias %}
+    <div class="mt-3 border-top">
+        <h2 class="mt-3">Process List</h2>
+        <table class="table mt-3 border-bottom">
+            <thead>
+                <tr>
+                    <th>Process</th>
+                    <th>Order</th>
+                    <th>Remarks</th>
+                    <th>Update</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in process %}
+                <tr>
+                    <td>
+                        {{ item.name }}
+                    </td>
+                    <td>
+                        {{ item.order }}
+                    </td>
+                    <td>
+                        {% if item.name == 'Select' %}
+                            {{ item.columns  | truncatechars:20 }}
+                        {% elif item.name == 'Trim' %}
+                            {{ item.get_start_method_display }} - {{ item.get_end_method_display }}
+                        {% elif item.name == 'Operate' %}
+                            {{ item.get_method_display }} - {{ item.targetcolumn }}
+                        {% elif item.name == 'Rolling' %}
+                            {{ item.get_method_display }} - {{ item.window }}
+                        {% elif item.name == 'Reduce' %}
+                            {{ item.step }}
+                        {% elif item.name == 'Gradient' %}
+                            {{ item.x_target }} - {{ item.y_target }}
+                        {% elif item.name == 'Drop' %}
+                            {{ item.columns | truncatechars:20 }}
+                        {% elif item.name == 'Query' %}
+                            {{ item.condition | truncatechars:20 }}
+                        {% elif item.name == 'Eval' %}
+                            {{ item.expr | truncatechars:20 }}
+                        {% elif item.name == 'Beads' %}
+                            {{ item.targetcolumn }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ item.get_update_url }}">Update</a>
+                    </td>
+                    <td>
+                        <a href="{{ item.get_delete_url }}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        Add :
+        {% for process in process_add %}
+        <a class="btn btn-primary btn-sm" href="{{ process.url }}">{{ process.title }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

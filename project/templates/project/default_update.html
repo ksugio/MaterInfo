@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    {% if object.updated_by and object.updated_at %}
+    <div class="mt-3">
+        Last updated by {{ object.updated_by }} at {{ object.updated_at }}
+    </div>
+    {% endif %}
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Cancel</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

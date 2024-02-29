@@ -1,0 +1,58 @@
+<div class="row mt-3 g-0">
+    <div class="col-2">
+        <h3>{{ current | date:"Y/m" }}</h3>
+    </div>
+    <div class="col-9">
+        <ul class="pagination">
+            <li class="page-item">
+                <a class="page-link" href="{% url 'calendars:detail' object.id previous.year previous.month %}">Prev</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="{% url 'calendars:detail' object.id next.year next.month %}">Next</a>
+            </li>
+        </ul>
+    </div>
+</div>
+<div class="row g-0">
+    <style>
+        td > div {
+            min-width: 100px;
+            min-height: 100px;
+        }
+    </style>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            {% for w in weeknames %}
+                <th scope="col">{{ w }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for week in monthplans %}
+            <tr>
+                {% for day in week %}
+                    <td>
+                        <div>
+                            <div class="row ms-0">
+                                <a href="{% url 'calendars:day_detail' object.id day.date.year day.date.month day.date.day %}">
+                                {% if today == day.date %}
+                                    <b>{{ day.date.day }}</b>
+                                {% else %}
+                                    {{ day.date.day }}
+                                {% endif %}
+                                </a>
+                            </div>
+                            {% for plan in day.plans %}
+                                <div class="row ms-1">
+                                    {{ plan.start | date:"H:i" }} {{ plan.title }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

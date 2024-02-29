@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    <div class="row mt-3 g-0">
+        <div class="col">ID : {{ object.id }}</div>
+        {% if object.get_status_display %}
+            <div class="col">Status : {{ object.get_status_display }}</div>
+        {% endif %}
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">{{ object.note | markdown2html | safe }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col-2">
+            <h3>{{ current | date:"Y/m/d" }}</h3>
+        </div>
+        <div class="col-9">
+            <ul class="pagination">
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'calendars:day_detail' object.id previous.year previous.month previous.day %}">Prev</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'calendars:day_detail' object.id next.year next.month next.day %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'calendars:detail' object.id current.year current.month %}">Month</a>
+                </li>
+            </ul>
+        </div>
+        <div class="col-1">
+            <a class="btn btn-primary" href="{% url 'calendars:plan_add' object.id current.year current.month current.day %}">Plan</a>
+        </div>
+    </div>
+    {% if dayplans %}
+    <div class="mt-3 border-top">
+        <table class="table mt-3 border-bottom">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Start</th>
+                    <th>Finish</th>
+                    <th>Update</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plan in dayplans %}
+                <tr>
+                    <td>
+                        {{ plan.title }}
+                    </td>
+                    <td>
+                        {{ plan.start }}
+                    </td>
+                    <td>
+                        {{ plan.finish }}
+                    </td>
+                    <td>
+                        <a href="{% url 'calendars:plan_update' plan.id %}">Update</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'calendars:plan_delete' plan.id %}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="row mt-3 g-0">
+        <img src="{% url 'calendars:day_chart' object.id current.year current.month current.day %}" class="img-fluid">
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

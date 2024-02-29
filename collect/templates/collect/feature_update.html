@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    {% if features %}
+    <div class="mt-3">
+        <h3>Upper Updated Features</h3>
+        {% for feat in features %}
+            <a href="{{ feat.get_detail_url }}">{{ feat.pathname }}/{{ feat.title }}<br></a>
+        {% endfor %}
+    </div>
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Update</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Back</a>
+        </form>
+    </div>
+    {% else %}
+    <div class="mt-3">
+        <h3>No Upper Updated Features</h3>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Back</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

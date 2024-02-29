@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    <div class="mt-3">
+        Last updated by {{ object.updated_by }} at {{ object.updated_at }}
+    </div>
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Cancel</a>
+            <a class="btn btn-primary btn-sm" href="{% url 'collect:feature_update' object.id %}">Feature Update</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ title }}</h1>
+    {% endif %}
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            {% if btn_title %}
+            <button type="submit" class="btn btn-primary btn-sm">{{ btn_title }}</button>
+            {% else %}
+             <button type="submit" class="btn btn-primary btn-sm">Add</button>
+            {% endif %}
+            <a class="btn btn-primary btn-sm" href="javascript:history.back()">Back</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

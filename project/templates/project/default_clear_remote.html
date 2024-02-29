@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    <div class="mt-3">
+        <form method="post">
+            {% csrf_token %}
+            <h3 class="mb-3">Are you sure you want to clear remote ?</h3>
+            <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Cancel</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

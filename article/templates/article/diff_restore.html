@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.upper.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.upper.title }}</h1>
+    <div class="mt-3">
+        <form method="post">
+            {% csrf_token %}
+            <h3 class="mb-3">Are you sure you want to restore ?</h3>
+            <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
+            <a class="btn btn-primary btn-sm" href="{% url 'article:diff_previous' object.id %}">Cancel</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

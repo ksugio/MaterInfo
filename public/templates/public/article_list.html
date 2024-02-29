@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ title }} {% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ title }}</h1>
+    {% endif %}
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="mt-3">
+        {% for object in object_list %}
+        <div class="row mt-1 border g-0">
+            <div class="col">
+                <div class="row ms-0 me-0">
+                    <div class="col-10"><a href="{{ object.article.get_detail_url }}">{{ object.article.title }}</a></div>
+                    <div class="col-2">Public : {{ object.article.public }}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col">Created by {{ object.article.created_by }} at {{ object.article.created_at }}</div>
+                    <div class="col">Updated by {{ object.article.updated_by }} at {{ object.article.updated_at }}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col-10">Posted by {{ object.posted_by }} at {{ object.posted_at }}</div>
+                    <div class="col-1"><a href="{{ object.get_update_url }}">Update</a></div>
+                    <div class="col-1"><a href="{{ object.get_delete_url }}">Delete</a></div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% include 'pagination.html' %}
+    </div>
+</div>
+
+{% endblock %}

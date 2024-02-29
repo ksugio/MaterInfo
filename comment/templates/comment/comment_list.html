@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} Comment{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>Comment</h1>
+    {% include 'navigation.html' %}
+    <div class="mt-3">
+        {% for comment, responses in comment_set %}
+        <div class="row mt-3 border g-0">
+            <div class="col">
+                <div class="row ms-1 me-1">
+                    <div class="col"><a href="{{ comment.get_detail_url }}">{{ comment.title }}</a></div>
+                </div>
+                <div class="row ms-1 me-1 border bg-light">
+                    <div class="col">Created by {{ comment.created_by }} at {{ comment.created_at }}</div>
+                </div>
+                <div class="row ms-1 me-1">
+                    <div class="col">{{ comment.comment }}</div>
+                </div>
+                {% if comment.file %}
+                <div class="row ms-1 me-1">
+                    <div class="col"><a href="{% url 'comment:file' comment.id %}">{{ comment.basename }}</a></div>
+                </div>
+                {% endif %}
+                {% for response in responses %}
+                <div class="row ms-4 me-1 border bg-light">
+                    <div class="col">Created by {{ response.created_by }} at {{ response.created_at }}</div>
+                </div>
+                <div class="row ms-4 me-1">
+                    <div class="col">{{ response.response }}</div>
+                </div>
+                {% if response.file %}
+                <div class="row ms-4 me-1">
+                    <div class="col"><a href="{% url 'comment:response_file' response.id %}">{{ response.basename }}</a></div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        {% include 'pagination.html' %}
+    </div>
+</div>
+
+{% endblock %}

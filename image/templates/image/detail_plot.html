@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Reload</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Back</a>
+        </form>
+    </div>
+    <div class="row mt-3 g-0">
+        <img src="{{ imageurl }}" class="img-fluid w-50">
+    </div>
+</div>
+
+{% endblock %}

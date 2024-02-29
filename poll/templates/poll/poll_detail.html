@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">ID : {{ object.id }}</div>
+        <div class="col">Status : {{ object.get_status_display }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">{{ object.note | markdown2html | safe }}</div>
+    </div>
+    {% if object.file %}
+    <div class="row mt-3 g-0">
+        <div class="col">File : {% url 'poll:file' object.id %} <a href="{% url 'poll:file' object.id %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+            </svg>
+        </a></div>
+    </div>
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <table class="table mt-3 border-bottom">
+            <thead>
+                <tr>
+                    {% autoescape off %}
+                    {{ thead_html }}
+                    {% endautoescape %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for tbody_html in tbody_list %}
+                <tr>
+                    {% autoescape off %}
+                    {{ tbody_html }}
+                    {% endautoescape %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+        <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'poll:edit_note' object.id %}">Edit Note</a>
+        {% if object.remoteurl %}
+        <a class="btn btn-primary btn-sm" href="{% url 'poll:pull' object.id %}">Pull</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'poll:push' object.id %}">Push</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'poll:clear_remote' object.id %}">Clear Remote</a>
+        {% else %}
+        <a class="btn btn-primary btn-sm" href="{% url 'poll:set_remote' object.id %}">Set Remote</a>
+        {% endif %}
+        
+    </div>
+</div>
+
+{% endblock %}

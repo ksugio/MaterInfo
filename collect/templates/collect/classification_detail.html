@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    {% if object.updated_at < object.upper.recent_updated_at %}
+    <div class="row mt-3 g-0">
+        <h4><font color="red">Upper data or filter updated</font></h4>
+    </div>
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">ID : {{ object.id }}</div>
+        {% if object.get_status_display %}
+            <div class="col">Status : {{ object.get_status_display }}</div>
+        {% endif %}
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">{{ object.note | markdown2html | safe }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Method : {{ object.get_method_display }}</div>
+        <div class="col">Scaler : {{ object.get_scaler_display }}</div>
+        <div class="col">PCA : {{ object.pca }}</div>
+        <div class="col">PCA n_components : {{ object.n_components }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Hyperparameter : {{ object.hparam | safe }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col-3">Objective : {{ object.objective }}</div>
+        <div class="col">Drop columns : {{ object.drop }}</div>
+    </div>
+    {% if object.file_type == 1 %}
+    <div class="row mt-3 g-0">
+        <div class="col">ONNX File : {% url 'collect:classification_file' object.id %} <a href="{% url 'collect:classification_file' object.id %}">{% include 'cloud-download-icon.html' %}</a></div>
+    </div>
+    {% endif %}
+    <table class="table mt-3 border-bottom">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Accuracy Train</th>
+                <th>Accuracy Test</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for rep in results.reports %}
+            <tr>
+                <td><a href="{% url 'collect:classification_report' object.id rep.id %}">KFold{{ rep.id }}</a></td>
+                <td>{{ rep.train_accuracy }}</td>
+                <td>{{ rep.accuracy }}</td>
+            </tr>
+        {% endfor %}
+            <tr>
+                <td>Mean</td>
+                <td>{{ results.mean_train_accuracy }}</td>
+                <td>{{ results.mean_accuracy }}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="row mt-3 g-0">
+        {% if results.trials %}
+        {% for name in results.trials.best_param.keys %}
+            <div class="col-1">
+            <a href="{% url 'collect:classification_plot_trials' object.id name %}">{{ name }}</a>
+            </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+        <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'collect:classification_edit_note' object.id %}">Edit Note</a>
+        {% if object.get_delete_url %}
+        <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
+        {% endif %}
+    </div>
+    <div class="mt-3">
+        <img src="{% url 'collect:classification_plot_importance' object.id %}">
+    </div>
+</div>
+
+{% endblock %}

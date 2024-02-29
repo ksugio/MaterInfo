@@ -1,0 +1,28 @@
+# Mac desktop service store files
+.DS_Store
+
+# for python
+*.pyc
+*.sqlite3
+
+# for pycharm
+.idea/
+
+# for vs and vscode
+.vs/
+Debug/
+Release/
+*.vcxproj.user
+.vscode/
+
+# for Django
+/media/
+/static/
+/repos/
+*/migrations/
+
+# for linux
+*~
+*.o
+*.so
+*.a

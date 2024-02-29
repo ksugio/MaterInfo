@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} Public {% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    <h1 class="mt-3">Public</h1>
+    <div class="nav border mt-3">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'public:add' %}">Add</a>
+        </li>
+    </div>
+    <div class="mt-3">
+        {% for object in object_list %}
+        <div class="row mt-1 border g-0">
+            <div class="col">
+                <div class="row ms-0 me-0">
+                    <div class="col"><a href="{{ object.get_detail_url }}">{{ object.title }}</a></div>
+                    <div class="col">Path : <a href="{% url 'public:home' object.path %}">{{ object.path }}</a></div>
+                    <div class="col">Release : {% if object.file %} True {% else %} False {% endif %}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col">{{ object.note|truncatechars:200 }}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+                    <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% include 'pagination.html' %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ poll.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ poll.title }}</h1>
+    <div class="mt-3">
+        {{ poll.note }}
+    </div>
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <table class="table mt-3 border-bottom">
+                <thead>
+                    <tr>
+                        {% for item in question %}
+                        <th>{{ item.question }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ formset.management_form }}
+                    <tr>
+                        {% for form in formset.forms %}
+                        <td>{{ form.as_p }}</td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+            <a class="btn btn-primary btn-sm" href="{{ poll.get_detail_url }}">Cancel</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

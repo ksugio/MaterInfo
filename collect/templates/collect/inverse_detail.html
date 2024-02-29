@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">ID : {{ object.id }}</div>
+        <div class="col">Status : {{ object.get_status_display }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">{{ object.note | markdown2html | safe }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Regression1 : {{ object.get_regression1.title }}</div>
+        <div class="col">Objective1 : {{ object.get_regression1.objective }}</div>
+        <div class="col">Target1 : {{ object.target1 }}</div>
+    </div>
+    {% if object.regression2 %}
+    <div class="row mt-3 g-0">
+        <div class="col">Regression2 : {{ object.get_regression2.title }}</div>
+        <div class="col">Objective2 : {{ object.get_regression2.objective }}</div>
+        <div class="col">Target2 : {{ object.target2 }}</div>
+    </div>
+    {% endif %}
+    {% if object.regression3 %}
+    <div class="row mt-3 g-0">
+        <div class="col">Regression3 : {{ object.get_regression3.title }}</div>
+        <div class="col">Objective3 : {{ object.get_regression3.objective }}</div>
+        <div class="col">Target3 : {{ object.target3 }}</div>
+    </div>
+    {% endif %}
+    {% if object.file %}
+    <div class="row mt-3 g-0">
+        <div class="col">File : {% url 'collect:inverse_file' object.id %} <a href="{% url 'collect:inverse_file' object.id %}">{% include 'cloud-download-icon.html' %}</a></div>
+    </div>
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+        <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'collect:inverse_edit_note' object.id %}">Edit Note</a>
+        <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
+    </div>
+    <div class="ratio ratio-16x9 mt-3 g-0">
+        <iframe src="{{ object.get_table_url }}"></iframe>
+    </div>
+    <div class="mt-3">
+        <img src="{% url 'collect:inverse_plot' object.id %}">
+    </div>
+</div>
+
+{% endblock %}

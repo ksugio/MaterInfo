@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    <div class="mt-3">
+        Remote URL : {{ object.remoteurl }}
+    </div>
+    <div class="mt-3">
+        Remote ID : {{ object.remoteid }}
+    </div>
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            {% if lines %}
+            <button type="submit" class="btn btn-primary btn-sm">Push</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Cancel</a>
+            {% else %}
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Back</a>
+            {% endif %}
+        </form>
+    </div>
+    <div class="mt-3">
+        <div>{{ lines|length }} changes</div>
+        {% for line in lines %}
+            <div>{{ line|truncatechars:200 }}</div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

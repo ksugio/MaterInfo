@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    <div class="row mt-3 border g-0">
+        <div class="col">
+            <div class="row ms-1 me-1">
+                <div class="col">{{ object.title }}</div>
+            </div>
+            <div class="row ms-1 me-1 border bg-light">
+                <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+            </div>
+            <div class="row ms-1 me-1">
+                <div class="col">{{ object.comment }}</div>
+            </div>
+            {% if object.file %}
+            <div class="row ms-1 me-1">
+                <div class="col"><a href="{% url 'comment:file' object.id %}">{{ object.basename }}</a></div>
+            </div>
+            {% endif %}
+            <div class="row text-center">
+                <div class="col"><a href="{% url 'comment:response' object.id %}">Response</a></div>
+            </div>
+            {% for response in responses %}
+            <div class="row ms-4 me-1 border bg-light">
+                <div class="col">Created by {{ response.created_by }} at {{ response.created_at }}</div>
+            </div>
+            <div class="row ms-4 me-1">
+                <div class="col">{{ response.response }}</div>
+            </div>
+            {% if response.file %}
+            <div class="row ms-4 me-1">
+                <div class="col"><a href="{% url 'comment:response_file' response.id %}">{{ response.basename }}</a></div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% if responses %}
+            <div class="row text-center">
+                <div class="col"><a href="{% url 'comment:response' comment.id %}">Response</a></div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

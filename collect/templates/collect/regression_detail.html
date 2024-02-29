@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    {% if object.updated_at < object.upper.recent_updated_at %}
+    <div class="row mt-3 g-0">
+        <h4><font color="red">Upper data or filter updated</font></h4>
+    </div>
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">ID : {{ object.id }}</div>
+        {% if object.get_status_display %}
+            <div class="col">Status : {{ object.get_status_display }}</div>
+        {% endif %}
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">{{ object.note | markdown2html | safe }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Method : {{ object.get_method_display }}</div>
+        <div class="col">Scaler : {{ object.get_scaler_display }}</div>
+        <div class="col">PCA : {{ object.pca }}</div>
+        <div class="col">PCA n_components : {{ object.n_components }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Hyperparameter : {{ object.hparam | safe }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col-3">Objective : {{ object.objective }}</div>
+        <div class="col">Drop columns : {{ object.drop }}</div>
+    </div>
+    {% if object.file2_type == 1 %}
+    <div class="row mt-3 g-0">
+        <div class="col">ONNX File : {% url 'collect:regression_file2' object.id %} <a href="{% url 'collect:regression_file2' object.id %}">{% include 'cloud-download-icon.html' %}</a></div>
+    </div>
+    {% endif %}
+    <table class="table mt-3 border-bottom">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>R2 Train</th>
+                <th>RMSE Train </th>
+                <th>MAE Train</th>
+                <th>R2 Test</th>
+                <th>RMSE Test</th>
+                <th>MAE Test</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for acc in results.accuracies %}
+            <tr>
+                {% if acc.id >= 0 %}
+                <td><a href="{% url 'collect:regression_plot' object.id acc.id %}">KFold{{ acc.id }}</a></td>
+                {% else %}
+                <td>Mean</td>
+                {% endif %}
+                <td>{{ acc.r2_train }}</td>
+                <td>{{ acc.rmse_train }}</td>
+                <td>{{ acc.mae_train }}</td>
+                <td>{{ acc.r2_test }}</td>
+                <td>{{ acc.rmse_test }}</td>
+                <td>{{ acc.mae_test }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="row mt-3 g-0">
+        {% if results.coef or results.importances %}
+        <div class="col-1">
+            <a href="{% url 'collect:regression_plot_importance' object.id %}">Importance</a>
+        </div>
+        {% endif %}
+        {% if results.trials %}
+        {% for name in results.trials.best_param.keys %}
+            <div class="col-1">
+            <a href="{% url 'collect:regression_plot_trials' object.id name %}">{{ name }}</a>
+            </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+        <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'collect:regression_edit_note' object.id %}">Edit Note</a>
+        {% if object.get_delete_url %}
+        <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
+        {% endif %}
+    </div>
+    <div class="mt-3">
+        <img src="{% url 'collect:regression_plot_all' object.id %}">
+    </div>
+</div>
+
+{% endblock %}
