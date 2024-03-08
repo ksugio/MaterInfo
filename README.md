@@ -6,7 +6,7 @@ It also has extensive research support functions such as diagram creation,
 reference management, document version control, schedule management,
 questionnaire functions, and bulletin boards.
 
-[README-ja](ReadME-ja.md)
+[Japanese version README](README-ja.md)
 
 # Run on Windows
 
