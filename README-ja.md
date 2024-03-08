@@ -7,8 +7,8 @@ MaterInfo はマテリアルズ・インフォマティクスのためウェブ�
 
 Docker Desktop for Windowsを[サイト](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/windows/install/)からダウンロードしてインストールする。
 
-[https://github.com/ksugio/MaterInfo](https://github.com/ksugio/MaterInfo) にアクセスして，
-compose.yaml をダウンロードして， それを適当な場所に配置する。
+[compose.yaml](https://github.com/ksugio/MaterInfo/blob/main/compose.yaml)
+をダウンロードして， それを適当な場所に配置する。
 コマンドプロンプトを立ち上げ，compose.yamlのあるフォルダに移動して，
 以下のコマンドでコンテナを作成・起動する。
 ```

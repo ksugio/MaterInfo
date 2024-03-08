@@ -12,8 +12,8 @@ questionnaire functions, and bulletin boards.
 
 Download and install Docker Desktop for Windows from [site](https://www.docker.com/products/docker-desktop/).
 
-Access [https://github.com/ksugio/MaterInfo](https://github.com/ksugio/MaterInfo)
-and download compose.yaml and place it in an appropriate location.
+Download [compose.yaml](https://github.com/ksugio/MaterInfo/blob/main/compose.yaml)
+and place it in an appropriate location.
 Launch a command prompt, move to the folder where compose.yaml is located,
 Create and start a Docker container with the following command.
 ```
