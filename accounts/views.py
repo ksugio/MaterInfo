@@ -28,6 +28,7 @@ class LoginView(auth.LoginView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['brand_name'] = BrandName()
+        context['email_active'] = settings.EMAIL_ACTIVE
         return context
 
 class LogoutView(auth.LogoutView):
@@ -50,8 +51,7 @@ class PasswordChangeView(LoginRequiredMixin, auth.PasswordChangeView):
     def form_valid(self, form):
         response = super().form_valid(form)
         if response.status_code == 302:
-            if 'accounts.ldap.LDAPBackend' in settings.AUTHENTICATION_BACKENDS \
-                    and settings.LDAP_SERVER['UPDATE_SERVER']:
+            if settings.LDAP_SERVER['USE'] and settings.LDAP_SERVER['UPDATE_SERVER']:
                 LDAPChangePassword(self.request.user.username,
                                    form.cleaned_data['old_password'],
                                    form.cleaned_data['new_password1'])
@@ -147,8 +147,7 @@ class ProfileUpdateView(LoginRequiredMixin, generic.FormView):
         model.save()
         response = super().form_valid(form)
         if response.status_code == 302:
-            if 'accounts.ldap.LDAPBackend' in settings.AUTHENTICATION_BACKENDS \
-                    and settings.LDAP_SERVER['UPDATE_SERVER']:
+            if settings.LDAP_SERVER['USE'] and settings.LDAP_SERVER['UPDATE_SERVER']:
                 LDAPUpdateUser(self.request.user.username,
                                form.cleaned_data['first_name'],
                                form.cleaned_data['last_name'],
@@ -165,7 +164,6 @@ class TokenView(LoginRequiredMixin, generic.View):
 
     def get(self, request, **kwargs):
         form = self.form_class()
-        form.fields['username'].initial = self.request.user.username
         params = {
             'form' : form,
             'brand_name': BrandName()
@@ -179,7 +177,11 @@ class TokenView(LoginRequiredMixin, generic.View):
             'brand_name': BrandName()
         }
         if form.is_valid():
-           params['refresh'] = RefreshToken.for_user(request.user)
+            password = form.cleaned_data['password']
+            if request.user.check_password(password):
+                params['refresh'] = RefreshToken.for_user(request.user)
+            else:
+                params['refresh'] = 'Invalid password'
         return render(request, self.template_name, params)
 
 class UserAddView(LoginRequiredMixin, UserPassesTestMixin, generic.edit.CreateView):
@@ -231,8 +233,7 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView
     def form_valid(self, form):
         response = super().form_valid(form)
         if response.status_code == 302:
-            if 'accounts.ldap.LDAPBackend' in settings.AUTHENTICATION_BACKENDS \
-                    and settings.LDAP_SERVER['UPDATE_SERVER']:
+            if settings.LDAP_SERVER['USE'] and settings.LDAP_SERVER['UPDATE_SERVER']:
                 model = self.model.objects.get(pk=self.kwargs['pk'])
                 LDAPUpdateUser(model.username,
                                form.cleaned_data['first_name'],

@@ -11,25 +11,25 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import environ
 from datetime import timedelta
-from distutils.util import strtobool
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+env = environ.Env()
+env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'v7u0d4hc403)rzi253ylbd5r@_oynt-vokf1aqpc8t=w-)0tkn'
-#SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = env('SECRET_KEY', default='v7u0d4hc403)rzi253ylbd5r@_oynt-vokf1aqpc8t=w-)0tkn')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-#DEBUG = bool(strtobool(os.environ['DEBUG']))
+DEBUG = env('DEBUG', cast=bool, default=True)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = env('ALLOWED_HOSTS', cast=list, default=['*'])
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
@@ -108,42 +108,29 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-    # 'default': {
-    #    'ENGINE': os.environ['DATABASE_ENGINE'],
-    #    'NAME': os.environ['DATABASE_NAME'],
-    #    'USER': os.environ['DATABASE_USER'],
-    #    'PASSWORD': os.environ['DATABASE_PASSWORD'],
-    #    'HOST': os.environ['DATABASE_HOST'],
-    #    'PORT': os.environ['DATABASE_PORT'],
-    #    'OPTIONS': {
-    #         'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-    #    }
-    # }
+    'default': env.db(default='sqlite:///db.sqlite3')
 }
 
 AUTHENTICATION_BACKENDS = [
-    #'accounts.ldap.LDAPBackend',
+    'accounts.ldap.LDAPBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
 # LDAP Settings
 LDAP_SERVER = {
-    'HOST': 'ldap_server',
-    'PORT': 636,
-    'USE_SSL': True,
-    'SEARCH_BASE': 'dc=matphys,dc=local',
-    'USER': 'cn=admin,dc=matphys,dc=local',
-    'PASSWORD': 'password',
-    'USERNAME': 'uid',
-    'EMAIL': 'mail',
-    'FIRST_NAME': 'givenName',
-    'LAST_NAME': 'sn',
-    'CREATE_USER_PROJECT': True,
-    'UPDATE_SERVER': True
+    'USE': env('LDAP_SERVER_USE', cast=bool, default=False),
+    'HOST': env('LDAP_SERVER_HOST', default='ldap_server'),
+    'PORT': env('LDAP_SERVER_PORT', cast=int, default=636),
+    'USE_SSL': env('LDAP_SERVER_USE_SSL', cast=bool, default=True),
+    'SEARCH_BASE': env('LDAP_SERVER_SEARCH_BASE', default='dc=matphys,dc=local'),
+    'USER': env('LDAP_SERVER_USER', default='cn=admin,dc=matphys,dc=local'),
+    'PASSWORD': env('LDAP_SERVER_PASSWORD', default='password'),
+    'USERNAME': env('LDAP_SERVER_USERNAME', default='uid'),
+    'EMAIL': env('LDAP_SERVER_EMAIL', default='mail'),
+    'FIRST_NAME': env('LDAP_SERVER_FIRST_NAME', default='givenName'),
+    'LAST_NAME': env('LDAP_SERVER_LAST_NAME', default='sn'),
+    'CREATE_USER_PROJECT': env('LDAP_SERVER_CREATE_USER_PROJECT', cast=bool, default=True),
+    'UPDATE_SERVER': env('LDAP_SERVER_UPDATE_SERVER', cast=bool, default=True),
 }
 
 # Password validation
@@ -192,19 +179,14 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-DATA_DIR = BASE_DIR
-#DATA_DIR = '/data'
-
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(DATA_DIR, 'static')
+STATIC_ROOT = env('STATIC_ROOT', default=os.path.join(BASE_DIR, 'static'))
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(DATA_DIR, 'media')
+MEDIA_ROOT = env('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
+MEDIA_ACCEL_REDIRECT = env('MEDIA_ACCEL_REDIRECT', cast=bool, default=False)
 
-MEDIA_ACCEL_REDIRECT = False
-#MEDIA_ACCEL_REDIRECT = True
-
-REPOS_ROOT = os.path.join(DATA_DIR, 'repos')
+REPOS_ROOT = env('REPOS_ROOT', default=os.path.join(BASE_DIR, 'repos'))
 
 RANDOM_STRING_LENGTH = 17
 
@@ -229,13 +211,14 @@ SIMPLE_JWT = {
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = 'server'
-EMAIL_HOST_USER = 'user'
-EMAIL_HOST_PASSWORD = 'password'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-DEFAULT_FROM_EMAIL = 'address'
+EMAIL_ACTIVE = env('EMAIL_ACTIVE', cast=bool, default=False)
+EMAIL_HOST = env('EMAIL_HOST', default='server')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='user')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='password')
+EMAIL_PORT = env('EMAIL_PORT', cast=int, default=587)
+EMAIL_USE_TLS = env('EMAIL_USE_TLS', cast=bool, default=True)
+EMAIL_USE_SSL = env('EMAIL_USE_SSL', cast=bool, default=False)
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='address')
 
 FONT_PATH = 'fonts/NotoSansJP-Regular.ttf'
 
@@ -258,7 +241,7 @@ MDEDITOR_CONFIGS = {
 
 # MaterInfo settings
 #
-BRAND_NAME = 'MaterInfo'
+BRAND_NAME = env('BRAND_NAME', default='MaterInfo')
 
 PROJECT_LOWER = [
     {

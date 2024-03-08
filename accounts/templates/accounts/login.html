@@ -19,7 +19,9 @@
 
             <button type="submit" class="btn btn-primary btn-sm">Login</button>
         </form>
+        {% if email_active %}
         <a href="{% url 'accounts:password_reset' %}">Forgot your password?</a>
+        {% endif %}
     </div>
   </body>
 </html>

@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import authenticate
 from project.views.token import GetAccessToken
 from .models import CustomUser
 
@@ -46,17 +45,4 @@ class ProfileUpdateForm(forms.Form):
     birthday = forms.DateField(label='Birthday', required=False)
 
 class PasswordForm(forms.Form):
-    username = forms.CharField(label='Username', max_length=100, required=True)
     password = forms.CharField(label='Password', max_length=100, widget=forms.PasswordInput, required=True)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs['readonly'] = 'readonly'
-
-    def clean(self):
-        cleaned_data = super().clean()
-        username = cleaned_data['username']
-        password = cleaned_data['password']
-        user = authenticate(username=username, password=password)
-        if user is None:
-            raise forms.ValidationError("Invalid Password.")

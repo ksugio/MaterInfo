@@ -157,31 +157,6 @@ class CurveRemote(remote.Remote):
     serializer_class = CurveSerializer
     child_remote = [EquationRemote]
 
-    def create(self, data, upper, user, **kwargs):
-        if 'alias' in data and data['alias'] is not None:
-            source = self.model.objects.filter(upper__upper__upper__upper=upper.upper.upper.upper).filter(remoteid=data['alias'])
-            if source:
-                data['alias'] = source[0].id
-            else:
-                data['alias'] = None
-        return super().create(data, upper, user, **kwargs)
-
-    def update(self, model, data, user, **kwargs):
-        if 'alias' in data and data['alias'] is not None:
-            source = self.model.objects.filter(upper__upper__upper__upper=model.upper.upper.upper.upper).filter(remoteid=data['alias'])
-            if source:
-                data['alias'] = source[0].id
-            else:
-                data['alias'] = None
-        return super().update(model, data, user, **kwargs)
-
-    def data_files(self, model, data, files, **kwargs):
-        model, data, files, kwargs = super().data_files(model, data, files, **kwargs)
-        if 'alias' in data and data['alias'] is not None:
-            source = self.model.objects.get(id=data['alias'])
-            data['alias'] = source.remoteid
-        return model, data, files, kwargs
-
 class ImportView(remote.ImportView):
     model = Curve
     upper = Filter

@@ -1,7 +1,7 @@
 from django.urls import reverse
 from django.db.models import Q
 from django.core.mail import send_mail
-from config.settings import DEFAULT_FROM_EMAIL
+from config.settings import DEFAULT_FROM_EMAIL, EMAIL_ACTIVE
 from project.views import base, base_api, remote
 from project.models import Project
 from .models import Comment, Response
@@ -38,7 +38,7 @@ class AddView(base.FormView):
         sendemail = form.cleaned_data['sendemail']
         model = self.model.objects.create(created_by=self.request.user, upper=upper,
                                           title=title, comment=comment, file=file)
-        if sendemail:
+        if sendemail and EMAIL_ACTIVE:
             self.send_mail(model)
         return super().form_valid(form)
 
@@ -110,7 +110,7 @@ class ResponseView(base.FormView):
         sendemail = form.cleaned_data['sendemail']
         model = self.model.objects.create(created_by=self.request.user, upper=upper,
                                           response=response, file=file)
-        if sendemail:
+        if sendemail and EMAIL_ACTIVE:
             self.send_mail(model)
         return super().form_valid(form)
 

@@ -3,14 +3,12 @@ services:
     image: ksugio/materinfo:latest
     #build: .
     environment:
-      SECRET_KEY: v7u0d4hc403)rzi253ylbd5r@_oynt-vokf1aqpc8t=w-)0tkn
       DEBUG: True
-      DATABASE_ENGINE: django.db.backends.mysql
-      DATABASE_NAME: materinfo
-      DATABASE_USER: materinfouser
-      DATABASE_PASSWORD: materinfopw
-      DATABASE_HOST: db
-      DATABASE_PORT: 3306
+      DATABASE_URL: mysql://materinfouser:materinfopw@db:3306/materinfo
+      STATIC_ROOT: /data/static
+      MEDIA_ROOT: /data/media
+      MEDIA_ACCEL_REDIRECT: True
+      REPOS_ROOT: /data/repos
     ports:
       - "8000:8000"
     volumes:
@@ -18,12 +16,12 @@ services:
     depends_on:
       - db
   nginx:
-    build: ./nginx
+    image: ksugio/materinfo-nginx:latest
+    #build: ./nginx
     ports:
       - "8080:80"
     volumes:
       - materinfo-data:/data
-      - .:/MaterInfo
   db:
     image: mariadb:11.3
     environment:

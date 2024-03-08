@@ -38,7 +38,7 @@ RUN pip install skl2onnx
 RUN pip install onnxmltools
 RUN pip install onnxruntime
 RUN pip install shap
-
+RUN pip install django-environ
 RUN pip install mysqlclient
 RUN pip install uwsgi
 
