@@ -3,7 +3,7 @@ MaterInfo はマテリアルズ・インフォマティクスのためウェブ�
 このアプリケーションを用いてデータの収集，特徴量抽出，特徴量取集，特徴量選択，機械学習および逆解析を実施することができる。
 また，図の作成，参考文献の管理，文章のバージョン管理，スケジュール管理，アンケート機能，掲示板等の研究支援機能も充実している。
 
-[https://www.youtube.com/@MaterInfo-lm8vk](https://www.youtube.com/@MaterInfo-lm8vk) にて使用法等を解説してる。
+[https://www.youtube.com/@MaterInfo-lm8vk](https://www.youtube.com/@MaterInfo-lm8vk) にて使用法等を解説している。
 
 # Windowsでの実行
 
