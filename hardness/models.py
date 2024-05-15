@@ -39,7 +39,8 @@ class Hardness(Created, Updated, Remote, PrefixPtr):
             if q.status == 0:
                 vals.append(q.value)
         describe = pd.Series(vals).describe()
-        describe['median'] = describe['50%']
+        if '50%' in describe:
+            describe['median'] = describe['50%']
         return describe
 
     def feature(self):

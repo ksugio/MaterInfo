@@ -19,7 +19,6 @@ Release/
 /media/
 /static/
 /repos/
-*/migrations/
 
 # for linux
 *~
