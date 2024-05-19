@@ -97,7 +97,7 @@ class Trim(Process):
         width = self.endx - self.startx
         height = self.endy - self.starty
         if width > 0 and height > 0:
-            return src[self.starty:self.endy, self.startx:self.endx], kwargs
+            return src[self.starty:self.endy, self.startx:self.endx].copy(), kwargs
         else:
             return src, kwargs
 
@@ -213,7 +213,7 @@ class DrawScale(Process):
         color = ColorTable[self.color]
         draw = ImageDraw.Draw(iplimg)
         text = '%s %s' % (self.scale, self.upper.upper.unittext())
-        tw, th = draw.textsize(text, font=font)
+        _, _, tw, th = draw.textbbox((0, 0), text=text, font=font)
         mx = self.marginx
         my = self.marginy
         if self.pos == 0:
@@ -285,7 +285,7 @@ class Tone(Process):
 
     def posterization(self, x):
         step = int(self.option)
-        if step > 0 and step < 256:
+        if step > 1 and step < 256:
             split = 1.0 / (step - 1)
             up = 1.0 / step
             y = []
