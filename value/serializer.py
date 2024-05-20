@@ -62,7 +62,8 @@ class CurveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curve
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'prefix', 'template', 'columnx', 'columny', 'params', 'alias')
+                  'title', 'status', 'note', 'prefix', 'template', 'columnx', 'columny',
+                  'startid', 'endid', 'params', 'alias')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 #

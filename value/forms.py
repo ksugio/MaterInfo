@@ -76,11 +76,13 @@ class CurveAddForm(forms.ModelForm):
 
     class Meta:
         model = Curve
-        fields = ('title', 'note', 'prefix', 'category', 'template', 'columnx', 'columny')
+        fields = ('title', 'note', 'prefix', 'category', 'template',
+                  'columnx', 'columny', 'startid', 'endid')
 
 class CurveUpdateForm(forms.ModelForm):
     prefix = forms.fields.ChoiceField(label='Prefix')
 
     class Meta:
         model = Curve
-        fields = ('title', 'status', 'note', 'prefix', 'category', 'template', 'columnx', 'columny')
+        fields = ('title', 'status', 'note', 'prefix', 'category', 'template',
+                  'columnx', 'columny', 'startid', 'endid')

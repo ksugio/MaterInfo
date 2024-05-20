@@ -20,6 +20,8 @@ class Curve(Created, Updated, Remote, PrefixPtr):
     template = models.BooleanField(verbose_name='Template', default=False)
     columnx = models.CharField(verbose_name='Column X', max_length=50)
     columny = models.CharField(verbose_name='Column Y', max_length=50)
+    startid = models.PositiveIntegerField(verbose_name='Start Index', blank=True, null=True)
+    endid = models.PositiveIntegerField(verbose_name='End Index', blank=True, null=True)
     params = models.TextField(verbose_name='Parameters', blank=True)
     alias = models.IntegerField(verbose_name='Alias ID', blank=True, null=True)
 
@@ -62,12 +64,26 @@ class Curve(Created, Updated, Remote, PrefixPtr):
         else:
             return equations, None
 
-    def measure(self):
+    def get_xy(self):
         df = self.upper.check_read_csv()
         if df is None:
+            return None, None
+        st = 0
+        ed = df.shape[0]
+        if self.startid and self.startid > 0:
+            st = self.startid
+        if self.endid and self.endid < df.shape[0]:
+            ed = self.endid
+        if self.columnx in df and self.columny in df:
+            x = df[st:ed][self.columnx].values
+            y = df[st:ed][self.columny].values
+            return x, y
+        return None, None
+
+    def measure(self):
+        x, y = self.get_xy()
+        if x is None or y is None:
             return
-        x = df[self.columnx].values
-        y = df[self.columny].values
         equations, lmmodel = self.get_lmmodel()
         if lmmodel:
             params = lmmodel.make_params()
@@ -84,20 +100,18 @@ class Curve(Created, Updated, Remote, PrefixPtr):
             self.params = ''
 
     def plot(self, **kwargs):
-        df = self.upper.read_csv()
-        if df is None:
+        x, y = self.get_xy()
+        if x is None or y is None:
             return
-        x = df[self.columnx].values
-        y = df[self.columny].values
+        plt.plot(x, y, '.')
+        plt.xlabel(self.columnx)
+        plt.ylabel(self.columny)
         equations, lmmodel = self.get_lmmodel()
         if lmmodel and self.params:
             params = json.loads(self.params)
             params = lmmodel.make_params(**params)
             y_eval = lmmodel.eval(params, x=x)
-            plt.plot(x, y, '.')
             plt.plot(x, y_eval)
-            plt.xlabel(self.columnx)
-            plt.ylabel(self.columny)
 
     def upper_updated(self):
         return self.updated_at < self.upper.recent_updated_at()
