@@ -2,20 +2,18 @@ from django.utils.module_loading import import_string
 from django.db import models
 from django.urls import reverse
 from config.settings import COLLECT_FEATURES
-from project.models import Created, Updated, RemoteRoot, Project, ModelUploadTo
+from project.models import Created, Updated, RemoteRoot, Project, ModelUploadTo, Unique, FileSearch
 from io import BytesIO
 import os
 import pandas as pd
 import json
+import requests
 
 HeadColumns = [
     ('Project_id', 0), ('Project_title', '-'),
     ('Sample_id', 0), ('Sample_title', '-'),
     ('Image_id', 0), ('Image_title', '-'),
-    ('Image_Filter_id', 0),
-    ('Image_Predict_id', 0),
     ('Value_id', 0), ('Value_title', '-'),
-    ('Value_Filter_id', 0),
     ('Upper_id', 0),
     ('Model', '-'), ('Model_id', 0),
     ('Category', '-')
@@ -24,7 +22,7 @@ HeadColumns = [
 def CollectUploadTo(instance, filename):
     return filename
 
-class Collect(Created, Updated, RemoteRoot):
+class Collect(Created, Updated, RemoteRoot, Unique, FileSearch):
     upper = models.ForeignKey(Project, verbose_name='Project', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))
@@ -73,11 +71,9 @@ class Collect(Created, Updated, RemoteRoot):
         if 'Model' in df.columns and model_name in df['Model'].values:
             df = df.query('Model == "%s"' % model_name).dropna(how='all', axis=1)
             if 'Image_id' in df.columns and df['Image_id'].sum() == 0:
-                df = df.drop(['Image_id', 'Image_title', 'Image_Filter_id'], axis=1)
+                df = df.drop(['Image_id', 'Image_title'], axis=1)
             if 'Value_id' in df.columns and df['Value_id'].sum() == 0:
-                df = df.drop(['Value_id', 'Value_title', 'Value_Filter_id'], axis=1)
-            if 'Image_Predict_id' in df.columns and df['Image_Predict_id'].sum() == 0:
-                df = df.drop(['Image_Predict_id'], axis=1)
+                df = df.drop(['Value_id', 'Value_title'], axis=1)
         if df is not None and self.disp_head + self.disp_tail < df.shape[0]:
             return pd.concat([df.head(self.disp_head), df.tail(self.disp_tail)])
         else:
@@ -144,13 +140,16 @@ class Collect(Created, Updated, RemoteRoot):
             dfall = self.sort_features(dfall)
             for item in HeadColumns:
                 if item[0] in dfall.columns.values:
-                    dfall[item[0]] = dfall[item[0]].fillna(item[1])
+                    dfall[item[0]] = dfall[item[0]].infer_objects().fillna(item[1])
             self.columns_text = ','.join(indexes)
             self.overview(dfall)
             self.save_csv(dfall)
 
-    def upload(self, file):
+    def upload_features(self, file):
         df = pd.read_csv(file)
+        self.checksave_df(df)
+
+    def checksave_df(self, df):
         if 'Project_id' not in df.columns:
             df.insert(0, 'Project_id', self.upper.id)
             df.insert(1, 'Project_title', self.upper.title)
@@ -163,6 +162,27 @@ class Collect(Created, Updated, RemoteRoot):
         self.columns_text = ','.join(columns)
         self.overview(df)
         self.save_csv(df)
+
+    def get_features(self, url):
+        if url.startswith('http'):
+            response = requests.get(url)
+            if response.status_code != 200:
+                return
+            else:
+                try:
+                    buf = BytesIO(response.content)
+                    df = pd.read_csv(buf)
+                    buf.close()
+                except:
+                    return
+        else:
+            file = self.file_search(url)
+            if file is None:
+                return
+            else:
+                with file.open('r') as f:
+                    df = pd.read_csv(f)
+        self.checksave_df(df)
 
     def overview(self, df):
         text = 'Project:%d,' % df['Project_id'].drop_duplicates().shape[0]
@@ -199,8 +219,8 @@ class Collect(Created, Updated, RemoteRoot):
     def head_columns(self):
         return [item[0] for item in HeadColumns]
 
-    def project_upper_updated_features(self, project):
-        updated = []
+    def project_latest_features(self, project):
+        latest = []
         for item in COLLECT_FEATURES:
             cls = import_string(item['Model'])
             if hasattr(cls, 'upper_updated'):
@@ -212,20 +232,22 @@ class Collect(Created, Updated, RemoteRoot):
                     features = cls.objects.filter(upper__upper__upper__upper=project)
                 for feature in features:
                     if feature.upper_updated():
-                        updated.append(feature)
-        return updated
+                        latest.append((feature, True))
+                    elif feature.updated_at > self.updated_at:
+                        latest.append((feature, False))
+        return latest
 
-    def upper_updated_features(self, user):
+    def latest_features(self, user):
         projects = self.collect_projects(user)
-        updated = []
+        latest = []
         for project in projects:
-            updated.extend(self.project_upper_updated_features(project))
-        return updated
+            latest.extend(self.project_latest_features(project))
+        return latest
 
-    def project_upper_updated_measure_features(self, project):
+    def project_update_upper_updated(self, project):
         for item in COLLECT_FEATURES:
             cls = import_string(item['Model'])
-            if hasattr(cls, 'upper_updated_measure'):
+            if hasattr(cls, 'upper_updated') and hasattr(cls, 'measure') :
                 if item['Depth'] == 2:
                     features = cls.objects.filter(upper__upper=project)
                 elif item['Depth'] == 3:
@@ -233,9 +255,11 @@ class Collect(Created, Updated, RemoteRoot):
                 elif item['Depth'] == 4:
                     features = cls.objects.filter(upper__upper__upper__upper=project)
                 for feature in features:
-                    feature.upper_updated_measure()
+                    if feature.upper_updated():
+                        feature.measure()
+                        feature.save()
 
-    def upper_updated_measure_features(self, user):
+    def update_upper_updated(self, user):
         projects = self.collect_projects(user)
         for project in projects:
-            self.project_upper_updated_measure_features(project)
+            self.project_update_upper_updated(project)

@@ -1,15 +1,19 @@
 from django.http import HttpResponse
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from config.settings import IMAGE_LOWER
 from project.views import base, base_api, remote
 from project.forms import EditNoteForm, ImportForm, SearchForm
+from project.models import FileSearch
 from sample.models import Sample
 from ..models.image import Image
 from ..models.filter import Filter
 from ..serializer import ImageSerializer
-from ..forms import ImageAddForm, ImageUpdateForm
+from ..forms import ImageAddForm, ImageUpdateForm, ImageGetForm
 import os
 import datetime
 import zipfile
+import requests
 
 class AddView(base.FormView):
     model = Image
@@ -33,11 +37,65 @@ class AddView(base.FormView):
                 title=title, note=note, file=file, scale=scale, scaleunit=scaleunit, scalepixels=scalepixels, device=device)
         return super().form_valid(form)
 
+class GetView(base.FormView, FileSearch):
+    model = Image
+    upper = Sample
+    form_class = ImageGetForm
+    template_name = "project/default_add.html"
+    title = 'Image Get'
+    success_name = 'image:list'
+
+    def get_file(self, url):
+        if url.startswith('http'):
+            response = requests.get(url)
+            if response.status_code != 200:
+                return None
+            else:
+                data = response.content
+                ctype = response.headers['Content-Type']
+                if ctype == 'image/jpeg':
+                    fname = 'Image.jpg'
+                elif ctype == 'image/png':
+                    fname = 'Image.png'
+                elif ctype == 'image/bmp':
+                    fname = 'Image.bmp'
+                elif ctype == 'image/tiff':
+                    fname = 'Image.tif'
+                else:
+                    return None
+        else:
+            file = self.file_search(url)
+            if file is None:
+                return None
+            else:
+                with file.open('rb') as f:
+                    data = f.read()
+                fname = os.path.basename(file.name)
+        return InMemoryUploadedFile(ContentFile(data), None, fname,
+                                    None, len(data), None)
+
+    def form_valid(self, form):
+        upper = self.upper.objects.get(pk=self.kwargs['pk'])
+        url = form.cleaned_data['url']
+        title = form.cleaned_data['title']
+        note = form.cleaned_data['note']
+        scale = form.cleaned_data['scale']
+        scaleunit = form.cleaned_data['scaleunit']
+        scalepixels = form.cleaned_data['scalepixels']
+        device = form.cleaned_data['device']
+        file = self.get_file(url)
+        if file:
+            self.model.objects.create(created_by=self.request.user, updated_by=self.request.user, upper=upper,
+                                      title=title, note=note, file=file, scale=scale, scaleunit=scaleunit,
+                                      scalepixels=scalepixels, device=device)
+        return super().form_valid(form)
+
 class ListView(base.ListView):
     model = Image
     upper = Sample
     template_name = "project/default_list.html"
     navigation = [['Add', 'image:add'],
+                  ['Get', 'image:get'],
                   ['Import', 'image:import'],
                   ['Download', 'image:download'],
                   ['Search', 'image:search']]
@@ -70,6 +128,7 @@ class EditNoteView(base.EditNoteView):
 class FileView(base.FileView):
     model = Image
     attachment = False
+    use_unique = True
 
 class DownloadView(base.View):
     upper = Sample

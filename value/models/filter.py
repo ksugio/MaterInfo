@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.module_loading import import_string
 from django.urls import reverse
 from django.utils import timezone
-from project.models import Created, Updated, Remote, ModelUploadTo
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from plot.models.item import ColorChoices
 from .value import Value
 from io import StringIO, BytesIO
@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-class Filter(Created, Updated, Remote):
+class Filter(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Value, verbose_name='Value', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))
@@ -41,9 +41,6 @@ class Filter(Created, Updated, Remote):
 
     def get_table_url(self):
         return reverse('value:filter_table', kwargs={'pk': self.id})
-
-    def pathname(self):
-        return '%s/%s' % (self.upper.upper, self.upper)
 
     def entity_id(self):
         if self.alias:
@@ -124,7 +121,7 @@ class Filter(Created, Updated, Remote):
             'Sample_title': self.upper.upper.title,
             'Value_id': self.upper.id,
             'Value_title': self.upper.title,
-            'Value_Filter_id': self.entity_id(),
+            'Upper_id': self.entity_id(),
         }
 
 

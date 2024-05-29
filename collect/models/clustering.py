@@ -1,7 +1,7 @@
 import pandas as pd
 from django.db import models
 from django.urls import reverse
-from project.models import Created, Updated, Remote, ModelUploadTo
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from .filter import Filter
 from .regression_lib import HParam2Dict, Dict2HParam
 from sklearn.pipeline import Pipeline
@@ -97,7 +97,7 @@ class ClusteringObjective:
             else:
                 return -1.0e10
 
-class Clustering(Created, Updated, Remote):
+class Clustering(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Filter, verbose_name='Filter', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))

@@ -3,7 +3,7 @@ from django.utils.module_loading import import_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from project.models import Created, Updated, Remote, ModelUploadTo
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from .image import Image
 from io import BytesIO
 import os
@@ -31,7 +31,7 @@ def PIL2cv(pilimg):
         newimg = cv2.cvtColor(newimg, cv2.COLOR_RGBA2BGRA)
     return newimg
 
-class Filter(Created, Updated, Remote):
+class Filter(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Image, verbose_name='Image', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))
@@ -58,9 +58,6 @@ class Filter(Created, Updated, Remote):
 
     def get_delete_url(self):
         return reverse('image:filter_delete', kwargs={'pk': self.id})
-
-    def pathname(self):
-        return '%s/%s' % (self.upper.upper, self.upper)
 
     def entity_id(self):
         if self.alias:
@@ -150,3 +147,21 @@ class Filter(Created, Updated, Remote):
             elif proc['type'] == 'trim':
                 img = img[proc['starty']:proc['endy'], proc['startx']:proc['endx']]
         return img
+
+    def get_image(self, **kwargs):
+        img = self.upper.read_img()
+        if img is not None:
+            procid = kwargs['procid']
+            img, kwargs = self.procimg(img, procid)
+            return cv2PIL(img)
+
+    def feature(self):
+        return {
+            'Project_id': self.upper.upper.upper.id,
+            'Project_title': self.upper.upper.upper.title,
+            'Sample_id': self.upper.upper.id,
+            'Sample_title': self.upper.upper.title,
+            'Image_id': self.upper.id,
+            'Image_title': self.upper.title,
+            'Upper_id': self.entity_id(),
+        }

@@ -5,13 +5,14 @@ app_name = 'image'
 urlpatterns = [
     # Image
     path('<int:pk>/add', image.AddView.as_view(), name='add'),
+    path('<int:pk>/get', image.GetView.as_view(), name='get'),
     path('<int:pk>/import', image.ImportView.as_view(), name='import'),
     path('<int:pk>/list', image.ListView.as_view(), name='list'),
     path('image/<int:pk>', image.DetailView.as_view(), name='detail'),
     path('image/<int:pk>/update', image.UpdateView.as_view(), name='update'),
     path('image/<int:pk>/delete', image.DeleteView.as_view(), name='delete'),
     path('image/<int:pk>/edit_note', image.EditNoteView.as_view(), name='edit_note'),
-    path('image/<int:pk>/file', image.FileView.as_view(), name='file'),
+    path('image/<str:unique>/file', image.FileView.as_view(), name='file'),
     path('<int:pk>/download', image.DownloadView.as_view(), name='download'),
     path('<int:pk>/search', image.SearchView.as_view(), name='search'),
     # Image API
@@ -29,7 +30,7 @@ urlpatterns = [
     path('filter/<int:pk>/update', filter.UpdateView.as_view(), name='filter_update'),
     path('filter/<int:pk>/edit_note', filter.EditNoteView.as_view(), name='filter_edit_note'),
     path('filter/<int:pk>/delete', filter.DeleteView.as_view(), name='filter_delete'),
-    path('filter/<int:pk>/file', filter.FileView.as_view(), name='filter_file'),
+    path('filter/<str:unique>/file', filter.FileView.as_view(), name='filter_file'),
     path('filter/<int:pk>/image/<int:procid>', filter.ImageView.as_view(), name='filter_image'),
     path('filter/<int:pk>/histgram/<int:procid>', filter.HistgramView.as_view(), name='filter_histgram'),
     # Filter API
@@ -93,7 +94,7 @@ urlpatterns = [
     path('size/<int:pk>/update', size.UpdateView.as_view(), name='size_update'),
     path('size/<int:pk>/edit_note', size.EditNoteView.as_view(), name='size_edit_note'),
     path('size/<int:pk>/delete', size.DeleteView.as_view(), name='size_delete'),
-    path('size/<int:pk>/file', size.FileView.as_view(), name='size_file'),
+    path('size/<str:unique>/file', size.FileView.as_view(), name='size_file'),
     path('size/<int:pk>/plot/<int:plotid>/<int:bins>', size.PlotView.as_view(), name='size_plot'),
     path('size/<int:pk>/plot/image/<int:plotid>/<int:bins>', size.PlotImageView.as_view(), name='size_plot_image'),
     path('size/<int:pk>/contours/<int:gc>/<int:bb>', size.ContoursView.as_view(), name='size_contours'),
@@ -112,9 +113,10 @@ urlpatterns = [
     path('ln2d/<int:pk>/update', ln2d.UpdateView.as_view(), name='ln2d_update'),
     path('ln2d/<int:pk>/edit_note', ln2d.EditNoteView.as_view(), name='ln2d_edit_note'),
     path('ln2d/<int:pk>/delete', ln2d.DeleteView.as_view(), name='ln2d_delete'),
-    path('ln2d/<int:pk>/file', ln2d.FileView.as_view(), name='ln2d_file'),
+    path('ln2d/<str:unique>/file', ln2d.FileView.as_view(), name='ln2d_file'),
     path('ln2d/<int:pk>/plot/<int:plotid>/<int:lnmax>/<int:uniform>', ln2d.PlotView.as_view(), name='ln2d_plot'),
     path('ln2d/<int:pk>/plot/image/<int:plotid>/<int:lnmax>/<int:uniform>', ln2d.PlotImageView.as_view(), name='ln2d_plot_image'),
+    path('ln2d/<int:pk>/image', ln2d.ImageView.as_view(), name='ln2d_image'),
     # LN2D API
     path('api/filter/<int:pk>/ln2d/add', ln2d.AddAPIView.as_view(), name='api_ln2d_add'),
     path('api/filter/<int:pk>/ln2d/list', ln2d.ListAPIView.as_view(), name='api_ln2d_list'),
@@ -129,9 +131,10 @@ urlpatterns = [
     path('imfp/<int:pk>/update', imfp.UpdateView.as_view(), name='imfp_update'),
     path('imfp/<int:pk>/edit_note', imfp.EditNoteView.as_view(), name='imfp_edit_note'),
     path('imfp/<int:pk>/delete', imfp.DeleteView.as_view(), name='imfp_delete'),
-    path('imfp/<int:pk>/file', imfp.FileView.as_view(), name='imfp_file'),
+    path('imfp/<str:unique>/file', imfp.FileView.as_view(), name='imfp_file'),
     path('imfp/<int:pk>/plot/<int:plotid>/<int:nclass>', imfp.PlotView.as_view(), name='imfp_plot'),
     path('imfp/<int:pk>/plot/image/<int:plotid>/<int:nclass>', imfp.PlotImageView.as_view(), name='imfp_plot_image'),
+    path('imfp/<int:pk>/image', imfp.ImageView.as_view(), name='imfp_image'),
     # IMFP API
     path('api/filter/<int:pk>/imfp/add', imfp.AddAPIView.as_view(), name='api_imfp_add'),
     path('api/filter/<int:pk>/imfp/list', imfp.ListAPIView.as_view(), name='api_imfp_list'),

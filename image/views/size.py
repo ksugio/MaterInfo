@@ -2,12 +2,12 @@ from django.http import HttpResponse
 from django.urls import reverse
 from project.views import base, base_api, remote, prefix
 from project.forms import EditNoteForm
-from plot.models.item import Item
 from ..models.filter import Filter, cv2PIL
 from ..models.size import Size
 from ..serializer import SizeSerializer
 from ..forms import ContoursForm, SizeAddForm, SizeUpdateForm, SizePlotForm
 from io import BytesIO
+import json
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -17,10 +17,11 @@ class AddView(prefix.AddPrefixView):
     upper = Filter
     form_class = SizeAddForm
     template_name ="project/default_add.html"
+    title_initial = 'Size'
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class=form_class)
-        form.fields['title'].initial = 'Size' + base.DateToday()[2:]
+        form.fields['title'].initial = self.title_initial + base.DateToday()[2:]
         return form
 
     def form_valid(self, form):
@@ -40,7 +41,22 @@ class ListView(base.ListView):
 class DetailView(base.DetailView):
     model = Size
     template_name = "image/size_detail.html"
+    plot_name = 'image:size_plot'
+    file_name = 'image:size_file'
+    edit_note_name = 'image:size_edit_note'
+    contours_name = 'image:size_contours'
     navigation = []
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        model = self.model.objects.get(pk=self.kwargs['pk'])
+        if model.results:
+            context['results'] = json.loads(model.results)
+        context['plot_name'] = self.plot_name
+        context['file_name'] = self.file_name
+        context['edit_note_name'] = self.edit_note_name
+        context['contours_name'] = self.contours_name
+        return context
 
 class UpdateView(prefix.UpdatePrefixView):
     model = Size
@@ -50,17 +66,8 @@ class UpdateView(prefix.UpdatePrefixView):
     def form_valid(self, form):
         model = form.save(commit=False)
         model.updated_by = self.request.user
-        if model.file:
-            prev = model.file.url
-        else:
-            prev = 'No File'
         model.measure()
-        response = super().form_valid(form)
-        items = Item.objects.filter(url=prev)
-        for item in items:
-            item.url = model.file.url
-            item.save()
-        return response
+        return super().form_valid(form)
 
 class EditNoteView(base.EditNoteView):
     model = Size
@@ -74,6 +81,7 @@ class DeleteView(base.DeleteView):
 class FileView(base.FileView):
     model = Size
     attachment = True
+    use_unique = True
 
 class PlotView(base.FormView):
     model = Size

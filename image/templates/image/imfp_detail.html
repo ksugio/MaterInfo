@@ -20,6 +20,12 @@
         <div class="col">ID : {{ object.id }}</div>
         <div class="col">Status : {{ object.get_status_display }}</div>
         <div class="col">Prefix : {{ object.prefix_display }}</div>
+        {%  if object.category %}
+            <div class="col">Category : {{ object.category }}</div>
+        {% endif %}
+        {%  if object.pred_class %}
+            <div class="col">Class : {{ object.pred_class }}</div>
+        {% endif %}
     </div>
     <div class="row mt-3 g-0">
         <div class="col">{{ object.note | markdown2html | safe }}</div>
@@ -34,12 +40,12 @@
         </thead>
         <tbody>
             <tr>
-                <td><a href="{% url 'image:imfp_plot' object.id 0 1000 %}">Single</a></td>
+                <td><a href="{% url plot_name object.id 0 1000 %}">Single</a></td>
                 <td>{{ object.single_ave }}</td>
                 <td>{{ object.single_std }}</td>
             </tr>
             <tr>
-                <td><a href="{% url 'image:imfp_plot' object.id 1 1000 %}">Double</a></td>
+                <td><a href="{% url plot_name object.id 1 1000 %}">Double</a></td>
                 <td>{{ object.double_ave }}</td>
                 <td>{{ object.double_std }}</td>
             </tr>
@@ -47,7 +53,7 @@
     </table>
     {% if object.file %}
     <div class="row mt-3 g-0">
-        <div class="col">File : {% url 'image:imfp_file' object.id %} <a href="{% url 'image:imfp_file' object.id %}">{% include 'cloud-download-icon.html' %}</a></div>
+        <div class="col">File : {% url file_name object.unique %} <a href="{% url file_name object.unique %}">{% include 'cloud-download-icon.html' %}</a></div>
     </div>
     {% endif %}
     <div class="row mt-3 g-0">
@@ -56,7 +62,8 @@
     </div>
     <div class="mt-3">
         <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
-        <a class="btn btn-primary btn-sm" href="{% url 'image:imfp_edit_note' object.id %}">Edit Note</a>
+        <a class="btn btn-primary btn-sm" href="{% url edit_note_name object.id %}">Edit Note</a>
+        <a class="btn btn-primary btn-sm" href="{% url image_name object.id %}">Image</a>
         {% if object.get_delete_url %}
         <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
         {% endif %}

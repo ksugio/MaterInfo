@@ -11,7 +11,7 @@ class ArticleSerializer(serializers.ModelSerializer):
 class FileSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
-        fields = ('id', 'updated_by', 'updated_at', 'title', 'note', 'file')
+        fields = ('id', 'updated_by', 'updated_at', 'title', 'note', 'file', 'unique')
         read_only_fields = ('id', 'updated_by', 'updated_at')
 
 class DiffSerializer(serializers.ModelSerializer):

@@ -58,7 +58,7 @@ class Process(Updated, Remote):
         hdf = df.isnull().any().to_frame(name='IsNull').T
         df = pd.concat([hdf, df])
         ldf = df.isnull().any(axis=1).to_frame(name='IsNull')
-        ldf['IsNull']['IsNull'] = hdf.sum(axis=1) > 0
+        ldf.loc['IsNull'] = hdf.sum(axis=1) > 0
         df = pd.concat([ldf, df], axis=1)
         if df is not None and self.upper.disp_head + self.upper.disp_tail < df.shape[0]:
             return pd.concat([df.head(self.upper.disp_head), df.tail(self.upper.disp_tail)]), rdf

@@ -1,7 +1,8 @@
 from django.db import models
 from django.urls import reverse
-from project.models import Created, Updated, Remote, ModelUploadTo
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from sample.models import Sample
+from io import BytesIO
 import pandas as pd
 import os
 
@@ -77,7 +78,7 @@ class CSVFile(models.Model):
 def ValueUploadTo(instance, filename):
     return filename
 
-class Value(Created, Updated, Remote, CSVFile):
+class Value(Created, Updated, Remote, Unique, CSVFile):
     upper = models.ForeignKey(Sample, verbose_name='Sample', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))

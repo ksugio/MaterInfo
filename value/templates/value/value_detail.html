@@ -22,7 +22,7 @@
         <div class="col">DataType : {{ object.get_datatype_display }}</div>
     </div>
     <div class="row mt-3 g-0">
-        <div class="col">File : {% url 'value:file' object.id %} <a href="{% url 'value:file' object.id %}">{% include 'cloud-download-icon.html' %}</a></div>
+        <div class="col">File : {% url 'value:file' object.unique %} <a href="{% url 'value:file' object.unique %}">{% include 'cloud-download-icon.html' %}</a></div>
     </div>
     <div class="row mt-3 g-0">
         <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>

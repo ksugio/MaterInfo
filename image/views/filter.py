@@ -6,7 +6,7 @@ from project.views import base, base_api, remote
 from project.forms import AliasForm, EditNoteForm, ImportForm
 from album.models.item import Item
 from ..models.image import Image
-from ..models.filter import Filter, cv2PIL
+from ..models.filter import Filter
 from ..models.process import Process
 from ..serializer import FilterSerializer, FilterAliasSerializer
 from .process_api import ProcessRemote
@@ -136,23 +136,10 @@ class DeleteView(base.DeleteAliasView):
 class FileView(base.FileView):
     model = Filter
     attachment = False
+    use_unique = True
 
-class ImageView(base.View):
+class ImageView(base.ImageView):
     model = Filter
-
-    def get(self, request, **kwargs):
-        filter = self.model.objects.get(pk=kwargs['pk'])
-        procid = kwargs['procid']
-        img = filter.upper.read_img()
-        if img is None:
-            return HttpResponse('Cannot read image file.')
-        img, kwargs = filter.procimg(img, procid)
-        pilimg = cv2PIL(img)
-        buf = BytesIO()
-        pilimg.save(buf, format='png')
-        response = HttpResponse(buf.getvalue(), content_type='image/png')
-        buf.close()
-        return response
 
 class HistgramView(base.View):
     model = Filter

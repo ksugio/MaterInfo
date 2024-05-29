@@ -76,6 +76,11 @@ class DeleteView(base.DeleteView):
     model = Regression
     template_name = "project/default_delete.html"
 
+class FileView(base.FileView):
+    model = Regression
+    attachment = True
+    use_unique = True
+
 class File2View(base.FileView):
     model = Regression
     attachment = True

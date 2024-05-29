@@ -72,6 +72,7 @@ class DeleteView(base.DeleteView):
 class FileView(base.FileView):
     model = Reduction
     attachment = True
+    use_unique = True
 
 class PlotScatterView(base.PlotView):
     model = Reduction

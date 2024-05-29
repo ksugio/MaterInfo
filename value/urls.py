@@ -5,6 +5,7 @@ app_name = 'value'
 urlpatterns = [
     # Value
     path('<int:pk>/add', value.AddView.as_view(), name='add'),
+    path('<int:pk>/get', value.GetView.as_view(), name='get'),
     path('<int:pk>/genarate', value.GenerateView.as_view(), name='generate'),
     path('<int:pk>/import', value.ImportView.as_view(), name='import'),
     path('<int:pk>/list', value.ListView.as_view(), name='list'),
@@ -12,7 +13,7 @@ urlpatterns = [
     path('value/<int:pk>/update', value.UpdateView.as_view(), name='update'),
     path('value/<int:pk>/delete', value.DeleteView.as_view(), name='delete'),
     path('value/<int:pk>/edit_note', value.EditNoteView.as_view(), name='edit_note'),
-    path('value/<int:pk>/file', value.FileView.as_view(), name='file'),
+    path('value/<str:unique>/file', value.FileView.as_view(), name='file'),
     path('value/<int:pk>/table', value.TableView.as_view(), name='table'),
     path('<int:pk>/download', value.DownloadView.as_view(), name='download'),
     path('<int:pk>/search', value.SearchView.as_view(), name='search'),
@@ -30,7 +31,7 @@ urlpatterns = [
     path('filter/<int:pk>', filter.DetailView.as_view(), name='filter_detail'),
     path('filter/<int:pk>/update', filter.UpdateView.as_view(), name='filter_update'),
     path('filter/<int:pk>/edit_note', filter.EditNoteView.as_view(), name='filter_edit_note'),
-    path('filter/<int:pk>/file', filter.FileView.as_view(), name='filter_file'),
+    path('filter/<str:unique>/file', filter.FileView.as_view(), name='filter_file'),
     path('filter/<int:pk>/table', filter.TableView.as_view(), name='filter_table'),
     path('filter/<int:pk>/delete', filter.DeleteView.as_view(), name='filter_delete'),
     # Filter API

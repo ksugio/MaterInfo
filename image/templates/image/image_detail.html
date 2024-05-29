@@ -23,7 +23,7 @@
         <div class="col">Device : {{ object.get_device_display }}</div>
     </div>
     <div class="row mt-3 g-0">
-        <div class="col">File : {% url 'image:file' object.id %}</div>
+        <div class="col">File : {% url 'image:file' object.unique %}</div>
     </div>
     <div class="row mt-3 g-0">
         <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
@@ -38,7 +38,7 @@
     </div>
     {% if object.file %}
     <div class="row mt-3 g-0">
-        <img src="{% url 'image:file' object.id %}" class="img-fluid">
+        <img src="{% url 'image:file' object.unique %}" class="img-fluid">
     </div>
     {% endif %}
 </div>

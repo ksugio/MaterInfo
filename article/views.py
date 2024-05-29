@@ -114,6 +114,7 @@ class FileDeleteView(base.DeleteView):
 class FileFileView(base.FileView):
     model = File
     attachment = False
+    use_unique = True
 
 def PreviousText(model):
     diffs = Diff.objects.filter(upper=model.upper).order_by('-updated_at')

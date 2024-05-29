@@ -5,14 +5,14 @@ from project.views import base, base_api, remote
 from project.models import Project
 from project.forms import EditNoteForm, SearchForm, ImportForm, CloneForm, TokenForm, SetRemoteForm
 from ..models.collect import Collect
-from ..forms import CollectUpdateForm, CollectUploadForm
+from ..forms import CollectAddForm, CollectUpdateForm, CollectLoadForm
 from ..serializer import CollectSerializer
 from .filter import FilterRemote
 
 class AddView(base.AddView):
     model = Collect
     upper = Project
-    fields = ('title', 'note', 'projectids', 'disp_head', 'disp_tail')
+    form_class = CollectAddForm
     template_name ="project/default_add.html"
 
     def get_form(self, form_class=None):
@@ -25,27 +25,13 @@ class AddView(base.AddView):
         model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
         model.created_by = self.request.user
         model.updated_by = self.request.user
-        model.collect_features(self.request.user)
-        return super().form_valid(form)
-
-class UploadView(base.AddView):
-    model = Collect
-    upper = Project
-    form_class = CollectUploadForm
-    template_name ="project/default_add.html"
-    title = 'Collect Upload'
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class=form_class)
-        form.fields['title'].initial = 'Collect' + base.DateToday()[2:]
-        return form
-
-    def form_valid(self, form):
-        model = form.save(commit=False)
-        model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
-        model.created_by = self.request.user
-        model.updated_by = self.request.user
-        model.upload(form.cleaned_data['uploadfile'])
+        method = form.cleaned_data['method']
+        if method == '0':
+            model.collect_features(self.request.user)
+        elif method == '1':
+            model.upload_features(form.cleaned_data['uploadfile'])
+        elif method == '2':
+            model.get_features(form.cleaned_data['url'])
         return super().form_valid(form)
 
 class ListView(base.ListView):
@@ -55,7 +41,6 @@ class ListView(base.ListView):
     navigation = [['Add', 'collect:add'],
                   ['Import', 'collect:import'],
                   ['Clone', 'collect:clone'],
-                  ['Upload', 'collect:upload'],
                   ['Search', 'collect:search']]
 
 class DetailView(base.DetailView):
@@ -84,7 +69,7 @@ class UpdateView(base.UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         model = self.model.objects.get(pk=self.kwargs['pk'])
-        #context['features'] = model.upper_updated_features(self.request.user)
+        context['features'] = model.latest_features(self.request.user)
         return context
 
     def form_valid(self, form):
@@ -106,18 +91,16 @@ class DeleteView(base.DeleteView):
 class FileView(base.FileView):
     model = Collect
     attachment = True
+    use_unique = True
 
-class FeatureUpdateView(base.View):
+class UpdateUpperUpdatedView(base.View):
     model = Collect
-    template_name = "collect/feature_update.html"
-    success_name = "collect:update"
+    template_name = "collect/update_upper_updated.html"
 
     def get(self, request, **kwargs):
         model = self.model.objects.get(pk=kwargs['pk'])
-        features = model.upper_updated_features(request.user)
         params = {
             'object': model,
-            'features': features,
             'brand_name': self.brandName(),
             'breadcrumb_list': self.breadcrumbList(model)
         }
@@ -125,7 +108,7 @@ class FeatureUpdateView(base.View):
 
     def post(self, request, **kwargs):
         model = self.model.objects.get(pk=kwargs['pk'])
-        model.upper_updated_measure_features(request.user)
+        model.update_upper_updated(request.user)
         return redirect(model.get_update_url())
 
 class TableView(base.TableView):

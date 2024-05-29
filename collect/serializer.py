@@ -16,7 +16,7 @@ class CollectSerializer(serializers.ModelSerializer):
         model = Collect
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
                   'title', 'status', 'note', 'projectids', 'disp_head', 'disp_tail',
-                  'file', 'columns_text', 'overview_text')
+                  'file', 'columns_text', 'overview_text', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class FilterSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class FilterSerializer(serializers.ModelSerializer):
         model = Filter
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
                   'title', 'status', 'note', 'disp_head', 'disp_tail', 'hist_bins',
-                  'file', 'columns_text', 'describe')
+                  'file', 'columns_text', 'describe', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class ReductionSerializer(serializers.ModelSerializer):
@@ -32,7 +32,7 @@ class ReductionSerializer(serializers.ModelSerializer):
         model = Reduction
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
                   'title', 'status', 'note', 'scaler', 'method', 'hparam', 'drop',
-                  'label', 'colormap', 'colorbar', 'nplot', 'file', 'results')
+                  'label', 'colormap', 'colorbar', 'nplot', 'file', 'results', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class CorrelationSerializer(serializers.ModelSerializer):
@@ -48,44 +48,46 @@ class ClusteringSerializer(serializers.ModelSerializer):
         model = Clustering
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
                   'title', 'status', 'note', 'scaler', 'reduction', 'n_components',
-                  'method', 'hparam', 'drop', 'colormap', 'ntrials', 'score', 'file', 'results')
+                  'method', 'hparam', 'drop', 'colormap', 'ntrials', 'score', 'file',
+                  'results', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class ClassificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Classification
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
                   'title', 'status', 'note', 'scaler', 'pca', 'n_components', 'method', 'hparam',
-                  'objective', 'drop', 'nsplits', 'random', 'ntrials', 'nplot', 'file', 'file_type', 'results')
+                  'objective', 'drop', 'nsplits', 'random', 'ntrials', 'nplot', 'file', 'file_type',
+                  'results', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class RegressionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Regression
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
                   'title', 'status', 'note', 'scaler', 'pca', 'n_components', 'method', 'hparam',
                   'objective', 'drop', 'nsplits', 'random', 'ntrials', 'nplot', 'file', 'file2',
-                  'file2_type', 'results', 'unique')
+                  'results', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class ClassSHAPSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassSHAP
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'test_size', 'results')
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
+                  'title', 'status', 'note', 'nsample', 'use_kernel', 'results')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class RegreSHAPSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegreSHAP
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'test_size', 'results')
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
+                  'title', 'status', 'note', 'nsample', 'use_kernel', 'results')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class InverseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Inverse
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
                   'title', 'status', 'note', 'regression1', 'target1', 'regression2', 'target2',
                   'regression3', 'target3', 'ntrials', 'seed', 'file')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')

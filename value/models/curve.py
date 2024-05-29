@@ -43,9 +43,6 @@ class Curve(Created, Updated, Remote, PrefixPtr):
     def get_plot_url(self):
         return reverse('value:curve_plot', kwargs={'pk': self.id})
 
-    def pathname(self):
-        return '%s/%s/%s' % (self.upper.upper.upper, self.upper.upper, self.upper)
-
     def get_lmmodel(self):
         if self.alias:
             upper = Curve.objects.get(pk=self.alias)
@@ -115,14 +112,6 @@ class Curve(Created, Updated, Remote, PrefixPtr):
 
     def upper_updated(self):
         return self.updated_at < self.upper.recent_updated_at()
-
-    def upper_updated_measure(self):
-        if self.upper_updated():
-            self.measure()
-            self.save()
-            return True
-        else:
-            return False
 
     def feature(self):
         if self.status or self.upper.status or self.upper.upper.status or self.upper.upper.upper.status:

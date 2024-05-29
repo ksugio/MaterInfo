@@ -34,7 +34,7 @@ class Item(Updated, Remote, FileSearch):
     def get_image_url(self):
         return reverse('album:item_image', kwargs={'pk': self.id})
 
-    def get_image(self):
+    def get_image(self, **kwargs):
         if self.url.startswith('http'):
             response = requests.get(self.url)
             if response.status_code != 200 or 'image' not in response.headers['Content-Type']:
@@ -60,4 +60,5 @@ class Item(Updated, Remote, FileSearch):
         else:
             return src
 
-
+    def detail_url(self):
+        return self.detail_search(self.url)

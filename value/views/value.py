@@ -1,17 +1,21 @@
 from django.http import HttpResponse
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from config.settings import VALUE_LOWER
 from django.shortcuts import render
 from project.views import base, base_api, remote
 from project.forms import EditNoteForm, ImportForm, SearchForm
+from project.models import FileSearch
 from sample.models import Sample
 from ..models.value import Value
 from ..serializer import ValueSerializer
-from ..forms import ValueAddForm, ValueUpdateForm, GenerateForm
+from ..forms import ValueAddForm, ValueUpdateForm, ValueGenerateForm, ValueGetForm
 import pandas as pd
 import numpy as np
 import os
 import datetime
 import zipfile
+import requests
 
 class AddView(base.FormView):
     model = Value
@@ -44,10 +48,59 @@ class AddView(base.FormView):
                                       datatype=datatype, disp_head=disp_head, disp_tail=disp_tail)
         return super().form_valid(form)
 
+class GetView(base.FormView, FileSearch):
+    model = Value
+    upper = Sample
+    form_class = ValueGetForm
+    template_name = "project/default_add.html"
+    title = 'Value Get'
+    success_name = 'value:list'
+
+    def get_file(self, url):
+        if url.startswith('http'):
+            response = requests.get(url)
+            if response.status_code != 200:
+                return None
+            else:
+                data = response.content
+        else:
+            file = self.file_search(url)
+            if file is None:
+                return None
+            else:
+                with file.open('r') as f:
+                    data = f.read()
+        return InMemoryUploadedFile(ContentFile(data), None,
+                                    'Value.csv', None, len(data), None)
+
+    def form_valid(self, form):
+        upper = self.upper.objects.get(pk=self.kwargs['pk'])
+        url = form.cleaned_data['url']
+        title = form.cleaned_data['title']
+        note = form.cleaned_data['note']
+        delimiter = form.cleaned_data['delimiter']
+        encoding = form.cleaned_data['encoding']
+        skiprows = form.cleaned_data['skiprows']
+        skipends = form.cleaned_data['skipends']
+        header = form.cleaned_data['header']
+        startstring = form.cleaned_data['startstring']
+        endstring = form.cleaned_data['endstring']
+        datatype = form.cleaned_data['datatype']
+        disp_head = form.cleaned_data['disp_head']
+        disp_tail = form.cleaned_data['disp_tail']
+        file = self.get_file(url)
+        if file:
+            self.model.objects.create(created_by=self.request.user, updated_by=self.request.user, upper=upper,
+                                      title=title, note=note, file=file, delimiter=delimiter, encoding=encoding,
+                                      skiprows=skiprows, skipends=skipends, header=header,
+                                      startstring=startstring, endstring=endstring,
+                                      datatype=datatype, disp_head=disp_head, disp_tail=disp_tail)
+        return super().form_valid(form)
+
 class GenerateView(base.FormView):
     model = Value
     upper = Sample
-    form_class = GenerateForm
+    form_class = ValueGenerateForm
     template_name = "project/default_add.html"
     title = 'Value Generate'
     success_name = 'value:list'
@@ -90,6 +143,7 @@ class ListView(base.ListView):
     upper = Sample
     template_name = "project/default_list.html"
     navigation = [['Add', 'value:add'],
+                  ['Get', 'value:get'],
                   ['Generate', 'value:generate'],
                   ['Import', 'value:import'],
                   ['Download', 'value:download'],
@@ -123,6 +177,7 @@ class EditNoteView(base.EditNoteView):
 class FileView(base.FileView):
     model = Value
     attachment = True
+    use_unique = True
 
 class TableView(base.TableView):
     model = Value

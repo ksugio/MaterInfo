@@ -22,5 +22,5 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = ('id', 'updated_by', 'updated_at', 'url', 'columnx', 'columny', 'type',
                   'color', 'edgecolor', 'linewidth', 'linestyle', 'marker', 'markersize',
-                  'bins', 'label', 'order')
+                  'bins', 'columnc', 'colormap', 'label', 'order')
         read_only_fields = ('id', 'updated_by', 'updated_at')

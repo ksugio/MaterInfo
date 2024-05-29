@@ -1,7 +1,7 @@
 from django.db.models import Q
 from project.views import base, base_api, remote
 from project.models import Project, Prefix
-from ..forms import EditNoteForm
+from ..forms import EditNoteForm, ImportForm
 from ..serializer import PrefixSerializer
 
 class AddView(base.AddView):
@@ -14,7 +14,8 @@ class ListView(base.ListView):
     model = Prefix
     upper = Project
     template_name = "project/prefix_list.html"
-    navigation = [['Add', 'project:prefix_add'],]
+    navigation = [['Add', 'project:prefix_add'],
+                  ['Import', 'project:prefix_import']]
     paginate_by = 12
 
 class DetailView(base.DetailView):
@@ -42,11 +43,11 @@ class AddPrefixView(base.AddView):
         project = base.ProjectModel(upper)
         prefix = Prefix.objects.filter(upper=project)
         if self.model.default_prefix:
-            choices = [(0, self.model.default_prefix)]
+            choices = [('000000', self.model.default_prefix)]
         else:
-            choices = [(0, self.model.__name__)]
+            choices = [('000000', self.model.__name__)]
         for p in prefix:
-            choices.append((p.id, p.prefix))
+            choices.append((p.unique, p.prefix))
         form = super().get_form(form_class=form_class)
         form.fields['prefix'].choices = choices
         return form
@@ -60,11 +61,11 @@ class UpdatePrefixView(base.UpdateView):
         project = base.ProjectModel(model)
         prefix = Prefix.objects.filter(upper=project)
         if self.model.default_prefix:
-            choices = [(0, self.model.default_prefix)]
+            choices = [('000000', self.model.default_prefix)]
         else:
-            choices = [(0, self.model.__name__)]
+            choices = [('000000', self.model.__name__)]
         for p in prefix:
-            choices.append((p.id, p.prefix))
+            choices.append((p.unique, p.prefix))
         form = super().get_form(form_class=form_class)
         form.fields['prefix'].choices = choices
         return form
@@ -81,7 +82,7 @@ class PrefixSearch(base.Search):
 
 # API
 class AddAPIView(base_api.AddAPIView):
-    upper = Prefix
+    upper = Project
     serializer_class = PrefixSerializer
 
 class ListAPIView(base_api.ListAPIView):
@@ -104,3 +105,13 @@ class PrefixRemote(remote.Remote):
     retrieve_name = 'project:api_prefix_retrieve'
     update_name = 'project:api_prefix_update'
     serializer_class = PrefixSerializer
+
+class ImportView(remote.ImportView):
+    model = Prefix
+    upper = Project
+    form_class = ImportForm
+    remote_class = PrefixRemote
+    template_name = "project/default_import.html"
+    title = 'Prefix Import'
+    success_name = 'prefix:list'
+    view_name = 'prefix:detail'

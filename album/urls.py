@@ -9,7 +9,7 @@ urlpatterns = [
     path('album/<int:pk>/update', album.UpdateView.as_view(), name='update'),
     path('album/<int:pk>/edit_note', album.EditNoteView.as_view(), name='edit_note'),
     path('album/<int:pk>/delete', album.DeleteView.as_view(), name='delete'),
-    path('album/<int:pk>/file', album.FileView.as_view(), name='file'),
+    path('album/<str:unique>/file', album.FileView.as_view(), name='file'),
     # API
     path('api/<int:pk>/add', album.AddAPIView.as_view(), name='api_add'),
     path('api/<int:pk>/list', album.ListAPIView.as_view(), name='api_list'),

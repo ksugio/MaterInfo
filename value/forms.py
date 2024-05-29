@@ -43,7 +43,7 @@ class ValueUpdateForm(forms.ModelForm):
             'file': ClearableFileInput(),
         }
 
-class GenerateForm(forms.Form):
+class ValueGenerateForm(forms.Form):
     title = forms.CharField(label='Title', max_length=100)
     note = forms.CharField(label='Note', widget=forms.Textarea, required=False)
     TYPE_CHOICES = ((0, 'Range'), (1, 'Linear'),  (2, 'Uniform Random'), (3, 'Normal Random'))
@@ -56,6 +56,22 @@ class GenerateForm(forms.Form):
     high = forms.FloatField(label='High', initial=1.0)
     mean = forms.FloatField(label='Mean', initial=0.0)
     std = forms.FloatField(label='STD', initial=1.0)
+
+class ValueGetForm(forms.Form):
+    url = forms.CharField(label='URL', max_length=256, required=True,
+                          widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
+    title = forms.CharField(label='Title', max_length=100)
+    note = forms.CharField(label='Note', widget=forms.Textarea, required=False)
+    delimiter = forms.ChoiceField(label='Delimiter', choices=CSVFile.DelimiterChoices, initial=0)
+    encoding = forms.ChoiceField(label='Encoding', choices=CSVFile.EncodingChoices, initial=0)
+    skiprows = forms.IntegerField(label='Skiprows', initial=0)
+    skipends = forms.IntegerField(label='Skipends', initial=0)
+    header = forms.BooleanField(label='Header', initial=False, required=False)
+    startstring = forms.CharField(label='Start String', max_length=100, required=False)
+    endstring = forms.CharField(label='End String', max_length=100, required=False)
+    datatype = forms.ChoiceField(label='Data type', choices=Value.DataTypeChoices, initial=0)
+    disp_head = forms.IntegerField(label='Display Head', initial=50)
+    disp_tail = forms.IntegerField(label='Display Tail', initial=50)
 
 class AggregateAddForm(forms.ModelForm):
     prefix = forms.fields.ChoiceField(label='Prefix')

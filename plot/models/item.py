@@ -70,6 +70,24 @@ MarkerChoices = ((0, 'point'), (1, 'pixel'), (2, 'circle'),
 Markers = ['.', ',', 'o', 'v', '^', '<', '>', '1', '2', '3', '4',
            '8', 's', 'p', '*', 'h', 'H', '+', 'x', 'D', 'd', '|', '-']
 
+ColormapChoices = ((0, 'viridis'), (1, 'plasma'), (2, 'inferno'), (3, 'magma'), (4, 'cividis'),
+                   (5, 'Greys'), (6, 'Purples'), (7, 'Blues'), (8, 'Greens'), (9, 'Oranges'),
+                   (10, 'Reds'), (11, 'YlOrBr'), (12, 'YlOrRd'), (13, 'OrRd'), (14, 'PuRd'),
+                   (15, 'RdPu'), (16, 'BuPu'), (17, 'GnBu'), (18, 'PuBu'), (19, 'YlGnBu'),
+                   (20, 'PuBuGn'), (21, 'BuGn'), (22, 'YlGn'), (23, 'binary'), (24, 'gist_yarg'),
+                   (25, 'gist_gray'), (26, 'gray'), (27, 'bone'), (28, 'pink'), (29, 'spring'),
+                   (30, 'summer'), (31, 'autumn'), (32, 'winter'), (33, 'cool'), (34, 'Wistia'),
+                   (35, 'hot'), (36, 'afmhot'), (37, 'gist_heat'), (38, 'copper'), (39, 'PiYG'),
+                   (40, 'PRGn'), (41, 'BrBG'), (42, 'PuOr'), (43, 'RdGy'), (44, 'RdBu'),
+                   (45, 'RdYlBu'), (46, 'RdYlGn'), (47, 'Spectral'), (48, 'coolwarm'), (49, 'bwr'),
+                   (50, 'seismic'), (51, 'twilight'), (52, 'twilight_shifted'), (53, 'hsv'), (54, 'Pastel1'),
+                   (55, 'Pastel2'), (56, 'Paired'), (57, 'Accent'), (58, 'Dark2'), (59, 'Set1'),
+                   (60, 'Set2'), (61, 'Set3'), (62, 'tab10'), (63, 'tab20'), (64, 'tab20b'),
+                   (65, 'tab20c'), (66, 'flag'), (67, 'prism'), (68, 'ocean'), (69, 'gist_earth'),
+                   (70, 'terrain'), (71, 'gist_stern'), (72, 'gnuplot'), (73, 'gnuplot2'), (74, 'CMRmap'),
+                   (75, 'cubehelix'), (76, 'brg'), (77, 'gist_rainbow'), (78, 'rainbow'), (79, 'jet'),
+                   (80, 'turbo'), (81, 'nipy_spectral'), (82, 'gist_ncar'))
+
 class Item(Updated, Remote, FileSearch):
     upper = models.ForeignKey(Area, verbose_name='Plot area', on_delete=models.CASCADE)
     url = models.CharField(verbose_name='URL', max_length=256)
@@ -84,6 +102,8 @@ class Item(Updated, Remote, FileSearch):
     marker = models.PositiveSmallIntegerField(verbose_name='Marker', choices=MarkerChoices, default=0)
     markersize = models.PositiveSmallIntegerField(verbose_name='Marker size', default=20)
     bins = models.PositiveSmallIntegerField(verbose_name='Bins', default=10)
+    columnc = models.CharField(verbose_name='Column Color', max_length=100, blank=True)
+    colormap = models.PositiveSmallIntegerField(verbose_name='Colormap', choices=ColormapChoices, default=0)
     label = models.CharField(verbose_name='Label', max_length=100, blank=True)
     order = models.SmallIntegerField(verbose_name='Order')
 
@@ -106,7 +126,7 @@ class Item(Updated, Remote, FileSearch):
         if self.url.startswith('http'):
             response = requests.get(self.url)
             if response.status_code != 200:
-                return [0, 0], [0, 0]
+                return [0, 0], [0, 0], None
             else:
                 buf = BytesIO(response.content)
                 df = pd.read_csv(buf)
@@ -114,7 +134,7 @@ class Item(Updated, Remote, FileSearch):
         else:
             file = self.file_search(self.url)
             if file is None:
-                return [0, 0], [0, 0]
+                return [0, 0], [0, 0], None
             else:
                 with file.open('r') as f:
                     df = pd.read_csv(f)
@@ -126,26 +146,38 @@ class Item(Updated, Remote, FileSearch):
             y = df[self.columny]
         else:
             y = df.index.values
-        return x, y
+        if self.columnc in df.columns.values:
+            c = df[self.columnc]
+        else:
+            c = None
+        return x, y, c
 
     def plot(self, host):
         if self.type == 0:
-            x, y = self.get_xy(host)
+            x, y, c = self.get_xy(host)
             plt.plot(x, y, linewidth=self.linewidth, linestyle=LineStyles[self.linestyle],
                      color=self.get_color_display(), label=self.label)
         elif self.type == 1:
-            x, y = self.get_xy(host)
+            x, y, c = self.get_xy(host)
             plt.plot(x, y, linewidth=self.linewidth, linestyle=LineStyles[self.linestyle],
                      color=self.get_color_display(), marker=Markers[self.marker], label=self.label)
         elif self.type == 2:
-            x, y = self.get_xy(host)
-            plt.scatter(x, y, color=self.get_color_display(), edgecolors=self.get_edgecolor_display(),
-                        marker=Markers[self.marker], s=self.markersize, label=self.label)
+            x, y, c = self.get_xy(host)
+            if c is None:
+                plt.scatter(x, y, color=self.get_color_display(), edgecolors=self.get_edgecolor_display(),
+                            marker=Markers[self.marker], s=self.markersize, label=self.label)
+            else:
+                cmap = plt.cm.get_cmap(self.get_colormap_display())
+                plt.scatter(x, y, marker=Markers[self.marker], s=self.markersize, label=self.label,
+                            c=c, cmap=cmap)
         elif self.type == 3:
-            x, y = self.get_xy(host)
+            x, y, c = self.get_xy(host)
             plt.bar(x, y, color=self.get_color_display(), edgecolor=self.get_edgecolor_display(),
                     linewidth=self.linewidth, align='center', label=self.label)
         elif self.type == 4:
-            x, y = self.get_xy(host)
+            x, y, c = self.get_xy(host)
             plt.hist(x, color=self.get_color_display(), edgecolor=self.get_edgecolor_display(),
                      bins=self.bins)
+
+    def detail_url(self):
+        return self.detail_search(self.url)

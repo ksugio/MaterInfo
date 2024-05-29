@@ -423,13 +423,20 @@ class FileView(LoginRequiredMixin, UserPassesTestMixin, generic.View):
     model = None
     attachment = False
     field = 'file'
+    use_unique = False
 
     def test_func(self):
-        model = get_object_or_404(self.model, id=self.kwargs['pk'])
+        if self.use_unique:
+            model = get_object_or_404(self.model, unique=self.kwargs['unique'])
+        else:
+            model = get_object_or_404(self.model, id=self.kwargs['pk'])
         return self.request.user in ProjectMember(model)
 
     def get_file(self, **kwargs):
-        model = self.model.objects.get(pk=kwargs['pk'])
+        if self.use_unique:
+            model = self.model.objects.get(unique=kwargs['unique'])
+        else:
+            model = self.model.objects.get(pk=kwargs['pk'])
         file = getattr(model, self.field)
         filename = os.path.basename(file.name)
         return file, filename
@@ -485,11 +492,35 @@ class TableView(LoginRequiredMixin, UserPassesTestMixin, generic.View):
         attr = getattr(model, self.methods)
         if callable(attr):
             df = attr(**kwargs)
-        buf = StringIO()
-        df.to_html(buf)
-        table = buf.getvalue()
-        buf.close()
-        return render(request, self.template_name, {'table' : table})
+            if df is not None:
+                buf = StringIO()
+                df.to_html(buf)
+                table = buf.getvalue()
+                buf.close()
+                return render(request, self.template_name, {'table' : table})
+        return render(request, self.template_name)
+
+class ImageView(LoginRequiredMixin, UserPassesTestMixin, generic.View):
+    model = None
+    methods = 'get_image'
+
+    def test_func(self):
+        model = get_object_or_404(self.model, id=self.kwargs['pk'])
+        return self.request.user in ProjectMember(model)
+
+    def get(self, request, **kwargs):
+        model = self.model.objects.get(pk=kwargs['pk'])
+        attr = getattr(model, self.methods)
+        if callable(attr):
+            pilimg = attr(**kwargs)
+            if pilimg is None:
+                response = HttpResponse('Cannot read image file.')
+            else:
+                buf = BytesIO()
+                pilimg.save(buf, format='png')
+                response = HttpResponse(buf.getvalue(), content_type='image/png')
+                buf.close()
+            return response
 
 class Search:
     def search_queries(self, texts, cond):

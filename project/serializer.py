@@ -17,5 +17,6 @@ class MemberSerializer(serializers.ModelSerializer):
 class PrefixSerializer(serializers.ModelSerializer):
     class Meta:
         model = Prefix
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'prefix', 'note')
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
+                  'prefix', 'note', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')

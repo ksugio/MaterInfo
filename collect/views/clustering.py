@@ -64,6 +64,11 @@ class DeleteView(base.DeleteView):
     model = Clustering
     template_name = "project/default_delete.html"
 
+class FileView(base.FileView):
+    model = Clustering
+    attachment = True
+    use_unique = True
+
 class PlotView(base.PlotView):
     model = Clustering
 

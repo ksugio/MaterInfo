@@ -10,6 +10,27 @@ from .models.regression import Regression
 from .models.regression_lib import HParam2Dict, RegressionModel
 from .models.inverse import Inverse
 
+class CollectAddForm(forms.ModelForm):
+    method = forms.ChoiceField(label='Method', choices=((0, 'Collect'), (1, 'Upload'), (2, 'Get')), initial=0)
+    uploadfile = forms.fields.FileField(label='File', required=False)
+    url = forms.CharField(label='URL', max_length=256, required=False,
+                          widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        method = cleaned_data['method']
+        uploadfile = cleaned_data['uploadfile']
+        url = cleaned_data['url']
+        if method == '1' and not uploadfile:
+            raise forms.ValidationError("File is required for upload method.")
+        elif method == '2' and not url:
+            raise forms.ValidationError("URL is required for get method.")
+
+    class Meta:
+        model = Collect
+        fields = ('title', 'note', 'projectids', 'disp_head', 'disp_tail')
+
+
 class CollectUpdateForm(forms.ModelForm):
     collect = forms.fields.BooleanField(label='Collect', required=False, initial=False)
 
@@ -17,8 +38,10 @@ class CollectUpdateForm(forms.ModelForm):
         model = Collect
         fields = ('title', 'status', 'note', 'projectids', 'disp_head', 'disp_tail')
 
-class CollectUploadForm(forms.ModelForm):
-    uploadfile = forms.fields.FileField(label='File', required=True)
+class CollectLoadForm(forms.ModelForm):
+    uploadfile = forms.fields.FileField(label='File', required=False)
+    url = forms.CharField(label='URL', max_length=256, required=False,
+                          widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
 
     class Meta:
         model = Collect

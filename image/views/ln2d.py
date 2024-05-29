@@ -19,10 +19,11 @@ class AddView(prefix.AddPrefixView):
     upper = Filter
     form_class = LN2DAddForm
     template_name ="project/default_add.html"
+    title_initial = 'LN2D'
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class=form_class)
-        form.fields['title'].initial = 'LN2D' + base.DateToday()[2:]
+        form.fields['title'].initial = self.title_initial + base.DateToday()[2:]
         form.fields['randseed'].initial = randint(0, 2147483647)
         return form
 
@@ -43,7 +44,19 @@ class ListView(base.ListView):
 class DetailView(base.DetailView):
     model = LN2D
     template_name = "image/ln2d_detail.html"
+    plot_name = 'image:ln2d_plot'
+    file_name = 'image:ln2d_file'
+    edit_note_name = 'image:ln2d_edit_note'
+    image_name = 'image:ln2d_image'
     navigation = []
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['plot_name'] = self.plot_name
+        context['file_name'] = self.file_name
+        context['edit_note_name'] = self.edit_note_name
+        context['image_name'] = self.image_name
+        return context
 
 class UpdateView(prefix.UpdatePrefixView):
     model = LN2D
@@ -53,17 +66,8 @@ class UpdateView(prefix.UpdatePrefixView):
     def form_valid(self, form):
         model = form.save(commit=False)
         model.updated_by = self.request.user
-        if model.file:
-            prev = model.file.url
-        else:
-            prev = 'No File'
         model.measure()
-        response = super().form_valid(form)
-        items = Item.objects.filter(url=prev)
-        for item in items:
-            item.url = model.file.url
-            item.save()
-        return response
+        return super().form_valid(form)
 
 class EditNoteView(base.EditNoteView):
     model = LN2D
@@ -77,6 +81,7 @@ class DeleteView(base.DeleteView):
 class FileView(base.FileView):
     model = LN2D
     attachment = True
+    use_unique = True
 
 class PlotView(base.FormView):
     model = LN2D
@@ -150,6 +155,9 @@ class PlotImageView(base.View):
         buf.close()
         plt.close()
         return HttpResponse(svg, content_type='image/svg+xml')
+
+class ImageView(base.ImageView):
+    model = LN2D
 
 class LN2DSearch(base.Search):
     model = LN2D

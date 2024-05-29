@@ -6,7 +6,7 @@ from accounts.models import CustomUser
 from config.settings import RANDOM_STRING_LENGTH, FILE_ITEMS
 import requests
 import os
-import uuid
+import json
 
 def UploadTo(instance, filename):
     split = os.path.splitext(os.path.basename(filename))
@@ -36,7 +36,10 @@ def UpperModelUploadTo(instance, filename):
         return '%s/%s' % (instance.updated_by.username, newname)
 
 def UniqueID():
-    return str(uuid.uuid4())
+    pass
+
+def UniqueStr():
+    return crypto.get_random_string(length=RANDOM_STRING_LENGTH)
 
 class Created(models.Model):
     upper = None
@@ -90,6 +93,12 @@ class Client(models.Model):
     class Meta:
         abstract = True
 
+class Unique(models.Model):
+    unique = models.CharField(verbose_name='Unique String', max_length=36, default=UniqueStr)
+
+    class Meta:
+        abstract = True
+
 class Project(Created, Updated, RemoteRoot):
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Active'), (1, 'Stop'), (2, 'Finish'), (3, 'Published'))
@@ -115,20 +124,15 @@ def CreateUserProject(user):
     proj.save()
     return proj
 
-# @receiver(post_save, sender=CustomUser)
-# def create_project(sender, **kwargs):
-#     if kwargs['created']:
-#         user = kwargs['instance']
-#         proj = Project.objects.create(created_by=user, updated_by=user, title=user.username + 'Project')
-#         proj.member.add(user)
-#         proj.save()
-
-class Prefix(Created, Updated, Remote):
+class Prefix(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Project, verbose_name='Project', on_delete=models.CASCADE)
     prefix = models.CharField(verbose_name='Prefix', max_length=100)
     note = models.TextField(verbose_name='Note', blank=True)
 
     def __str__(self):
+        return self.prefix
+
+    def title(self):
         return self.prefix
 
     def get_list_url(self):
@@ -141,12 +145,12 @@ class Prefix(Created, Updated, Remote):
         return reverse('project:prefix_update', kwargs={'pk': self.id})
 
 class PrefixPtr(models.Model):
-    prefix = models.PositiveIntegerField(verbose_name='Prefix', default=0)
+    prefix = models.CharField(verbose_name='Prefix', max_length=36, blank=True)
     default_prefix = ''
 
     def prefix_display(self):
         try:
-            return Prefix.objects.get(id=self.prefix).prefix
+            return Prefix.objects.get(unique=self.prefix).prefix
         except:
             if self.default_prefix:
                 return self.default_prefix
@@ -169,14 +173,28 @@ class PrefixPtr(models.Model):
         abstract = True
 
 class FileSearch:
-    def file_search(self, url):
+    def model_search(self, url):
         for dic in FILE_ITEMS:
             lurl = url.split('/')
             path = reverse(dic['FileName'], args=range(1))
             lpath = path.split('/')
             if lurl[:-2] == lpath[:-2] and lurl[-1] == lpath[-1]:
                 cls = import_string(dic['Model'])
-                model = cls.objects.filter(pk=lurl[-2])
+                model = cls.objects.filter(unique=lurl[-2])
                 if model:
-                    return getattr(model[0], dic['FileField'])
-        return None
+                    return model[0], dic
+        return None, None
+
+    def file_search(self, url):
+        model, dic = self.model_search(url)
+        if model:
+            return getattr(model, dic['FileField'])
+        else:
+            return None
+
+    def detail_search(self, url):
+        model, dic = self.model_search(url)
+        if model and 'DetailName' in dic:
+            return reverse(dic['DetailName'], kwargs={'pk': model.id})
+        else:
+            return None

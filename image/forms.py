@@ -37,6 +37,16 @@ class ImageUpdateForm(forms.ModelForm):
             'file': ClearableFileInput(),
         }
 
+class ImageGetForm(forms.Form):
+    url = forms.CharField(label='URL', max_length=256, required=True,
+                          widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
+    title = forms.CharField(label='Title', max_length=100)
+    note = forms.CharField(label='None', widget=forms.Textarea, required=False)
+    scale = forms.FloatField(label='Scale', initial=1.0)
+    scaleunit = forms.ChoiceField(label='Scale unit', choices=Image.UnitChoices, initial=0)
+    scalepixels = forms.IntegerField(label='Scale pixels', initial=1)
+    device = forms.ChoiceField(label='Device', choices=Image.DeviceChoices, initial=0)
+
 class ContoursForm(forms.Form):
     gc = forms.BooleanField(label='Gravity Center', required=False)
     bb = forms.BooleanField(label='Bounding Box', required=False)

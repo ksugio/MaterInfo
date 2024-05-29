@@ -2,7 +2,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from accounts.models import CustomUser
-from project.models import Created, Updated, RemoteRoot, Remote, Project, UpperModelUploadTo
+from project.models import Created, Updated, RemoteRoot, Remote, Project, UpperModelUploadTo, Unique
 import os
 
 def ArticleUploadTo(instance, filename):
@@ -36,7 +36,7 @@ class Article(Created, Updated, RemoteRoot):
     def get_public_url(self):
         return reverse('article:public_detail', kwargs={'pk': self.id})
 
-class File(Updated, Remote):
+class File(Updated, Remote, Unique):
     upper = models.ForeignKey(Article, verbose_name='Article', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     note = models.TextField(verbose_name='Note', blank=True)

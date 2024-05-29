@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.module_loading import import_string
 from django.urls import reverse
 from django.utils import timezone
-from project.models import Created, Updated, Remote, ModelUploadTo
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from .collect import Collect, HeadColumns
 from io import BytesIO
 import os
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 def FilterUploadTo(instance, filename):
     return filename
 
-class Filter(Created, Updated, Remote):
+class Filter(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Collect, verbose_name='Collect', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))
@@ -45,9 +45,6 @@ class Filter(Created, Updated, Remote):
 
     def get_table_url(self):
         return reverse('collect:filter_table', kwargs={'pk': self.id})
-
-    def pathname(self):
-        return '%s/%s' % (self.upper.upper, self.upper)
 
     def process_updated_at(self):
         cls = import_string('collect.models.process.Process')
@@ -109,7 +106,7 @@ class Filter(Created, Updated, Remote):
         hdf = df.isnull().any().to_frame(name='IsNull').T
         df = pd.concat([hdf, df])
         ldf = df.isnull().any(axis=1).to_frame(name='IsNull')
-        ldf['IsNull']['IsNull'] = hdf.sum(axis=1) > 0
+        ldf.loc['IsNull'] = hdf.sum(axis=1) > 0
         df = pd.concat([ldf, df], axis=1)
         if df is not None and self.disp_head + self.disp_tail < df.shape[0]:
             return pd.concat([df.head(self.disp_head), df.tail(self.disp_tail)])

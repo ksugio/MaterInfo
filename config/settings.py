@@ -678,37 +678,80 @@ FILE_ITEMS = [
     {
         'Model': 'album.models.album.Album',
         'FileName': 'album:file',
-        'FileField': 'file'
+        'FileField': 'file',
+        'DetailName': 'album:detail'
     },
     {
         'Model': 'image.models.image.Image',
         'FileName': 'image:file',
-        'FileField': 'file'
+        'FileField': 'file',
+        'DetailName': 'image:detail'
     },
     {
         'Model': 'image.models.filter.Filter',
         'FileName': 'image:filter_file',
-        'FileField': 'file'
-    },
-    {
-        'Model': 'value.models.filter.Filter',
-        'FileName': 'value:filter_file',
-        'FileField': 'file'
+        'FileField': 'file',
+        'DetailName': 'image:filter_detail'
     },
     {
         'Model': 'image.models.size.Size',
         'FileName': 'image:size_file',
-        'FileField': 'file'
+        'FileField': 'file',
+        'DetailName': 'image:size_detail'
     },
     {
         'Model': 'image.models.ln2d.LN2D',
         'FileName': 'image:ln2d_file',
-        'FileField': 'file'
+        'FileField': 'file',
+        'DetailName': 'image:ln2d_detail'
     },
     {
         'Model': 'image.models.imfp.IMFP',
         'FileName': 'image:imfp_file',
-        'FileField': 'file'
+        'FileField': 'file',
+        'DetailName': 'image:imfp_detail'
+    },
+    {
+        'Model': 'value.models.value.Value',
+        'FileName': 'value:file',
+        'FileField': 'file',
+        'DetailName': 'value:detail'
+    },
+    {
+        'Model': 'value.models.filter.Filter',
+        'FileName': 'value:filter_file',
+        'FileField': 'file',
+        'DetailName': 'value:filter_detail'
+    },
+    {
+        'Model': 'collect.models.collect.Collect',
+        'FileName': 'collect:file',
+        'FileField': 'file',
+        'DetailName': 'collect:detail'
+    },
+    {
+        'Model': 'collect.models.filter.Filter',
+        'FileName': 'collect:filter_file',
+        'FileField': 'file',
+        'DetailName': 'collect:filter_detail'
+    },
+    {
+        'Model': 'collect.models.reduction.Reduction',
+        'FileName': 'collect:reduction_file',
+        'FileField': 'file',
+        'DetailName': 'collect:reduction_detail'
+    },
+    {
+        'Model': 'collect.models.clustering.Clustering',
+        'FileName': 'collect:clustering_file',
+        'FileField': 'file',
+        'DetailName': 'collect:clustering_detail'
+    },
+    {
+        'Model': 'collect.models.regression.Regression',
+        'FileName': 'collect:regression_file',
+        'FileField': 'file',
+        'DetailName': 'collect:regression_detail'
     },
     {
         'Model': 'article.models.File',

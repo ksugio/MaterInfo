@@ -10,15 +10,16 @@ class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'file',
-                  'scale', 'scaleunit', 'scalepixels', 'device')
+                  'title', 'status', 'note', 'file', 'scale', 'scaleunit', 'scalepixels',
+                  'device', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class FilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Filter
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'template', 'format', 'alias', 'file', 'pixelsize')
+                  'title', 'status', 'note', 'template', 'format', 'alias', 'file',
+                  'pixelsize', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class FilterAliasSerializer(serializers.Serializer):
@@ -38,13 +39,8 @@ class SizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Size
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'prefix', 'mindia', 'areafraction', 'numberdensity',
-                  'diameter_mean', 'diameter_std', 'diameter_min', 'diameter_median', 'diameter_max',
-                  'longside_mean', 'longside_std', 'longside_min', 'longside_median', 'longside_max',
-                  'narrowside_mean', 'narrowside_std', 'narrowside_min', 'narrowside_median', 'narrowside_max',
-                  'aspectratio_mean', 'aspectratio_std', 'aspectratio_min', 'aspectratio_median', 'aspectratio_max',
-                  'circularity_mean', 'circularity_std', 'circularity_min', 'circularity_median', 'circularity_max',
-                  'angle_mean', 'angle_std', 'angle_min', 'angle_median', 'angle_max', 'file')
+                  'title', 'status', 'note', 'prefix', 'mindia', 'roiarea', 'results',
+                  'file', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class LN2DSerializer(serializers.ModelSerializer):
@@ -52,7 +48,8 @@ class LN2DSerializer(serializers.ModelSerializer):
         model = LN2D
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
                   'title', 'status', 'note', 'prefix', 'lnmax', 'ntrials', 'randseed', 'areafraction',
-                  'ln2d_tot', 'ln2d_ave', 'ln2d_var', 'ln2dr_tot', 'ln2dr_ave', 'ln2dr_var', 'file')
+                  'ln2d_tot', 'ln2d_ave', 'ln2d_var', 'ln2dr_tot', 'ln2dr_ave', 'ln2dr_var',
+                  'file', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class IMFPSerializer(serializers.ModelSerializer):
@@ -60,7 +57,8 @@ class IMFPSerializer(serializers.ModelSerializer):
         model = IMFP
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
                   'title', 'status', 'note', 'prefix', 'barrier', 'nclass', 'ntrials', 'randseed',
-                  'single_ave', 'single_std', 'double_ave', 'double_std', 'file')
+                  'single_ave', 'single_std', 'double_ave', 'double_std',
+                  'file', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 #

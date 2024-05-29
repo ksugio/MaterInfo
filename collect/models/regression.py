@@ -1,6 +1,6 @@
 from django.db import models
 from django.urls import reverse
-from project.models import Created, Updated, Remote, ModelUploadTo, UniqueID
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from .filter import Filter
 from .regression_lib import HParam2Dict, Dict2HParam, RegressionModel, RegressionCoef, RegressionObjective, ToONNX, RunONNX
 from sklearn.model_selection import KFold
@@ -18,7 +18,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-class Regression(Created, Updated, Remote):
+class Regression(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Filter, verbose_name='Filter', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))
@@ -43,7 +43,6 @@ class Regression(Created, Updated, Remote):
     file2 = models.FileField(verbose_name='Model file', upload_to=ModelUploadTo, blank=True, null=True)
     file2_type = models.PositiveSmallIntegerField(verbose_name='File2 type', default=0)
     results = models.TextField(verbose_name='JSON Results', blank=True)
-    unique = models.CharField(verbose_name='Unique ID', max_length=36, default=UniqueID)
 
     def __str__(self):
         return self.title

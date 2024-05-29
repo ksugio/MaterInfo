@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load utils %}
 
 {% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
 
@@ -20,9 +21,23 @@
             {{ form.as_p }}
             <button type="submit" class="btn btn-primary btn-sm">Save</button>
             <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Cancel</a>
-            <a class="btn btn-primary btn-sm" href="{% url 'collect:feature_update' object.id %}">Feature Update</a>
         </form>
     </div>
+    {% if features %}
+    <h3>Latest Features</h3>
+    <div class="mt-3">
+        {% for feat, upper in features %}
+            {% if upper %}
+                <a href="{{ feat.get_detail_url }}">{{ feat | get_path }}</a> <font color="red">(Upper Updated)</font><br>
+            {% else %}
+             <a href="{{ feat.get_detail_url }}">{{ feat | get_path }}</a><br>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{% url 'collect:update_upper_updated' object.id %}">Update Upper Updated</a>
+    </div>
+    {% endif %}
 </div>
 
 {% endblock %}

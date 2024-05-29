@@ -26,7 +26,7 @@
     </div>
     {% if object.file %}
     <div class="row mt-3 g-0">
-        File : {% url 'album:file' object.id %}
+        File : {% url 'album:file' object.unique %}
     </div>
     {% endif %}
     <div class="row mt-3 g-0">
@@ -42,7 +42,7 @@
     </div>
     {% if object.file %}
     <div class="row mt-3 g-0">
-        <img src="{% url 'album:file' object.id %}" class="img-fluid">
+        <img src="{% url 'album:file' object.unique %}" class="img-fluid">
     </div>
     {% endif %}
 </div>

@@ -1,6 +1,6 @@
 from django.db import models
 from django.urls import reverse
-from project.models import Created, Updated, Remote, ModelUploadTo
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from .filter import Filter
 from .regression_lib import HParam2Dict
 from sklearn.pipeline import Pipeline
@@ -43,7 +43,7 @@ def ReductionModel(dparam, scaler, method):
         pipeline.append(('umap', UMAP(**dparam)))
     return Pipeline(pipeline)
 
-class Reduction(Created, Updated, Remote):
+class Reduction(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Filter, verbose_name='Filter', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))

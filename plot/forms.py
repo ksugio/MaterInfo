@@ -9,4 +9,4 @@ class ItemForm(forms.ModelForm):
         model = Item
         fields = ('url', 'columnx', 'columny', 'type', 'color', 'edgecolor',
                   'linewidth', 'linestyle', 'marker', 'markersize', 'bins',
-                  'label', 'order')
+                  'columnc', 'colormap', 'label', 'order')

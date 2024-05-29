@@ -135,6 +135,7 @@ class DeleteView(base.DeleteAliasView):
 class FileView(base.FileView):
     model = Filter
     attachment = True
+    use_unique = True
 
 class TableView(base.TableView):
     model = Filter

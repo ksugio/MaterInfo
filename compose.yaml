@@ -22,6 +22,8 @@ services:
       - "8080:80"
     volumes:
       - materinfo-data:/data
+    depends_on:
+      - materinfo
   db:
     image: mariadb:11.3
     environment:

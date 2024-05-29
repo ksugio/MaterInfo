@@ -6,7 +6,8 @@ class AlbumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Album
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'ncol', 'margin', 'bgcolor', 'format', 'file')
+                  'title', 'status', 'note', 'ncol', 'margin', 'bgcolor', 'format',
+                  'file', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class ItemSerializer(serializers.ModelSerializer):

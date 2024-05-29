@@ -51,8 +51,7 @@ class UpdateView(base.UpdateView):
         items = Item.objects.filter(upper=model).order_by('order')
         item_detail = []
         for item in items:
-            detail_url = '/'.join(item.url.split('/')[:-1])
-            item_detail.append((item, detail_url))
+            item_detail.append((item, item.detail_url()))
         context['item_detail'] = item_detail
         return context
 
@@ -80,6 +79,7 @@ class DeleteView(base.DeleteView):
 class FileView(base.FileView):
     model = Album
     attachment = False
+    use_unique = True
 
 class AlbumSearch(base.Search):
     model = Album

@@ -1,13 +1,13 @@
 from django.db import models
 from django.utils.module_loading import import_string
-from project.models import Project, Created, Updated, Remote, ModelUploadTo
+from project.models import Project, Created, Updated, Remote, ModelUploadTo, Unique
 from django.urls import reverse
 from image.models.process import ColorTable, ColorChoices
 from io import BytesIO
 import PIL
 import math as m
 
-class Album(Created, Updated, Remote):
+class Album(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Project, verbose_name='Project', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))

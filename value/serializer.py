@@ -11,14 +11,15 @@ class ValueSerializer(serializers.ModelSerializer):
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
                   'title', 'status', 'note', 'file', 'datatype', 'disp_head', 'disp_tail',
                   'delimiter', 'encoding', 'skiprows', 'skipends', 'header',
-                  'startstring', 'endstring')
+                  'startstring', 'endstring', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class FilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Filter
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'template', 'disp_head', 'disp_tail', 'alias', 'file')
+                  'title', 'status', 'note', 'template', 'disp_head', 'disp_tail', 'alias',
+                  'file', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class FilterAliasSerializer(serializers.Serializer):
