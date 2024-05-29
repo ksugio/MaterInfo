@@ -2,6 +2,7 @@ import pandas as pd
 from django.db import models
 from django.urls import reverse
 from project.models import Created, Updated, Remote, ModelUploadTo, Unique
+from plot.models.item import ColormapChoices
 from .filter import Filter
 from .regression_lib import HParam2Dict, Dict2HParam
 from sklearn.pipeline import Pipeline
@@ -113,7 +114,6 @@ class Clustering(Created, Updated, Remote, Unique):
     method = models.PositiveSmallIntegerField(verbose_name='Method', choices=MethodChoices, default=0)
     hparam = models.TextField(verbose_name='Hyperparameter', blank=True)
     drop = models.CharField(verbose_name='Drop columns', max_length=250, blank=True)
-    ColormapChoices = ((0, 'viridis'), (1, 'gray'), (2, 'rainbow'), (3, 'jet'))
     colormap = models.PositiveSmallIntegerField(verbose_name='Colormap', choices=ColormapChoices, default=0)
     ntrials = models.PositiveIntegerField(verbose_name='Number of trials', default=20)
     ScoreChoices = ((0, 'Silhouette'), (1, 'Davies-Bouldin'), (2, 'Calinski-Harabasz'))

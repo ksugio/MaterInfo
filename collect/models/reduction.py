@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from project.models import Created, Updated, Remote, ModelUploadTo, Unique
+from plot.models.item import ColormapChoices
 from .filter import Filter
 from .regression_lib import HParam2Dict
 from sklearn.pipeline import Pipeline
@@ -57,7 +58,6 @@ class Reduction(Created, Updated, Remote, Unique):
     hparam = models.TextField(verbose_name='Hyperparameter', blank=True)
     drop = models.CharField(verbose_name='Drop columns', max_length=250, blank=True)
     label = models.CharField(verbose_name='Label', max_length=50, blank=True, null=True)
-    ColormapChoices = ((0, 'viridis'), (1, 'gray'), (2, 'rainbow'), (3, 'jet'))
     colormap = models.PositiveSmallIntegerField(verbose_name='Colormap', choices=ColormapChoices, default=0)
     colorbar = models.BooleanField(verbose_name='Colorbar', default=False)
     nplot = models.PositiveSmallIntegerField(verbose_name='Number of plot features', default=10)
