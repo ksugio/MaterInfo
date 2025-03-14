@@ -32,6 +32,9 @@ class Hardness(Created, Updated, Remote, PrefixPtr):
     def get_delete_url(self):
         return reverse('hardness:delete', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('hardness:api_update', kwargs={'pk': self.id})
+
     def value_describe(self):
         queryset = Value.objects.filter(upper=self)
         vals = []
@@ -47,14 +50,12 @@ class Hardness(Created, Updated, Remote, PrefixPtr):
         if self.status or self.upper.status:
             return {}
         else:
+            upper_feature = self.upper.feature()
             describe = self.value_describe()
             prefix = self.prefix_display()
             prefixhv = '%s_%s' % (prefix, self.get_unit_display())
             return {
-                'Project_id': self.upper.upper.id,
-                'Project_title': self.upper.upper.title,
-                'Sample_id': self.upper.id,
-                'Sample_title': self.upper.title,
+                **upper_feature,
                 'Model': self.__class__.__name__,
                 'Model_id': self.id,
                 'Category': 'property',

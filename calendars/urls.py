@@ -16,6 +16,7 @@ urlpatterns = [
     path('calendar/<int:pk>/token/<int:ind>', calendars.TokenView.as_view(), name='token'),
     path('calendar/<int:pk>/pull', calendars.PullView.as_view(), name='pull'),
     path('calendar/<int:pk>/push', calendars.PushView.as_view(), name='push'),
+    path('calendar/<int:pk>/log', calendars.LogView.as_view(), name='log'),
     path('calendar/<int:pk>/set_remote', calendars.SetRemoteView.as_view(), name='set_remote'),
     path('calendar/<int:pk>/clear_remote', calendars.ClearRemoteView.as_view(), name='clear_remote'),
     # API

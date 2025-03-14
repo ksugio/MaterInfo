@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from project.views.token import GetAccessToken
+from project.views.requests import GetAccessToken
 from .models import CustomUser
 
 class UserAddForm(UserCreationForm):

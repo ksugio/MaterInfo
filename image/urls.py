@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import image, filter, process, process_api, size, ln2d, imfp
+from .views import image, filter, process, process_api, size, ln2d, imfp, voronoi, measure
 
 app_name = 'image'
 urlpatterns = [
@@ -11,6 +11,7 @@ urlpatterns = [
     path('image/<int:pk>', image.DetailView.as_view(), name='detail'),
     path('image/<int:pk>/update', image.UpdateView.as_view(), name='update'),
     path('image/<int:pk>/delete', image.DeleteView.as_view(), name='delete'),
+    path('image/<int:pk>/move', image.MoveView.as_view(), name='move'),
     path('image/<int:pk>/edit_note', image.EditNoteView.as_view(), name='edit_note'),
     path('image/<str:unique>/file', image.FileView.as_view(), name='file'),
     path('<int:pk>/download', image.DownloadView.as_view(), name='download'),
@@ -60,6 +61,8 @@ urlpatterns = [
     path('tone/<int:pk>/plot', process.TonePlotView.as_view(), name='tone_plot'),
     path('filter/<int:pk>/transform/add', process.TransformAddView.as_view(), name='transform_add'),
     path('transform/<int:pk>/update', process.TransformUpdateView.as_view(), name='transform_update'),
+    path('filter/<int:pk>/draw/add', process.DrawAddView.as_view(), name='draw_add'),
+    path('draw/<int:pk>/update', process.DrawUpdateView.as_view(), name='draw_update'),
     # Process API
     path('api/filter/<int:pk>/process/list', process_api.ListAPIView.as_view(), name='api_process_list'),
     path('api/process/<int:pk>/delete', process_api.DeleteAPIView.as_view(), name='api_process_delete'),
@@ -87,6 +90,9 @@ urlpatterns = [
     path('api/filter/<int:pk>/transform/add', process_api.TransformAddAPIView.as_view(), name='api_transform_add'),
     path('api/transform/<int:pk>', process_api.TransformRetrieveAPIView.as_view(), name='api_transform_retrieve'),
     path('api/transform/<int:pk>/update', process_api.TransformUpdateAPIView.as_view(), name='api_transform_update'),
+    path('api/filter/<int:pk>/draw/add', process_api.DrawAddAPIView.as_view(), name='api_draw_add'),
+    path('api/draw/<int:pk>', process_api.DrawRetrieveAPIView.as_view(), name='api_draw_retrieve'),
+    path('api/draw/<int:pk>/update', process_api.DrawUpdateAPIView.as_view(), name='api_draw_update'),
     # Size
     path('filter/<int:pk>/size/add', size.AddView.as_view(), name='size_add'),
     path('filter/<int:pk>/size/list', size.ListView.as_view(), name='size_list'),
@@ -142,4 +148,37 @@ urlpatterns = [
     path('api/imfp/<int:pk>/update', imfp.UpdateAPIView.as_view(), name='api_imfp_update'),
     path('api/imfp/<int:pk>/delete', imfp.DeleteAPIView.as_view(), name='api_imfp_delete'),
     path('api/imfp/<int:pk>/file', imfp.FileAPIView.as_view(), name='api_imfp_file'),
+    # Voronoi
+    path('filter/<int:pk>/voronoi/add', voronoi.AddView.as_view(), name='voronoi_add'),
+    path('filter/<int:pk>/voronoi/list', voronoi.ListView.as_view(), name='voronoi_list'),
+    path('voronoi/<int:pk>', voronoi.DetailView.as_view(), name='voronoi_detail'),
+    path('voronoi/<int:pk>/update', voronoi.UpdateView.as_view(), name='voronoi_update'),
+    path('voronoi/<int:pk>/edit_note', voronoi.EditNoteView.as_view(), name='voronoi_edit_note'),
+    path('voronoi/<int:pk>/delete', voronoi.DeleteView.as_view(), name='voronoi_delete'),
+    path('voronoi/<str:unique>/file', voronoi.FileView.as_view(), name='voronoi_file'),
+    path('voronoi/<int:pk>/plot/<int:plotid>/<int:bins>', voronoi.PlotView.as_view(), name='voronoi_plot'),
+    path('voronoi/<int:pk>/plot/image/<int:plotid>/<int:bins>', voronoi.PlotImageView.as_view(), name='voronoi_plot_image'),
+    path('voronoi/<int:pk>/image/<int:type>', voronoi.ImageView.as_view(), name='voronoi_image'),
+    # Voronoi API
+    path('api/filter/<int:pk>/voronoi/add', voronoi.AddAPIView.as_view(), name='api_voronoi_add'),
+    path('api/filter/<int:pk>/voronoi/list', voronoi.ListAPIView.as_view(), name='api_voronoi_list'),
+    path('api/voronoi/<int:pk>', voronoi.RetrieveAPIView.as_view(), name='api_voronoi_retrieve'),
+    path('api/voronoi/<int:pk>/update', voronoi.UpdateAPIView.as_view(), name='api_voronoi_update'),
+    path('api/voronoi/<int:pk>/delete', voronoi.DeleteAPIView.as_view(), name='api_voronoi_delete'),
+    path('api/voronoi/<int:pk>/file', voronoi.FileAPIView.as_view(), name='api_voronoi_file'),
+    # Measure
+    path('image/<int:pk>/measure/add', measure.AddView.as_view(), name='measure_add'),
+    path('image/<int:pk>/measure/list', measure.ListView.as_view(), name='measure_list'),
+    path('measure/<int:pk>', measure.DetailView.as_view(), name='measure_detail'),
+    path('measure/<int:pk>/update', measure.UpdateView.as_view(), name='measure_update'),
+    path('measure/<int:pk>/edit_note', measure.EditNoteView.as_view(), name='measure_edit_note'),
+    path('measure/<int:pk>/delete', measure.DeleteView.as_view(), name='measure_delete'),
+    path('measure/<int:pk>/measure', measure.MeasureView.as_view(), name='measure_measure'),
+    path('measure/<int:pk>/download', measure.DownloadView.as_view(), name='measure_download'),
+    # Measure API
+    path('api/image/<int:pk>/measure/add', measure.AddAPIView.as_view(), name='api_measure_add'),
+    path('api/image/<int:pk>/measure/list', measure.ListAPIView.as_view(), name='api_measure_list'),
+    path('api/measure/<int:pk>', measure.RetrieveAPIView.as_view(), name='api_measure_retrieve'),
+    path('api/measure/<int:pk>/update', measure.UpdateAPIView.as_view(), name='api_measure_update'),
+    path('api/measure/<int:pk>/delete', measure.DeleteAPIView.as_view(), name='api_measure_delete'),
 ]

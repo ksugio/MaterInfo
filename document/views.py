@@ -1,11 +1,15 @@
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.db.models import Q
+from django.urls import reverse
 from project.views import base, base_api, remote
 from project.models import Project
-from project.forms import EditNoteForm, ImportForm, CloneForm, TokenForm, SetRemoteForm, SearchForm
+from project.forms import ImportForm, CloneForm, TokenForm, SetRemoteForm, SearchForm
 from .models import Document, File
 from .forms import DocumentForm
 from .serializer import DocumentSerializer, FileSerializer
 import os
+import urllib
 
 class AddView(base.FormView):
     model = Document
@@ -37,8 +41,25 @@ class DetailView(base.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         model = self.model.objects.get(pk=self.kwargs['pk'])
-        files = File.objects.filter(upper=model).order_by('-edition')
-        context['document_files'] = files
+        files = File.objects.filter(upper=model, edition=self.kwargs['ed'])
+        if files:
+            context['file'] = files[0]
+            if files[0].file_ext() == '.zip':
+                zipfile_list = files[0].zipfile_list()
+                if self.kwargs['zipid'] == 0:
+                    context['zipfile_list'] = zipfile_list
+                else:
+                    zipid = self.kwargs['zipid']
+                    if zipid >= 1 and zipid <= len(zipfile_list):
+                        context['zipname'] = zipfile_list[zipid - 1]
+                    if zipid > 1:
+                        context['prev_zipid'] = zipid - 1
+                    if zipid <= len(zipfile_list):
+                        context['next_zipid'] = zipid + 1
+            if self.kwargs['ed'] > 0:
+                context['prev_ed'] = self.kwargs['ed'] - 1
+            if self.kwargs['ed'] < model.latest_file().edition:
+                context['next_ed'] = self.kwargs['ed'] + 1
         return context
 
 class ListView(base.ListView):
@@ -46,22 +67,51 @@ class ListView(base.ListView):
     upper = Project
     template_name = "document/document_list.html"
     navigation = [['Add', 'document:add'],
-                  ['Import', 'document:import'],
-                  ['Clone', 'document:clone']]
+                  ['Import', 'document:import']]
 
 class UpdateView(base.UpdateView):
     model = Document
     fields = ('title', 'status', 'note')
-    template_name = "project/default_update.html"
+    template_name = "document/document_update.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        model = self.model.objects.get(pk=self.kwargs['pk'])
+        files = File.objects.filter(upper=model).order_by('-edition')
+        context['document_files'] = files
+        return context
 
 class DeleteView(base.DeleteManagerView):
     model = Document
     template_name = "project/default_delete.html"
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Document
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
+
+class ContentView(base.View):
+    model = Document
+    template_name = "document/content.html"
+
+    def get(self, request, **kwargs):
+        model = self.model.objects.get(pk=kwargs['pk'])
+        files = File.objects.filter(upper=model, edition=self.kwargs['ed'])
+        if files:
+            if self.kwargs['zipid'] == 0:
+                content = files[0].file_content()
+            else:
+                content = files[0].zipfile_content(self.kwargs['zipid'])
+            if 'md' in content or 'texts' in content or 'code' in content or 'plain' in content:
+                return render(request, self.template_name, {'content': content})
+            elif 'html' in content:
+                return HttpResponse(content['html'], content_type='text/html')
+            elif 'image' in content:
+                response = HttpResponse(content['image'], content_type=content['type'])
+                fn = urllib.parse.quote(content['filename'])
+                response["Content-Disposition"] = "inline; filename='{0}'; filename*=UTF-8''{1}".format(fn, fn)
+                return response
+        return HttpResponse('Cannot display content.')
 
 class SearchView(base.SearchView):
     model = Document
@@ -101,6 +151,10 @@ class FileAddView(base.AddView):
         model.filename = model.file.name
         return super().form_valid(form)
 
+    def get_success_url(self):
+        return reverse('document:detail',
+                       kwargs={'pk': self.object.upper.id, 'ed': self.object.edition})
+
 class FileUpdateView(base.UpdateView):
     model = File
     fields = ('comment',)
@@ -110,6 +164,7 @@ class FileUpdateView(base.UpdateView):
 class FileView(base.FileView):
     model = File
     attachment = True
+    utf8_filename = True
 
     def get_file(self, **kwargs):
         model = self.model.objects.get(pk=kwargs['pk'])
@@ -182,42 +237,42 @@ class ImportView(remote.ImportView):
     success_name = 'document:list'
     view_name = 'document:detail'
 
-class CloneView(remote.CloneView):
-    model = Document
-    form_class = CloneForm
-    upper = Project
-    remote_class = DocumentRemote
-    template_name = "project/default_clone.html"
-    title = 'Document Clone'
-    success_name = 'document:list'
-    view_name = 'document:detail'
-
-class TokenView(remote.TokenView):
-    model = Document
-    form_class = TokenForm
-    success_names = ['document:pull', 'document:push']
-
-class PullView(remote.PullView):
-    model = Document
-    remote_class = DocumentRemote
-    success_name = 'document:detail'
-    fail_name = 'document:token'
-
-class PushView(remote.PushView):
-    model = Document
-    remote_class = DocumentRemote
-    success_name = 'document:detail'
-    fail_name = 'document:token'
-
-class SetRemoteView(remote.SetRemoteView):
-    model = Document
-    form_class = SetRemoteForm
-    remote_class = DocumentRemote
-    title = 'Document Set Remote'
-    success_name = 'document:detail'
-    view_name = 'document:detail'
-
-class ClearRemoteView(remote.ClearRemoteView):
-    model = Document
-    remote_class = DocumentRemote
-    success_name = 'document:detail'
+# class CloneView(remote.CloneView):
+#     model = Document
+#     form_class = CloneForm
+#     upper = Project
+#     remote_class = DocumentRemote
+#     template_name = "project/default_clone.html"
+#     title = 'Document Clone'
+#     success_name = 'document:list'
+#     view_name = 'document:detail'
+#
+# class TokenView(remote.TokenView):
+#     model = Document
+#     form_class = TokenForm
+#     success_names = ['document:pull', 'document:push']
+#
+# class PullView(remote.PullView):
+#     model = Document
+#     remote_class = DocumentRemote
+#     success_name = 'document:detail'
+#     fail_name = 'document:token'
+#
+# class PushView(remote.PushView):
+#     model = Document
+#     remote_class = DocumentRemote
+#     success_name = 'document:detail'
+#     fail_name = 'document:token'
+#
+# class SetRemoteView(remote.SetRemoteView):
+#     model = Document
+#     form_class = SetRemoteForm
+#     remote_class = DocumentRemote
+#     title = 'Document Set Remote'
+#     success_name = 'document:detail'
+#     view_name = 'document:detail'
+#
+# class ClearRemoteView(remote.ClearRemoteView):
+#     model = Document
+#     remote_class = DocumentRemote
+#     success_name = 'document:detail'

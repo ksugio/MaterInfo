@@ -1,7 +1,6 @@
 from django.http import HttpResponse
 from django.urls import reverse
 from project.views import base, base_api, prefix, remote
-from project.forms import EditNoteForm
 from plot.views.item import Item
 from ..models.filter import Filter
 from ..models.imfp import IMFP
@@ -69,10 +68,10 @@ class UpdateView(prefix.UpdatePrefixView):
         model.measure()
         return super().form_valid(form)
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = IMFP
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = IMFP

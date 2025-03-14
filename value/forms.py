@@ -1,6 +1,6 @@
 from django import forms
 from project.forms import ClearableFileInput
-from .models.value import Value, CSVFile
+from .models.value import Value, DataFile
 from .models.aggregate import Aggregate
 from .models.curve import Curve
 
@@ -21,16 +21,17 @@ class MultipleFileField(forms.FileField):
         return result
 
 class ValueAddForm(forms.Form):
-    file = MultipleFileField(label='File')
+    file = MultipleFileField(label='File (.csv, .xlsx)')
     note = forms.CharField(label='Note', widget=forms.Textarea, required=False)
-    delimiter = forms.ChoiceField(label='Delimiter', choices=CSVFile.DelimiterChoices, initial=0)
-    encoding = forms.ChoiceField(label='Encoding', choices=CSVFile.EncodingChoices, initial=0)
+    delimiter = forms.ChoiceField(label='Delimiter', choices=DataFile.DelimiterChoices, initial=0)
+    encoding = forms.ChoiceField(label='Encoding', choices=DataFile.EncodingChoices, initial=0)
     skiprows = forms.IntegerField(label='Skiprows', initial=0)
     skipends = forms.IntegerField(label='Skipends', initial=0)
     header = forms.BooleanField(label='Header', initial=False, required=False)
     startstring = forms.CharField(label='Start String', max_length=100, required=False)
     endstring = forms.CharField(label='End String', max_length=100, required=False)
-    datatype = forms.ChoiceField(label='Data type', choices=Value.DataTypeChoices, initial=0)
+    sheetname = forms.CharField(label='Sheet Name', max_length=100, required=False)
+    datatype = forms.ChoiceField(label='Data Type', choices=Value.DataTypeChoices, initial=0)
     disp_head = forms.IntegerField(label='Display Head', initial=50)
     disp_tail = forms.IntegerField(label='Display Tail', initial=50)
 
@@ -38,7 +39,7 @@ class ValueUpdateForm(forms.ModelForm):
     class Meta:
         model = Value
         fields = ('title', 'status', 'note', 'file', 'delimiter', 'encoding', 'skiprows', 'skipends',
-                  'header', 'startstring', 'endstring', 'datatype', 'disp_head', 'disp_tail')
+                  'header', 'startstring', 'endstring', 'sheetname', 'datatype', 'disp_head', 'disp_tail')
         widgets = {
             'file': ClearableFileInput(),
         }
@@ -62,8 +63,8 @@ class ValueGetForm(forms.Form):
                           widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
     title = forms.CharField(label='Title', max_length=100)
     note = forms.CharField(label='Note', widget=forms.Textarea, required=False)
-    delimiter = forms.ChoiceField(label='Delimiter', choices=CSVFile.DelimiterChoices, initial=0)
-    encoding = forms.ChoiceField(label='Encoding', choices=CSVFile.EncodingChoices, initial=0)
+    delimiter = forms.ChoiceField(label='Delimiter', choices=DataFile.DelimiterChoices, initial=0)
+    encoding = forms.ChoiceField(label='Encoding', choices=DataFile.EncodingChoices, initial=0)
     skiprows = forms.IntegerField(label='Skiprows', initial=0)
     skipends = forms.IntegerField(label='Skipends', initial=0)
     header = forms.BooleanField(label='Header', initial=False, required=False)

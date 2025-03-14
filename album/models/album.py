@@ -38,6 +38,9 @@ class Album(Created, Updated, Remote, Unique):
     def get_image_url(self):
         return reverse('album:image', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('album:api_update', kwargs={'pk': self.id})
+
     def bgcolor_rgb(self):
         return ColorTable[self.bgcolor]
 
@@ -72,13 +75,14 @@ class Album(Created, Updated, Remote, Unique):
             pilimg.paste(images[i], pos[i])
         return pilimg
 
-    def saveimg(self):
+    def saveimg(self, request):
         cls = import_string('album.models.item.Item')
         items = cls.objects.filter(upper=self).order_by('order')
         images = []
         shifts = []
         for item in items:
-            images.append(item.get_image())
+            images.append(item.get_image(request_host=request._current_scheme_host,
+                                         request_cookies=request.COOKIES))
             shifts.append([item.shiftx, item.shifty])
         pilimg = self.tile(images, shifts)
         buf = BytesIO()

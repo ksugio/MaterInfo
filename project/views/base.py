@@ -8,10 +8,11 @@ from django.http import HttpResponseRedirect, HttpResponse, FileResponse
 from django.utils.module_loading import import_string
 from django.db.models import Q
 from io import BytesIO, StringIO
-from config.settings import BRAND_NAME, MEDIA_ACCEL_REDIRECT
+from config.settings import BRAND_NAME, MEDIA_ACCEL_REDIRECT, FILE_ITEMS
 import datetime
 import os
 import mimetypes
+import urllib
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -419,11 +420,31 @@ class EditNoteView(LoginRequiredMixin, UserPassesTestMixin, generic.FormView):
     def get_success_url(self):
         return self.object.get_detail_url()
 
+class MDEditView(LoginRequiredMixin, UserPassesTestMixin, generic.TemplateView):
+    model = None
+    text_field = ''
+    template_name = "project/default_mdedit.html"
+
+    def test_func(self):
+        model = get_object_or_404(self.model, id=self.kwargs['pk'])
+        return self.request.user in ProjectMember(model)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['brand_name'] = BrandName()
+        model = self.model.objects.get(pk=self.kwargs['pk'])
+        context['object'] = model
+        context['breadcrumb_list'] = BreadcrumbList(model)
+        context['initial_text'] = getattr(model, self.text_field)
+        context['text_field'] = self.text_field
+        return context
+
 class FileView(LoginRequiredMixin, UserPassesTestMixin, generic.View):
     model = None
     attachment = False
     field = 'file'
     use_unique = False
+    utf8_filename = False
 
     def test_func(self):
         if self.use_unique:
@@ -445,15 +466,23 @@ class FileView(LoginRequiredMixin, UserPassesTestMixin, generic.View):
         file, filename = self.get_file(**kwargs)
         if MEDIA_ACCEL_REDIRECT:
             response = HttpResponse()
-            response["Content-Type"] = mimetypes.guess_type(filename)[0]
-            if self.attachment:
+            response['X-Accel-Redirect'] = "/media/{0}".format(file.name)
+        else:
+            response = FileResponse(file.open("rb"))
+        response["Content-Type"] = mimetypes.guess_type(filename)[0]
+        if self.attachment:
+            if self.utf8_filename:
+                fn = urllib.parse.quote(filename)
+                response["Content-Disposition"] = "attachment; filename='{0}'; filename*=UTF-8''{1}".format(fn, fn)
+            else:
                 response["Content-Disposition"] = "attachment; filename={0}".format(filename)
+        else:
+            if self.utf8_filename:
+                fn = urllib.parse.quote(filename)
+                response["Content-Disposition"] = "inline; filename='{0}'; filename*=UTF-8''{1}".format(fn, fn)
             else:
                 response["Content-Disposition"] = "inline; filename={0}".format(filename)
-            response['X-Accel-Redirect'] = "/media/{0}".format(file.name)
-            return response
-        else:
-            return FileResponse(file.open("rb"), as_attachment=self.attachment, filename=filename)
+        return response
 
 class PlotView(LoginRequiredMixin, UserPassesTestMixin, generic.View):
     model = None
@@ -467,6 +496,8 @@ class PlotView(LoginRequiredMixin, UserPassesTestMixin, generic.View):
         model = self.model.objects.get(pk=kwargs['pk'])
         attr = getattr(model, self.methods)
         if callable(attr):
+            kwargs['request_host'] = request._current_scheme_host
+            kwargs['request_cookies'] = request.COOKIES
             figure = attr(**kwargs)
         buf = BytesIO()
         if figure is not None:
@@ -491,6 +522,8 @@ class TableView(LoginRequiredMixin, UserPassesTestMixin, generic.View):
         model = self.model.objects.get(pk=kwargs['pk'])
         attr = getattr(model, self.methods)
         if callable(attr):
+            kwargs['request_host'] = request._current_scheme_host
+            kwargs['request_cookies'] = request.COOKIES
             df = attr(**kwargs)
             if df is not None:
                 buf = StringIO()
@@ -512,6 +545,8 @@ class ImageView(LoginRequiredMixin, UserPassesTestMixin, generic.View):
         model = self.model.objects.get(pk=kwargs['pk'])
         attr = getattr(model, self.methods)
         if callable(attr):
+            kwargs['request_host'] = request._current_scheme_host
+            kwargs['request_cookies'] = request.COOKIES
             pilimg = attr(**kwargs)
             if pilimg is None:
                 response = HttpResponse('Cannot read image file.')
@@ -622,3 +657,58 @@ class SearchView(FormView, Search):
         self.request.GET = self.request.GET.copy()
         self.request.GET.clear()
         return self.get(request, *args, **kwargs)
+
+class MoveView(UpdateView):
+    model = None
+    fields = ('upper',)
+    template_name = "project/default_update.html"
+    bdcl_remove = 0
+
+    def get_form(self, form_class=None):
+        model = self.model.objects.get(pk=self.kwargs['pk'])
+        project = ProjectModel(model)
+        form = super().get_form(form_class=form_class)
+        newchoices = []
+        for choice in form.fields['upper'].choices:
+            if hasattr(choice[0], 'instance'):
+                if project == ProjectModel(choice[0].instance):
+                    newchoices.append(choice)
+        form.fields['upper'].choices = newchoices
+        return form
+
+class MoveManagerView(MoveView):
+    model = None
+    fields = ('upper',)
+    template_name = "project/default_update.html"
+    bdcl_remove = 0
+
+    def test_func(self):
+        model = get_object_or_404(self.model, id=self.kwargs['pk'])
+        return self.request.user in ProjectMember(model) and self.request.user.is_manager
+
+class FileSearch:
+    def model_search(self, url):
+        for dic in FILE_ITEMS:
+            lurl = url.split('/')
+            path = reverse(dic['FileName'], args=range(1))
+            lpath = path.split('/')
+            if lurl[:-2] == lpath[:-2] and lurl[-1] == lpath[-1]:
+                cls = import_string(dic['Model'])
+                model = cls.objects.filter(unique=lurl[-2])
+                if model:
+                    return model[0], dic
+        return None, None
+
+    def file_search(self, url):
+        model, dic = self.model_search(url)
+        if model:
+            return getattr(model, dic['FileField'])
+        else:
+            return None
+
+    def detail_search(self, url):
+        model, dic = self.model_search(url)
+        if model and 'DetailName' in dic:
+            return reverse(dic['DetailName'], kwargs={'pk': model.id})
+        else:
+            return None

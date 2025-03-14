@@ -3,6 +3,13 @@
 
 {% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
 
+{% block script %}
+
+    {% include 'mathjax.html' %}
+    {% include 'highlight.html' %}
+
+{% endblock %}
+
 {% block contents %}
 
 <div class="container">
@@ -37,6 +44,7 @@
         <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
         <a class="btn btn-primary btn-sm" href="{% url 'density:edit_note' object.id %}">Edit Note</a>
         {% if user.is_manager %}
+            <a class="btn btn-primary btn-sm" href="{% url 'density:move' object.id %}">Move</a>
         <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
         {% endif %}
     </div>

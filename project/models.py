@@ -1,12 +1,10 @@
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone, crypto
-from django.utils.module_loading import import_string
+from django_celery_results.models import TaskResult
 from accounts.models import CustomUser
-from config.settings import RANDOM_STRING_LENGTH, FILE_ITEMS
-import requests
+from config.settings import RANDOM_STRING_LENGTH
 import os
-import json
 
 def UploadTo(instance, filename):
     split = os.path.splitext(os.path.basename(filename))
@@ -79,6 +77,9 @@ class Remote(models.Model):
 
 class RemoteRoot(Remote):
     remoteurl = models.URLField(verbose_name='Remote URL', max_length=200, blank=True)
+    remoteauth = models.CharField(verbose_name='Remote auth', max_length=10, blank=True)
+    remotelink = models.URLField(verbose_name='Remote link', max_length=200, blank=True)
+    remotelog = models.TextField(verbose_name='Remote log', blank=True)
 
     class Meta:
         abstract = True
@@ -93,13 +94,25 @@ class Client(models.Model):
     class Meta:
         abstract = True
 
+class Task(models.Model):
+    task_id = models.CharField(verbose_name='Task ID', max_length=40, blank=True)
+
+    class Meta:
+        abstract = True
+
+# class RemoteTask(Task):
+#     remotelog = models.TextField(verbose_name='Log', blank=True)
+#
+#     class Meta:
+#         abstract = True
+
 class Unique(models.Model):
     unique = models.CharField(verbose_name='Unique String', max_length=36, default=UniqueStr)
 
     class Meta:
         abstract = True
 
-class Project(Created, Updated, RemoteRoot):
+class Project(Created, Updated, RemoteRoot, Task):
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Active'), (1, 'Stop'), (2, 'Finish'), (3, 'Published'))
     status = models.PositiveSmallIntegerField(verbose_name='Status', choices=StatusChoices, default=0)
@@ -117,6 +130,9 @@ class Project(Created, Updated, RemoteRoot):
 
     def get_update_url(self):
         return reverse('project:update', kwargs={'pk': self.id})
+
+    def get_apiupdate_url(self):
+        return reverse('project:api_update', kwargs={'pk': self.id})
 
 def CreateUserProject(user):
     proj = Project.objects.create(created_by=user, updated_by=user, title=user.username + 'Project')
@@ -143,6 +159,9 @@ class Prefix(Created, Updated, Remote, Unique):
 
     def get_update_url(self):
         return reverse('project:prefix_update', kwargs={'pk': self.id})
+
+    def get_apiupdate_url(self):
+        return reverse('project:api_prefix_update', kwargs={'pk': self.id})
 
 class PrefixPtr(models.Model):
     prefix = models.CharField(verbose_name='Prefix', max_length=36, blank=True)
@@ -173,28 +192,4 @@ class PrefixPtr(models.Model):
         abstract = True
 
 class FileSearch:
-    def model_search(self, url):
-        for dic in FILE_ITEMS:
-            lurl = url.split('/')
-            path = reverse(dic['FileName'], args=range(1))
-            lpath = path.split('/')
-            if lurl[:-2] == lpath[:-2] and lurl[-1] == lpath[-1]:
-                cls = import_string(dic['Model'])
-                model = cls.objects.filter(unique=lurl[-2])
-                if model:
-                    return model[0], dic
-        return None, None
-
-    def file_search(self, url):
-        model, dic = self.model_search(url)
-        if model:
-            return getattr(model, dic['FileField'])
-        else:
-            return None
-
-    def detail_search(self, url):
-        model, dic = self.model_search(url)
-        if model and 'DetailName' in dic:
-            return reverse(dic['DetailName'], kwargs={'pk': model.id})
-        else:
-            return None
+    pass

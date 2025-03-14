@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ object.title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ object.title }}</h1>
+    {% endif %}
+    <div class="mt-3">
+        Last updated by {{ object.updated_by }} at {{ object.updated_at }}
+    </div>
+    <div class="mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Cancel</a>
+        </form>
+    </div>
+    <div class="mt-3 border-top">
+        <h2 class="mt-3">Condition List</h2>
+        <table class="table mt-3 border-bottom">
+            <thead>
+                <tr>
+                    <th>Prefix</th>
+                    <th>Mode</th>
+                    <th>Values</th>
+                    <th>Update</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in condition %}
+                <tr>
+                    <td>
+                        {{ item.prefix_display }}
+                    </td>
+                    <td>
+                        {{ item.get_mode_display }}
+                    </td>
+                    <td>
+                        {{ item.values }}
+                    </td>
+                    <td>
+                        <a href="{{ item.get_update_url }}">Update</a>
+                    </td>
+                    <td>
+                        <a href="{{ item.get_delete_url }}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a class="btn btn-primary btn-sm" href="{% url 'design:condition_add' object.id %}">Add Condition</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'project:prefix_add' object.upper.id %}">Add Prefix</a>
+    </div>
+</div>
+
+{% endblock %}

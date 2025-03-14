@@ -4,6 +4,8 @@ from .models.image import Image
 from .models.size import Size
 from .models.ln2d import LN2D
 from .models.imfp import IMFP
+from .models.voronoi import Voronoi
+from .models.measure import Measure
 
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
@@ -23,7 +25,7 @@ class MultipleImageField(forms.ImageField):
 
 class ImageAddForm(forms.Form):
     file = MultipleImageField(label='Image')
-    note = forms.CharField(label='None', widget=forms.Textarea, required=False)
+    note = forms.CharField(label='Note', widget=forms.Textarea, required=False)
     scale = forms.FloatField(label='Scale', initial=1.0)
     scaleunit = forms.ChoiceField(label='Scale unit', choices=Image.UnitChoices, initial=0)
     scalepixels = forms.IntegerField(label='Scale pixels', initial=1)
@@ -41,7 +43,7 @@ class ImageGetForm(forms.Form):
     url = forms.CharField(label='URL', max_length=256, required=True,
                           widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
     title = forms.CharField(label='Title', max_length=100)
-    note = forms.CharField(label='None', widget=forms.Textarea, required=False)
+    note = forms.CharField(label='Note', widget=forms.Textarea, required=False)
     scale = forms.FloatField(label='Scale', initial=1.0)
     scaleunit = forms.ChoiceField(label='Scale unit', choices=Image.UnitChoices, initial=0)
     scalepixels = forms.IntegerField(label='Scale pixels', initial=1)
@@ -56,14 +58,14 @@ class SizeAddForm(forms.ModelForm):
 
     class Meta:
         model = Size
-        fields = ('title', 'note', 'prefix', 'mindia')
+        fields = ('title', 'note', 'prefix', 'mindia', 'roiarea')
 
 class SizeUpdateForm(forms.ModelForm):
     prefix = forms.fields.ChoiceField(label='Prefix')
 
     class Meta:
         model = Size
-        fields = ('title', 'status', 'note', 'prefix', 'mindia')
+        fields = ('title', 'status', 'note', 'prefix', 'mindia', 'roiarea')
 
 class SizePlotForm(forms.Form):
     bins = forms.IntegerField(label='Bins')
@@ -121,3 +123,39 @@ class IMFPPlotForm(forms.Form):
         if nclass <= 1:
             raise forms.ValidationError("NClass should be larger than 1")
 
+class VoronoiAddForm(forms.ModelForm):
+    prefix = forms.fields.ChoiceField(label='Prefix')
+
+    class Meta:
+        model = Voronoi
+        fields = ('title', 'note', 'prefix')
+
+class VoronoiUpdateForm(forms.ModelForm):
+    prefix = forms.fields.ChoiceField(label='Prefix')
+
+    class Meta:
+        model = Voronoi
+        fields = ('title', 'status', 'note', 'prefix')
+
+class VoronoiPlotForm(forms.Form):
+    bins = forms.IntegerField(label='Bins')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        bins = cleaned_data.get("bins")
+        if bins <= 1:
+            raise forms.ValidationError("Bins should be larger than 1")
+
+class MeasureAddForm(forms.ModelForm):
+    prefix = forms.fields.ChoiceField(label='Prefix')
+
+    class Meta:
+        model = Measure
+        fields = ('title', 'note', 'type', 'prefix')
+
+class MeasureUpdateForm(forms.ModelForm):
+    prefix = forms.fields.ChoiceField(label='Prefix')
+
+    class Meta:
+        model = Measure
+        fields = ('title', 'status', 'note', 'prefix')

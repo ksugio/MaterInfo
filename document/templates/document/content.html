@@ -1,0 +1,27 @@
+{% load static %}
+{% load django_bootstrap5 %}
+{% load mifilter %}
+
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        {% include 'mathjax.html' %}
+        {% include 'highlight.html' %}
+    </head>
+    <body>
+        {% if content.md %}
+            {{ content.md | markdown2html | safe }}
+        {% elif content.texts %}
+            {% for text in content.texts %}
+                <p>{{ text }}</p>
+            {% endfor %}
+        {% elif content.code %}
+            <pre><code>{{ content.code | safe }}</code></pre>
+        {% elif content.plain %}
+            <pre>{{ content.plain | safe }}</pre>
+        {% endif %}
+    </body>
+</html>

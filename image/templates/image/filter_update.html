@@ -66,6 +66,8 @@
                             {{ item.get_method_display }}
                         {% elif item.name == 'Transform' %}
                             {{ item.get_method_display }}
+                        {% elif item.name == 'Draw' %}
+                            {{ item.ndata }}
                         {% endif %}
                     </td>
                     <td>

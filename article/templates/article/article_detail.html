@@ -29,16 +29,10 @@
         <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
     </div>
     <div class="mt-3">
-        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Edit</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'article:edit' object.id %}">Edit</a>
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
         <a class="btn btn-primary btn-sm" href="{% url 'article:upload' object.id %}">Upload</a>
         <a class="btn btn-primary btn-sm" href="{% url 'article:download' object.id %}">Download</a>
-        {% if object.remoteurl %}
-        <a class="btn btn-primary btn-sm" href="{% url 'article:pull' object.id %}">Pull</a>
-        <a class="btn btn-primary btn-sm" href="{% url 'article:push' object.id %}">Push</a>
-        <a class="btn btn-primary btn-sm" href="{% url 'article:clear_remote' object.id %}">Clear Remote</a>
-        {% else %}
-        <a class="btn btn-primary btn-sm" href="{% url 'article:set_remote' object.id %}">Set Remote</a>
-        {% endif %}
         {% if user.is_manager %}
         <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
         {% endif %}
@@ -48,7 +42,8 @@
     </div>
     {% if object.text|length > 1000 %}
     <div class="mt-3">
-        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Edit</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'article:edit' object.id %}">Edit</a>
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
         <a class="btn btn-primary btn-sm" href="{% url 'article:upload' object.id %}">Upload</a>
         <a class="btn btn-primary btn-sm" href="{% url 'article:download' object.id %}">Download</a>
         {% if user.is_manager %}

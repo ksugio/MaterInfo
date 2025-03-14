@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block script %}
+
+    {% include 'mathjax.html' %}
+    {% include 'highlight.html' %}
+
+{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    {% if object.upper_updated %}
+    <div class="row mt-3 g-0">
+        <h4><font color="red">Upper image or filter updated</font></h4>
+    </div>
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">ID : {{ object.id }}</div>
+        <div class="col">Status : {{ object.get_status_display }}</div>
+        <div class="col">Prefix : {{ object.prefix_display }}</div>
+        {%  if object.category %}
+            <div class="col">Category : {{ object.category }}</div>
+        {% endif %}
+        {%  if object.pred_class %}
+            <div class="col">Class : {{ object.pred_class }}</div>
+        {% endif %}
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">{{ object.note | markdown2html | safe }}</div>
+    </div>
+    <table class="table mt-3 border-bottom">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Count</th>
+                <th>Mean</th>
+                <th>STD</th>
+                <th>Min</th>
+                <th>Median</th>
+                <th>Max</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="{% url plot_name object.pk 0 10 %}">VFacet</a></td>
+                <td>{{ results.VFacet.count }}</td>
+                <td>{{ results.VFacet.mean }}</td>
+                <td>{{ results.VFacet.std }}</td>
+                <td>{{ results.VFacet.min }}</td>
+                <td>{{ results.VFacet.median }}</td>
+                <td>{{ results.VFacet.max }}</td>
+            </tr>
+            <tr>
+                <td><a href="{% url plot_name object.pk 1 10 %}">VArea</a></td>
+                <td>{{ results.VArea.count }}</td>
+                <td>{{ results.VArea.mean }}</td>
+                <td>{{ results.VArea.std }}</td>
+                <td>{{ results.VArea.min }}</td>
+                <td>{{ results.VArea.median }}</td>
+                <td>{{ results.VArea.max }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% if object.file %}
+    <div class="row mt-3 g-0">
+        <div class="col">File : {% url file_name object.unique %} <a href="{% url file_name object.unique %}">{% include 'cloud-download-icon.html' %}</a></div>
+    </div>
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+        <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
+        <a class="btn btn-primary btn-sm" href="{% url edit_note_name object.id %}">Edit Note</a>
+        <a class="btn btn-primary btn-sm" href="{% url image_name object.id 0 %}">Image0</a>
+        <a class="btn btn-primary btn-sm" href="{% url image_name object.id 1 %}">Image1</a>
+        {% if object.get_delete_url %}
+        <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

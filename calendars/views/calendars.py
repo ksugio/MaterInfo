@@ -1,10 +1,9 @@
 from django.urls import reverse
 from django.http import HttpResponse
-from django.utils.timezone import localtime
 from config.settings import FONT_PATH
 from project.views import base, base_api, remote
 from project.models import Project
-from project.forms import EditNoteForm, ImportForm, CloneForm, TokenForm, SetRemoteForm
+from project.forms import ImportForm, CloneForm, TokenForm, SetRemoteForm
 from ..models import Calendar, Plan
 from ..serializer import CalendarSerializer
 from .plan import PlanRemote
@@ -181,10 +180,10 @@ class DeleteView(base.DeleteManagerView):
     model = Calendar
     template_name = "project/default_delete.html"
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Calendar
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class CalendarSearch(base.Search):
     model = Calendar
@@ -262,6 +261,9 @@ class PushView(remote.PushView):
     def get_success_url(self):
         today = datetime.date.today()
         return reverse(self.success_name, kwargs={'pk': self.kwargs['pk'], 'year': today.year, 'month': today.month})
+
+class LogView(remote.LogView):
+    model = Calendar
 
 class SetRemoteView(remote.SetRemoteView):
     model = Calendar

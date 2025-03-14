@@ -1,8 +1,10 @@
+from .regression import Regression
+from .regreshap import RegreSHAP
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import KFold, train_test_split
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.neighbors import KNeighborsRegressor
@@ -11,14 +13,13 @@ from sklearn.svm import SVR
 from sklearn.neural_network import MLPRegressor
 from xgboost import XGBRegressor
 from lightgbm import LGBMRegressor
-from skl2onnx import convert_sklearn, update_registered_converter
-from skl2onnx.common.data_types import FloatTensorType
-from skl2onnx.common.shape_calculator import calculate_linear_regressor_output_shapes
-from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost
-from onnxmltools.convert.lightgbm.operator_converters.LightGbm import convert_lightgbm
-from onnxruntime import InferenceSession
+from io import BytesIO
 import numpy as np
+import pandas as pd
 import optuna
+import shap
+import joblib
+import json
 
 def GetValueList(item):
     vl = []
@@ -182,80 +183,169 @@ class RegressionObjective:
             kf = KFold(n_splits=self.nsplits)
         scores = []
         for train, test in kf.split(self.X, self.Y):
-            xtrain, ytrain = self.X.iloc[train], self.Y.iloc[train]
-            xtest, ytest = self.X.iloc[test], self.Y.iloc[test]
+            xtrain, ytrain = self.X[train], self.Y[train]
+            xtest, ytest = self.X[test], self.Y[test]
             model.fit(xtrain, ytrain)
-            ypred = model.predict(self.X.iloc[test])
+            ypred = model.predict(self.X[test])
             scores.append(mean_squared_error(ytest, ypred))
         if trial.should_prune():
             raise optuna.structs.TrialPruned()
         return -np.mean(scores)
 
-def ToONNX(method, model, ncol):
-    if method == 10:
-        update_registered_converter(
-            XGBRegressor,
-            "XGBoostXGBRegressor",
-            calculate_linear_regressor_output_shapes,
-            convert_xgboost,
-        )
-        onx = convert_sklearn(
-            model,
-            "pipeline_xgboost",
-            [("input", FloatTensorType([None, ncol]))],
-            target_opset={"": 12, "ai.onnx.ml": 2},
-        )
-    elif method == 11:
-        update_registered_converter(
-            LGBMRegressor,
-            "LightGbmLGBMRegressor",
-            calculate_linear_regressor_output_shapes,
-            convert_lightgbm,
-            #options={"split": None},
-        )
-        onx = convert_sklearn(
-            model,
-            "pipeline_lightgbm",
-            [("input", FloatTensorType([None, ncol]))],
-            target_opset={"": 14, "ai.onnx.ml": 2}
-        )
+def Optimize(features, obj, dparam, scaler, pca, n_components, method, nsplits, random, ntrials):
+    study = optuna.create_study(direction='maximize')
+    objective = RegressionObjective(features, obj, dparam, scaler, pca,
+                                    n_components, method, nsplits, random)
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    study.optimize(objective, n_trials=ntrials)
+    dparam.update(study.best_params)
+    ids = [t._trial_id for t in study.get_trials()]
+    values = [t.values[0] for t in study.get_trials()]
+    params = [t.params for t in study.get_trials()]
+    trials = {
+        'ids': ids,
+        'values': values,
+        'params': params,
+        'best_id': study.best_trial._trial_id,
+        'best_value': study.best_trial.values[0],
+        'best_param': study.best_trial.params
+    }
+    return dparam, trials
+
+def Accuracy(id, ytrain, ptrain, ytest, ptest):
+    if ytest is not None:
+        return {
+            'id': id,
+            'r2_train': r2_score(ytrain, ptrain),
+            'rmse_train': np.sqrt(mean_squared_error(ytrain, ptrain)),
+            'mae_train': mean_absolute_error(ytrain, ptrain),
+            'r2_test': r2_score(ytest, ptest),
+            'rmse_test': np.sqrt(mean_squared_error(ytest, ptest)),
+            'mae_test': mean_absolute_error(ytest, ptest)
+        }
     else:
-        onx = convert_sklearn(
-            model,
-            initial_types=[('input', FloatTensorType([None, ncol]))]
-        )
-    return onx.SerializeToString()
+        return {
+            'id': id,
+            'r2_train': r2_score(ytrain, ptrain),
+            'rmse_train': np.sqrt(mean_squared_error(ytrain, ptrain)),
+            'mae_train': mean_absolute_error(ytrain, ptrain)
+        }
 
-def RunONNX(onxs, values):
-    sess = InferenceSession(onxs)
-    input_name = sess.get_inputs()[0].name
-    pred_onx = sess.run(None, {input_name: values.astype(np.float32)})[0]
-    return pred_onx.reshape(-1)
+def AccuracyMaen(accuracies):
+    df = pd.DataFrame(accuracies)
+    return {
+        'id': -1,
+        'r2_train': df['r2_train'].mean(),
+        'rmse_train': df['rmse_train'].mean(),
+        'mae_train': df['mae_train'].mean(),
+        'r2_test': df['r2_test'].mean(),
+        'rmse_test': df['rmse_test'].mean(),
+        'mae_test': df['mae_test'].mean()
+    }
 
-def TrainModel(x_train, y_train, dparam, method):
-    if method == 0:
-        model = LinearRegression(**dparam)
-    elif method == 1:
-        model = Ridge(**dparam)
-    elif method == 2:
-        model = Lasso(**dparam)
-    elif method == 3:
-        model = ElasticNet(**dparam)
-    elif method == 4:
-        model = GaussianProcessRegressor(**dparam)
-    elif method == 5:
-        model = KNeighborsRegressor(**dparam)
-    elif method == 6:
-        model = RandomForestRegressor(**dparam)
-    elif method == 7:
-        model = GradientBoostingRegressor(**dparam)
-    elif method == 8:
-        model = SVR(**dparam)
-    elif method == 9:
-        model = MLPRegressor(max_iter=1000, **dparam)
-    elif method == 10:
-        model = XGBRegressor(**dparam)
-    elif method == 11:
-        model = LGBMRegressor(importance_type='gain', verbose=-1, **dparam)
-    model.fit(x_train, y_train)
-    return model
+def RegressionExec(features, obj, hparam, optimize, testsize, randomts, scaler,
+                   pca, n_components, method, nsplits, random, ntrials, columns, task_id):
+    features = np.array(features)
+    obj = np.array(obj)
+    if testsize > 0.0 and testsize <= 0.5:
+        if randomts:
+            features, test_features, obj, test_obj = train_test_split(features, obj, test_size=testsize, random_state=randomts)
+        else:
+            features, test_features, obj, test_obj = train_test_split(features, obj, test_size=testsize)
+    else:
+        test_features = None
+        test_obj = None
+    dparam = HParam2Dict(hparam)
+    if optimize:
+        dparam, trials = Optimize(features, obj, dparam, scaler, pca, n_components,
+                                  method, nsplits, random, ntrials)
+        hparam = Dict2HParam(dparam)
+    else:
+        trials = {}
+    # test with KFold
+    model = RegressionModel(dparam, scaler, pca, n_components, method)
+    if random:
+        kf = KFold(n_splits=nsplits, shuffle=True, random_state=random)
+    else:
+        kf = KFold(n_splits=nsplits)
+    accuracies = []
+    predictions = {'Objective': obj.tolist()}
+    for i, (train, test) in enumerate(kf.split(features, obj)):
+        xtrain, ytrain = features[train], obj[train]
+        xtest, ytest = features[test], obj[test]
+        model.fit(xtrain, ytrain)
+        pred = model.predict(features)
+        predictions['Predict%d' % i] = pred.tolist()
+        flag = np.full(len(pred), False)
+        flag[test] = True
+        predictions['Test%d' % i] = flag.tolist()
+        accuracies.append(Accuracy(i, ytrain, pred[train], ytest, pred[test]))
+    accuracies.append(AccuracyMaen(accuracies))
+    # train
+    model.fit(features, obj)
+    pred = model.predict(features)
+    predictions['PredictAll'] = pred.tolist()
+    if test_features is not None:
+        test_pred = model.predict(test_features)
+        ldiff = len(obj) - len(test_obj)
+        predictions['ObjectiveTest'] = test_obj.tolist()
+        predictions['ObjectiveTest'].extend([None] * ldiff)
+        predictions['PredictTest'] = test_pred.tolist()
+        predictions['PredictTest'].extend([None] * ldiff)
+        accuracies.append(Accuracy(-2, obj, pred, test_obj, test_pred))
+    else:
+        accuracies.append(Accuracy(-2, obj, pred, None, None))
+    coef = RegressionCoef(model, method)
+    if pca:
+        columns = ['PC{}'.format(i) for i in range(1, n_components + 1)]
+    results = {
+        'accuracies': accuracies,
+        'columns': columns,
+        'trials': trials,
+        **coef
+    }
+    reg = Regression.objects.get(task_id=task_id)
+    reg.hparam = hparam
+    pdf = pd.DataFrame(predictions)
+    reg.save_csv(pdf)
+    reg.save_model(model)
+    reg.results = json.dumps(results)
+    reg.save()
+
+def RegreSHAPExec(model_data, features, obj, columns, use_kernel, kmeans, nsample,  task_id):
+    buf = BytesIO(model_data)
+    buf.write(model_data)
+    model = joblib.load(buf)
+    buf.close()
+    features = np.array(features)
+    step = 0
+    if model.steps[step][0] == 'minmax' or model.steps[step][0] == 'standard':
+        features = model[step].transform(features)
+        step += 1
+    if model.steps[step][0] == 'pca':
+        features = model[step].transform(features)
+        step += 1
+    obj = np.array(obj)
+    method = model.steps[step][0]
+    if use_kernel or method == 'gpr' or method == 'knr' or method == 'svr' or method == 'mlpr':
+        summary = shap.kmeans(features, kmeans)
+        explainer = shap.KernelExplainer(model[step].predict, summary)
+        if nsample < obj.shape[0]:
+            x_test = features[:nsample]
+        else:
+            x_test = features
+    elif method == 'linear' or method == 'ridge' or method == 'lasso' or method == 'elasticnet':
+        explainer = shap.LinearExplainer(model[step], features)
+        x_test = features
+    elif method == 'rfr' or method == 'gbr' or method == 'xgb' or method == 'lgbm':
+        explainer = shap.TreeExplainer(model[step])
+        x_test = features
+    shap_values = explainer.shap_values(X=x_test)
+    results = {
+        'shap_values': shap_values.tolist(),
+        'x_test': x_test.tolist(),
+        'columns': columns
+    }
+    model = RegreSHAP.objects.get(task_id=task_id)
+    model.results = json.dumps(results)
+    model.save()

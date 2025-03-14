@@ -1,7 +1,6 @@
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.crypto import get_random_string
 from project.models import Created, Updated, RemoteRoot, Remote, Project
 import datetime
 
@@ -27,6 +26,9 @@ class Calendar(Created, Updated, RemoteRoot):
 
     def get_delete_url(self):
         return reverse('calendars:delete', kwargs={'pk': self.id})
+
+    def get_apiupdate_url(self):
+        return reverse('calendars:api_update', kwargs={'pk': self.id})
 
 def Timenow():
     tp = timezone.now() + datetime.timedelta(minutes=30)

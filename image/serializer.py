@@ -4,6 +4,8 @@ from .models.filter import Filter
 from .models.size import Size
 from .models.ln2d import LN2D
 from .models.imfp import IMFP
+from .models.voronoi import Voronoi
+from .models.measure import Measure
 from .models import process
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -39,8 +41,8 @@ class SizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Size
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'prefix', 'mindia', 'roiarea', 'results',
-                  'file', 'unique')
+                  'title', 'status', 'note', 'prefix', 'mindia', 'roiarea',
+                  'results', 'file', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class LN2DSerializer(serializers.ModelSerializer):
@@ -59,6 +61,20 @@ class IMFPSerializer(serializers.ModelSerializer):
                   'title', 'status', 'note', 'prefix', 'barrier', 'nclass', 'ntrials', 'randseed',
                   'single_ave', 'single_std', 'double_ave', 'double_std',
                   'file', 'unique')
+        read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
+
+class VoronoiSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Voronoi
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
+                  'title', 'status', 'note', 'prefix', 'results', 'file', 'unique')
+        read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
+
+class MeasureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Measure
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
+                  'title', 'status', 'note', 'type', 'data', 'prefix')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 #
@@ -118,4 +134,10 @@ class TransformSerializer(serializers.ModelSerializer):
     class Meta:
         model = process.Transform
         fields = ('id', 'updated_by', 'updated_at', 'name', 'order', 'method', 'angle')
+        read_only_fields = ('id', 'updated_by', 'updated_at')
+
+class DrawSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = process.Draw
+        fields = ('id', 'updated_by', 'updated_at', 'name', 'order', 'data')
         read_only_fields = ('id', 'updated_by', 'updated_at')

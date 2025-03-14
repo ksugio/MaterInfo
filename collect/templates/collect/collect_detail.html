@@ -3,6 +3,13 @@
 
 {% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
 
+{% block script %}
+
+    {% include 'mathjax.html' %}
+    {% include 'highlight.html' %}
+
+{% endblock %}
+
 {% block contents %}
 
 <div class="container">
@@ -56,13 +63,6 @@
         <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
         <a class="btn btn-primary btn-sm" href="{% url 'collect:edit_note' object.id %}">Edit Note</a>
         <a class="btn btn-primary btn-sm" href="{{ object.get_table_url }}">Table</a>
-        {% if object.remoteurl %}
-        <a class="btn btn-primary btn-sm" href="{% url 'collect:pull' object.id %}">Pull</a>
-        <a class="btn btn-primary btn-sm" href="{% url 'collect:push' object.id %}">Push</a>
-        <a class="btn btn-primary btn-sm" href="{% url 'collect:clear_remote' object.id %}">Clear Remote</a>
-        {% else %}
-        <a class="btn btn-primary btn-sm" href="{% url 'collect:set_remote' object.id %}">Set Remote</a>
-        {% endif %}
         {% if object.get_delete_url %}
         <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
         {% endif %}

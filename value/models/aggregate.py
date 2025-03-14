@@ -34,8 +34,8 @@ class Aggregate(Created, Updated, Remote, PrefixPtr):
     def get_delete_url(self):
         return reverse('value:aggregate_delete', kwargs={'pk': self.id})
 
-    def pathname(self):
-        return '%s/%s/%s' % (self.upper.upper.upper, self.upper.upper, self.upper)
+    def get_apiupdate_url(self):
+        return reverse('value:api_aggregate_update', kwargs={'pk': self.id})
 
     def measure(self):
         df = self.upper.check_read_csv()
@@ -50,14 +50,6 @@ class Aggregate(Created, Updated, Remote, PrefixPtr):
 
     def upper_updated(self):
         return self.updated_at < self.upper.recent_updated_at()
-
-    def upper_updated_measure(self):
-        if self.upper_updated():
-            self.measure()
-            self.save()
-            return True
-        else:
-            return False
 
     def feature(self):
         if self.status or self.upper.status or self.upper.upper.status or self.upper.upper.upper.status:

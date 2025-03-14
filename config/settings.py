@@ -14,6 +14,8 @@ import os
 import environ
 from datetime import timedelta
 
+os.environ['TF_ENABLE_ONEDNN_OPTS']='0'
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -45,29 +47,31 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'rest_framework',
     'djoser',
-    'mdeditor',
     'django_cleanup.apps.CleanupConfig',
+    'django_celery_results',
     'accounts.apps.AccountsConfig',
+    'project.apps.ProjectConfig',
+    'sample.apps.SampleConfig',
+    'comment.apps.CommentConfig',
+    'reference.apps.ReferenceConfig',
+    'document.apps.DocumentConfig',
+    'schedule.apps.ScheduleConfig',
+    'poll.apps.PollConfig',
+    'image.apps.ImageConfig',
+    'value.apps.ValueConfig',
+    'material.apps.MaterialConfig',
+    'density.apps.DensityConfig',
+    'hardness.apps.HardnessConfig',
+    'plot.apps.PlotConfig',
     'album.apps.AlbumConfig',
     'article.apps.ArticleConfig',
+    'public.apps.PublicConfig',
     'calendars.apps.CalendarsConfig',
     'collect.apps.CollectConfig',
-    'comment.apps.CommentConfig',
-    'density.apps.DensityConfig',
-    'document.apps.DocumentConfig',
     'general.apps.GeneralConfig',
-    'hardness.apps.HardnessConfig',
-    'image.apps.ImageConfig',
-    'material.apps.MaterialConfig',
-    'plot.apps.PlotConfig',
-    'poll.apps.PollConfig',
-    'project.apps.ProjectConfig',
-    'public.apps.PublicConfig',
-    'reference.apps.ReferenceConfig',
     'repository.apps.RepositoryConfig',
-    'sample.apps.SampleConfig',
-    'schedule.apps.ScheduleConfig',
-    'value.apps.ValueConfig',
+    'logger.apps.LoggerConfig',
+    'design.apps.DesignConfig'
 ]
 
 MIDDLEWARE = [
@@ -142,12 +146,18 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': env('MINIMUM_PASSWORD_LENGTH', cast=int, default=8),
+        },
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'accounts.views.AlphabeticPasswordValidator',
     },
 ]
 
@@ -188,12 +198,27 @@ MEDIA_ACCEL_REDIRECT = env('MEDIA_ACCEL_REDIRECT', cast=bool, default=False)
 
 REPOS_ROOT = env('REPOS_ROOT', default=os.path.join(BASE_DIR, 'repos'))
 
+MPGRID_WORK = env('MPGRID_WORK', default=os.path.join(BASE_DIR, 'mpgrid_work'))
+MPGRID_PLATFORM = env('MPGRID_PLATFORM', cast=int, default=-1)
+
+DETECT_WORK = env('DETECT_WORK', default=os.path.join(BASE_DIR, 'detect_work'))
+
+QE_WORK = env('QE_WORK', default=os.path.join(BASE_DIR, 'qe_work'))
+QE_PRE_EXEC = env('QE_PRE_EXEC', default='')
+QE_PWX_COMMAND = env('QE_PWX_COMMAND', default='pw.x')
+QE_BANDSX_COMMAND = env('QE_BANDSX_COMMAND', default='bands.x')
+QE_DOSX_COMMAND = env('QE_DOSX_COMMAND', default='dos.x')
+QE_PHX_COMMAND = env('QE_PHX_COMMAND', default='ph.x')
+QE_Q2RX_COMMAND = env('QE_Q2RX_COMMAND', default='q2r.x')
+QE_MATDYN_COMMAND = env('QE_MATDYNX_COMMAND', default='matdyn.x')
+QE_PPX_COMMAND = env('QE_PPX_COMMAND', default='pp.x')
+
 RANDOM_STRING_LENGTH = 17
 
 USE_LOCAL_HOST = {
-    'check': True,
-    'hosts': ['http://localhost:8080'],
-    'localhost': 'http://localhost:8000'
+    'check': env('USE_LOCAL_HOST_CHECK', cast=bool, default=True),
+    'hosts': env('USE_LOCAL_HOST_HOSTS', cast=list, default=['http://localhost:8080']),
+    'localhost': env('USE_LOCAL_HOST_LOCALHOST', default='http://localhost:8000')
 }
 
 REST_FRAMEWORK = {
@@ -222,22 +247,72 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='address')
 
 FONT_PATH = 'fonts/NotoSansJP-Regular.ttf'
 
-MDEDITOR_CONFIGS = {
-    'default': {
-        'width': '90% ',
-        'height': 600,
-        'toolbar': ["undo", "redo", "|",
-                    "bold", "del", "italic", "quote", "ucwords", "uppercase", "lowercase", "|",
-                    "h1", "h2", "h3", "h5", "h6", "|",
-                    "list-ul", "list-ol", "hr", "|",
-                    "link", "reference-link", "code", "preformatted-text", "code-block", "table", "datetime",
-                    "emoji", "html-entities", "pagebreak", "goto-line", "|",
-                    "help", "info",
-                    "||", "preview", "watch", "fullscreen"],
-        'watch':False,
-        'language': 'en'
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379')
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_EXTENDED = True
+CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERYD_LOG_LEVEL = 'INFO'
+
+TASK_MODELS = [
+    {
+        'TaskName': 'regression-task',
+        'Model': 'collect.models.regression.Regression',
+        'DetailName': 'collect:regression_detail'
+    },
+    {
+        'TaskName': 'regreshap-task',
+        'Model': 'collect.models.regreshap.RegreSHAP',
+        'DetailName': 'collect:regreshap_detail'
+    },
+    {
+        'TaskName': 'inverse-task',
+        'Model': 'collect.models.inverse.Inverse',
+        'DetailName': 'collect:inverse_detail'
+    },
+    {
+        'TaskName': 'classification-task',
+        'Model': 'collect.models.classification.Classification',
+        'DetailName': 'collect:classification_detail'
+    },
+    {
+        'TaskName': 'classshap-task',
+        'Model': 'collect.models.classshap.ClassSHAP',
+        'DetailName': 'collect:classshap_detail'
+    },
+    {
+        'TaskName': 'clustering-task',
+        'Model': 'collect.models.clustering.Clustering',
+        'DetailName': 'collect:clustering_detail'
+    },
+    {
+        'TaskName': 'clone-task',
+        'Model': 'project.models.Project',
+        'DetailName': 'project:detail'
+    },
+    {
+        'TaskName': 'pull-task',
+        'Model': 'project.models.Project',
+        'DetailName': 'project:detail'
+    },
+    {
+        'TaskName': 'push-task',
+        'Model': 'project.models.Project',
+        'DetailName': 'project:detail'
+    },
+]
+
+RESTART_DAEMON = [
+    {
+        'name': 'celery',
+        'call': ['systemctl', 'restart', env('RESTART_CELERY', default='celery.service')]
+    },
+    {
+        'name': 'uwsgi',
+        'call': ['systemctl', 'restart', env('RESTART_UWSGI', default='uwsgi.service')]
     }
-}
+]
 
 # MaterInfo settings
 #
@@ -255,6 +330,12 @@ PROJECT_LOWER = [
         'Remote': 'project.views.prefix.PrefixRemote',
         'RemoteOrder': 1,
         'Search': 'project.views.prefix.PrefixSearch'
+    },
+    {
+        'ListName': ('Design', 'design:list'),
+        'Remote': 'design.views.design.DesignRemote',
+        'RemoteOrder': 3,
+        'Search': 'design.views.design.DesignSearch'
     },
     {
         'ListName': ('Plot', 'plot:list'),
@@ -282,9 +363,9 @@ PROJECT_LOWER = [
     },
     {
         'ListName': ('Reference', 'reference:list'),
-        'Remote': 'reference.views.ReferenceRemote',
+        'Remote': 'reference.views.reference.ReferenceRemote',
         'RemoteOrder': 12,
-        'Search': 'reference.views.SearchView'
+        'Search': 'reference.views.reference.SearchView'
     },
     {
         'ListName': ('Document', 'document:list'),
@@ -320,6 +401,12 @@ PROJECT_LOWER = [
         'RemoteOrder': 18,
         'Search': 'poll.views.poll.PollSearch'
     },
+    {
+        'ListName': ('Logger', 'logger:list'),
+        'Remote': 'logger.views.logger.LoggerRemote',
+        'RemoteOrder': 19,
+        'Search': 'logger.views.logger.LoggerSearch'
+    }
 ]
 
 SAMPLE_LOWER = [
@@ -335,8 +422,8 @@ SAMPLE_LOWER = [
     },
     {
         'ListName': ('Density', 'density:list'),
-        'Remote': 'density.views.DensityRemote',
-        'Search': 'density.views.DensitySearch'
+        'Remote': 'density.views.density.DensityRemote',
+        'Search': 'density.views.density.DensitySearch'
     },
     {
         'ListName': ('Hardness', 'hardness:list'),
@@ -360,6 +447,11 @@ IMAGE_LOWER = [
         'ListName': ('Filter', 'image:filter_list'),
         'Remote': 'image.views.filter.FilterRemote',
         'Search': 'image.views.filter.FilterSearch'
+    },
+    {
+        'ListName': ('Measure', 'image:measure_list'),
+        'Remote': 'image.views.measure.MeasureRemote',
+        'Search': 'image.views.measure.MeasureSearch'
     },
 ]
 
@@ -404,6 +496,11 @@ IMAGE_FILTER_PROCESS = [
         'AddName': ('Transform', 'image:transform_add'),
         'Remote': 'image.views.process_api.TransformRemote'
     },
+    {
+        'Model': 'image.models.process.Draw',
+        'AddName': ('Draw', 'image:draw_add'),
+        'Remote': 'image.views.process_api.DrawRemote'
+    },
 ]
 
 IMAGE_FILTER_LOWER = [
@@ -421,6 +518,16 @@ IMAGE_FILTER_LOWER = [
         'ListName': ('IMFP', 'image:imfp_list'),
         'Remote': 'image.views.imfp.IMFPRemote',
         'Search': 'image.views.imfp.IMFPSearch'
+    },
+    {
+        'ListName': ('Voronoi', 'image:voronoi_list'),
+        'Remote': 'image.views.voronoi.VoronoiRemote',
+        'Search': 'image.views.voronoi.VoronoiSearch'
+    },
+    {
+        'ListName': ('Contours', 'detect:contours_list'),
+        'Remote': 'detect.views.contours.ContoursRemote',
+        'Search': 'detect.views.contours.ContoursSearch'
     },
 ]
 
@@ -553,6 +660,10 @@ VALUE_CURVE_EQUATION = [
 
 COLLECT_FEATURES = [
     {
+        'Model': 'design.models.experiment.Experiment',
+        'Depth': 2
+    },
+    {
         'Model': 'general.models.General',
         'Depth': 2
     },
@@ -567,6 +678,10 @@ COLLECT_FEATURES = [
     {
         'Model': 'hardness.models.Hardness',
         'Depth': 2
+    },
+    {
+        'Model': 'image.models.measure.Measure',
+        'Depth': 3
     },
     {
         'Model': 'value.models.aggregate.Aggregate',
@@ -586,6 +701,10 @@ COLLECT_FEATURES = [
     },
     {
         'Model': 'image.models.imfp.IMFP',
+        'Depth': 4
+    },
+    {
+        'Model': 'image.models.voronoi.Voronoi',
         'Depth': 4
     },
 ]
@@ -752,6 +871,12 @@ FILE_ITEMS = [
         'FileName': 'collect:regression_file',
         'FileField': 'file',
         'DetailName': 'collect:regression_detail'
+    },
+    {
+        'Model': 'reference.models.digitizer.Digitizer',
+        'FileName': 'reference:digitizer_file',
+        'FileField': 'file',
+        'DetailName': 'reference:digitizer_detail'
     },
     {
         'Model': 'article.models.File',

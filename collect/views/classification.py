@@ -1,14 +1,16 @@
+from django.http import HttpResponse
 from django.shortcuts import render
-from project.views import base, base_api, remote
-from project.forms import EditNoteForm
+from project.views import base, base_api, remote, task
 from ..models.filter import Filter
 from ..models.classification import Classification
 from ..forms import ClassificationAddForm, ClassificationUpdateForm
+from ..tasks import ClassificationTask
 from ..serializer import ClassificationSerializer
 from .classshap import ClassSHAPRemote
 import json
+import datetime
 
-class AddView(base.AddView):
+class AddView(task.AddView):
     model = Classification
     upper = Filter
     form_class = ClassificationAddForm
@@ -18,17 +20,21 @@ class AddView(base.AddView):
         upper = self.upper.objects.get(pk=self.kwargs['pk'])
         form = super().get_form(form_class=form_class)
         form.fields['title'].initial = 'Cla' + base.DateToday()[2:]
-        form.fields['objective'].choices = upper.columns_choice()
+        form.fields['objective'].choices = upper.columns_choice(drophead=True)
         return form
 
-    def form_valid(self, form):
-        model = form.save(commit=False)
-        model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
-        model.created_by = self.request.user
-        model.updated_by = self.request.user
-        optimize = form.cleaned_data['optimize']
-        model.test_train(optimize)
-        return super().form_valid(form)
+    def start_task(self, form, model):
+        features, obj = model.dataset()
+        if features is not None and model.check_obj(obj):
+            model.task_id = ClassificationTask.delay(
+                features.values.tolist(), obj.values.tolist(),
+                model.hparam, form.cleaned_data['optimize'],
+                model.testsize, model.randomts, model.scaler,
+                model.pca, model.get_n_components(features),
+                model.method, model.nsplits, model.random, model.ntrials,
+                features.columns.tolist(),
+                request_user_id=self.request.user.id
+            )
 
 class ListView(base.ListView):
     model = Classification
@@ -36,19 +42,21 @@ class ListView(base.ListView):
     template_name = "project/default_list.html"
     navigation = [['Add', 'collect:classification_add'],]
 
-class DetailView(base.DetailView):
+class DetailView(task.DetailView):
     model = Classification
     template_name = "collect/classification_detail.html"
-    navigation = [['ClassSHAP', 'collect:classshap_list'], ]
+    result_fields = ('results',)
+    navigation = [['ClassSHAP', 'collect:classshap_list'],
+                  ['ClassPred', 'collect:classpred_list']]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         model = self.model.objects.get(pk=self.kwargs['pk'])
-        if model.results:
+        if self.result_saved(model):
             context['results'] = json.loads(model.results)
         return context
 
-class UpdateView(base.UpdateView):
+class UpdateView(task.UpdateView):
     model = Classification
     form_class = ClassificationUpdateForm
     template_name = "project/default_update.html"
@@ -56,25 +64,54 @@ class UpdateView(base.UpdateView):
     def get_form(self, form_class=None):
         model = self.model.objects.get(pk=self.kwargs['pk'])
         form = super().get_form(form_class=form_class)
-        form.fields['objective'].choices = model.upper.columns_choice()
+        form.fields['objective'].choices = model.upper.columns_choice(drophead=True)
         form.fields['objective'].initial = model.objective
         return form
 
-    def form_valid(self, form):
-        model = form.save(commit=False)
-        model.updated_by = self.request.user
-        optimize = form.cleaned_data['optimize']
-        model.test_train(optimize)
-        return super().form_valid(form)
+    def start_task(self, form, model):
+        features, obj = model.dataset()
+        if features is not None and model.check_obj(obj):
+            model.task_id = ClassificationTask.delay(
+                features.values.tolist(), obj.values.tolist(),
+                model.hparam, form.cleaned_data['optimize'],
+                model.testsize, model.randomts, model.scaler,
+                model.pca, model.get_n_components(features),
+                model.method, model.nsplits, model.random, model.ntrials,
+                features.columns.tolist(),
+                request_user_id=self.request.user.id
+            )
+            model.results = ''
+            if model.file:
+                model.file.delete()
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Classification
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
-class DeleteView(base.DeleteView):
+class DeleteView(task.DeleteView):
     model = Classification
     template_name = "project/default_delete.html"
+
+class RevokeView(task.RevokeView):
+    model = Classification
+    template_name = "project/default_revoke.html"
+    success_name = 'collect:classification_detail'
+
+class ONNXView(base.View):
+    model = Classification
+
+    def get(self, request, **kwargs):
+        model = self.model.objects.get(pk=kwargs['pk'])
+        onnx, score_onnx = model.to_onnx()
+        if score_onnx == 1.0:
+            response = HttpResponse(onnx, content_type='text/plain; charset=Shift-JIS')
+            now = datetime.datetime.now()
+            filename = 'Classification_%s.onnx' % (now.strftime('%Y%m%d_%H%M%S'))
+            response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'{}'.format(filename)
+            return response
+        else:
+            return HttpResponse('Cannot transform to ONNX')
 
 class FileView(base.FileView):
     model = Classification
@@ -96,18 +133,26 @@ class ReportView(base.View):
         model = self.model.objects.get(pk=kwargs['pk'])
         rid = kwargs['rid']
         results = json.loads(model.results)
-        report = results['reports'][rid].copy()
+        if rid < len(results['reports']):
+            report = results['reports'][rid].copy()
+            del report['id'], report['accuracy'], report['train_accuracy']
+        else:
+            report = results['all_report']
+            del report['accuracy']
         mavg = report.pop('macro avg')
         wavg = report.pop('weighted avg')
-        del report['id'], report['accuracy'], report['train_accuracy']
         lreport = []
         for key, val in report.items():
             item = [key, val['precision'], val['recall'], val['f1-score'], val['support']]
             lreport.append(item)
         lreport.append(['macro avg', mavg['precision'], mavg['recall'], mavg['f1-score'], mavg['support']])
         lreport.append(['weighted avg', wavg['precision'], wavg['recall'], wavg['f1-score'], wavg['support']])
+        if rid < len(results['reports']):
+            title = '%s : KFold%d Report' % (model.title, rid)
+        else:
+            title = '%s : All Report' % (model.title)
         params = {
-            'title': '%s : KFold%d Report' % (model.title, rid),
+            'title': title,
             'report': lreport,
             'object': model,
             'brand_name': self.brandName(),

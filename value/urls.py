@@ -12,6 +12,7 @@ urlpatterns = [
     path('value/<int:pk>', value.DetailView.as_view(), name='detail'),
     path('value/<int:pk>/update', value.UpdateView.as_view(), name='update'),
     path('value/<int:pk>/delete', value.DeleteView.as_view(), name='delete'),
+    path('value/<int:pk>/move', value.MoveView.as_view(), name='move'),
     path('value/<int:pk>/edit_note', value.EditNoteView.as_view(), name='edit_note'),
     path('value/<str:unique>/file', value.FileView.as_view(), name='file'),
     path('value/<int:pk>/table', value.TableView.as_view(), name='table'),

@@ -28,7 +28,7 @@ class Command(BaseCommand):
             url = options['url']
         username = input("Remote Username: ")
         password = getpass("Remote Password: ")
-        rooturl, id = ParseURL(url, self.view_name, self.view_args)
+        rooturl, id, _ = ParseURL(url, self.view_name, self.view_args)
         refresh, access = Login(rooturl, username, password)
         if refresh:
             self.clone(rooturl, id, access, localuser[0])

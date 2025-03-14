@@ -5,6 +5,7 @@ from .models import process
 from .models.size import Size
 from .models.ln2d import LN2D
 from .models.imfp import IMFP
+from .models.measure import Measure
 
 admin.site.register(Image)
 admin.site.register(Filter)
@@ -18,4 +19,4 @@ admin.site.register(process.DrawScale)
 admin.site.register(Size)
 admin.site.register(LN2D)
 admin.site.register(IMFP)
-
+admin.site.register(Measure)

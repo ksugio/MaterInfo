@@ -1,11 +1,8 @@
-from django.utils.module_loading import import_string
-from django.shortcuts import render, redirect
 from project.views import base, base_api, remote
 from ..models.area import Area
 from ..models.item import Item
 from ..forms import ItemForm
 from ..serializer import ItemSerializer
-import urllib
 
 class AddView(base.AddView):
     model = Item
@@ -28,6 +25,10 @@ class DeleteView(base.DeleteView):
 class AddAPIView(base_api.AddAPIView):
     upper = Area
     serializer_class = ItemSerializer
+
+    def perform_create(self, serializer):
+        upper = self.upper.objects.get(pk=self.kwargs['pk'])
+        serializer.save(updated_by=self.request.user, upper=upper)
 
 class ListAPIView(base_api.ListAPIView):
     upper = Area

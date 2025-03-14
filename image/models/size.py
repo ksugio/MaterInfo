@@ -3,7 +3,6 @@ from django.urls import reverse
 from project.models import Created, Updated, Remote, PrefixPtr, ModelUploadTo, Unique
 from .filter import Filter
 from io import BytesIO
-import os
 import numpy as np
 import cv2
 import pandas as pd
@@ -196,6 +195,9 @@ class Size(Created, Updated, Remote, SizeMixin):
 
     def get_delete_url(self):
         return reverse('image:size_delete', kwargs={'pk': self.id})
+
+    def get_apiupdate_url(self):
+        return reverse('image:api_size_update', kwargs={'pk': self.id})
 
     # def basename(self):
     #     return os.path.basename(self.file.name)

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block script %}
+
+    {% include 'mathjax.html' %}
+    {% include 'highlight.html' %}
+
+{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">ID : {{ object.id }}</div>
+        <div class="col">Status : {{ object.get_status_display }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">{{ object.note | markdown2html | safe }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Logger ID : {{ object.logger }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+        <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{% url 'logger:grab' object.id %}">Grab</a>
+        {% if user.is_manager %}
+            <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
+            <a class="btn btn-primary btn-sm" href="{% url 'logger:edit_note' object.id %}">Edit Note</a>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
+        {% endif %}
+    </div>
+    <div class="row mt-3 g-0">
+        <img src="{% url 'logger:monitor' object.id 3600 %}" id="PlotImage">
+    </div>
+   <form>
+        <div class="row mt-3">
+            <div class="col-2">
+                Period<input class="form-control" type="number" name="period" id="Period" value="3600">
+            </div>
+            <div class="col-1">
+                <button type="button" class="btn btn-primary btn-sm" id="buttonSet">Reload</button>
+            </div>
+        </div>
+   </form>
+</div>
+
+{% endblock %}
+
+{% block script2 %}
+
+    <script>
+        function init() {
+            document.getElementById('buttonSet').addEventListener('click', () => {
+                let period = document.getElementById('Period').value;
+                let url = '{% url 'logger:monitor' object.id 0 %}'.slice(0, -1) + period + "?" + Date.now();
+                document.getElementById('PlotImage').src = url;
+            });
+        }
+        window.onload = init;
+    </script>
+
+{% endblock %}

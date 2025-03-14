@@ -11,29 +11,17 @@
     {% else %}
         <h1 class="mt-3">{{ object.title }}</h1>
     {% endif %}
-    <div class="mt-3">
-        Remote URL : {{ object.remoteurl }}
-    </div>
-    <div class="mt-3">
-        Remote ID : {{ object.remoteid }}
-    </div>
+   <div class="row mt-3 g-0">
+        <div class="col">Remote URL : {{ object.remoteurl }}</div>
+        <div class="col">Remote ID : {{ object.remoteid }}</div>
+   </div>
     <div class="mt-3">
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.as_p }}
-            {% if lines %}
+            <h3 class="mb-3">Are you sure you want to push ?</h3>
             <button type="submit" class="btn btn-primary btn-sm">Push</button>
             <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Cancel</a>
-            {% else %}
-            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Back</a>
-            {% endif %}
         </form>
-    </div>
-    <div class="mt-3">
-        <div>{{ lines|length }} changes</div>
-        {% for line in lines %}
-            <div>{{ line|truncatechars:200 }}</div>
-        {% endfor %}
     </div>
 </div>
 

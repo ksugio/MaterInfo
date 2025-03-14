@@ -3,6 +3,13 @@
 
 {% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
 
+{% block script %}
+
+    {% include 'mathjax.html' %}
+    {% include 'highlight.html' %}
+
+{% endblock %}
+
 {% block contents %}
 
 <div class="container">
@@ -35,6 +42,7 @@
         {% if object.remoteurl %}
         <a class="btn btn-primary btn-sm" href="{% url 'calendars:pull' object.id %}">Pull</a>
         <a class="btn btn-primary btn-sm" href="{% url 'calendars:push' object.id %}">Push</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'calendars:log' object.id %}">Log</a>
         <a class="btn btn-primary btn-sm" href="{% url 'calendars:clear_remote' object.id %}">Clear Remote</a>
         {% else %}
         <a class="btn btn-primary btn-sm" href="{% url 'calendars:set_remote' object.id %}">Set Remote</a>

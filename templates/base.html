@@ -38,12 +38,15 @@
               <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                 <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Profile</a></li>
                 <li><a class="dropdown-item" href="{% url 'accounts:token' %}">Token</a></li>
+                <li><a class="dropdown-item" href="{% url 'project:task_user' %}">Task</a></li>
                 {% if user.is_manager %}
-                <li><a class="dropdown-item" href="{% url 'public:list' %}">Public</a></li>
+                    <li><a class="dropdown-item" href="{% url 'project:task_all' %}">Task All</a></li>
+                    <li><a class="dropdown-item" href="{% url 'public:list' %}">Public</a></li>
                 {% endif %}
                 {% if user.is_superuser %}
-                <li><a class="dropdown-item" href="{% url 'accounts:user_list' %}">User List</a></li>
-                <li><a class="dropdown-item" href="/mi7398527" target="_blank">Admin</a></li>
+                    <li><a class="dropdown-item" href="{% url 'accounts:user_list' %}">User List</a></li>
+                    <li><a class="dropdown-item" href="{% url 'project:restart_daemon' %}">Restart</a></li>
+                    <li><a class="dropdown-item" href="/mi7398527" target="_blank">Admin</a></li>
                 {% endif %}
               </ul>
             </li>
@@ -64,7 +67,7 @@
 
     <footer class="footer mt-3">
       <div class="container">
-        <p class="text-muted text-center">Copyright &copy 2020-2024 MaterInfo</p>
+        <p class="text-muted text-center">Copyright of MaterInfo &copy 2020-2025 Kenjiro Sugio</p>
       </div>
     </footer>
   </body>

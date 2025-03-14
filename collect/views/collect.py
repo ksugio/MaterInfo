@@ -1,23 +1,21 @@
-from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from config.settings import COLLECT_LOWER
 from project.views import base, base_api, remote
 from project.models import Project
-from project.forms import EditNoteForm, SearchForm, ImportForm, CloneForm, TokenForm, SetRemoteForm
+from project.forms import SearchForm, ImportForm, CloneForm, TokenForm, SetRemoteForm
 from ..models.collect import Collect
-from ..forms import CollectAddForm, CollectUpdateForm, CollectLoadForm
+from ..forms import CollectUploadForm, CollectGetForm, CollectUpdateForm
 from ..serializer import CollectSerializer
-from .filter import FilterRemote
 
 class AddView(base.AddView):
     model = Collect
     upper = Project
-    form_class = CollectAddForm
+    fields = ('title', 'note', 'projectids', 'disp_head', 'disp_tail')
     template_name ="project/default_add.html"
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class=form_class)
-        form.fields['title'].initial = 'Collect' + base.DateToday()[2:]
+        form.fields['title'].initial = 'Col' + base.DateToday()[2:]
         return form
 
     def form_valid(self, form):
@@ -25,13 +23,51 @@ class AddView(base.AddView):
         model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
         model.created_by = self.request.user
         model.updated_by = self.request.user
-        method = form.cleaned_data['method']
-        if method == '0':
-            model.collect_features(self.request.user)
-        elif method == '1':
-            model.upload_features(form.cleaned_data['uploadfile'])
-        elif method == '2':
-            model.get_features(form.cleaned_data['url'])
+        model.collect_features(self.request.user)
+        return super().form_valid(form)
+
+class UploadView(base.AddView):
+    model = Collect
+    upper = Project
+    form_class = CollectUploadForm
+    template_name ="project/default_add.html"
+    title = 'Collect Upload'
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class=form_class)
+        form.fields['title'].initial = 'Col' + base.DateToday()[2:]
+        return form
+
+    def form_valid(self, form):
+        model = form.save(commit=False)
+        model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
+        model.created_by = self.request.user
+        model.updated_by = self.request.user
+        encoding = CollectUploadForm.EncodingChoices[int(form.cleaned_data['encoding'])][1]
+        model.upload_features(form.cleaned_data['uploadfile'], encoding,
+                              form.cleaned_data['sheetname'])
+        return super().form_valid(form)
+
+class GetView(base.AddView):
+    model = Collect
+    upper = Project
+    form_class = CollectGetForm
+    template_name ="project/default_add.html"
+    title = 'Collect Get'
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class=form_class)
+        form.fields['title'].initial = 'Col' + base.DateToday()[2:]
+        return form
+
+    def form_valid(self, form):
+        model = form.save(commit=False)
+        model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
+        model.created_by = self.request.user
+        model.updated_by = self.request.user
+        model.get_features(form.cleaned_data['url'],
+                           request_host=self.request._current_scheme_host,
+                           request_cookies=self.request.COOKIES)
         return super().form_valid(form)
 
 class ListView(base.ListView):
@@ -39,8 +75,9 @@ class ListView(base.ListView):
     upper = Project
     template_name = "project/default_list.html"
     navigation = [['Add', 'collect:add'],
+                  ['Upload', 'collect:upload'],
+                  ['Get', 'collect:get'],
                   ['Import', 'collect:import'],
-                  ['Clone', 'collect:clone'],
                   ['Search', 'collect:search']]
 
 class DetailView(base.DetailView):
@@ -79,10 +116,10 @@ class UpdateView(base.UpdateView):
             model.collect_features(self.request.user)
         return super().form_valid(form)
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Collect
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = Collect
@@ -172,42 +209,42 @@ class ImportView(remote.ImportView):
     hidden_lower = False
     default_lower = False
 
-class CloneView(remote.CloneView):
-    model = Collect
-    form_class = CloneForm
-    upper = Project
-    remote_class = CollectRemote
-    template_name = "project/default_clone.html"
-    title = 'Collect Clone'
-    success_name = 'collect:list'
-    view_name = 'collect:detail'
-
-class TokenView(remote.TokenView):
-    model = Collect
-    form_class = TokenForm
-    success_names = ['collect:pull', 'collect:push']
-
-class PullView(remote.PullView):
-    model = Collect
-    remote_class = CollectRemote
-    success_name = 'collect:detail'
-    fail_name = 'collect:token'
-
-class PushView(remote.PushView):
-    model = Collect
-    remote_class = CollectRemote
-    success_name = 'collect:detail'
-    fail_name = 'collect:token'
-
-class SetRemoteView(remote.SetRemoteView):
-    model = Collect
-    form_class = SetRemoteForm
-    remote_class = CollectRemote
-    title = 'Collect Set Remote'
-    success_name = 'collect:detail'
-    view_name = 'collect:detail'
-
-class ClearRemoteView(remote.ClearRemoteView):
-    model = Collect
-    remote_class = CollectRemote
-    success_name = 'collect:detail'
+# class CloneView(remote.CloneView):
+#     model = Collect
+#     form_class = CloneForm
+#     upper = Project
+#     remote_class = CollectRemote
+#     template_name = "project/default_clone.html"
+#     title = 'Collect Clone'
+#     success_name = 'collect:list'
+#     view_name = 'collect:detail'
+#
+# class TokenView(remote.TokenView):
+#     model = Collect
+#     form_class = TokenForm
+#     success_names = ['collect:pull', 'collect:push']
+#
+# class PullView(remote.PullView):
+#     model = Collect
+#     remote_class = CollectRemote
+#     success_name = 'collect:detail'
+#     fail_name = 'collect:token'
+#
+# class PushView(remote.PushView):
+#     model = Collect
+#     remote_class = CollectRemote
+#     success_name = 'collect:detail'
+#     fail_name = 'collect:token'
+#
+# class SetRemoteView(remote.SetRemoteView):
+#     model = Collect
+#     form_class = SetRemoteForm
+#     remote_class = CollectRemote
+#     title = 'Collect Set Remote'
+#     success_name = 'collect:detail'
+#     view_name = 'collect:detail'
+#
+# class ClearRemoteView(remote.ClearRemoteView):
+#     model = Collect
+#     remote_class = CollectRemote
+#     success_name = 'collect:detail'

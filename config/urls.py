@@ -25,7 +25,6 @@ urlpatterns = [
     path('mi7398527/', admin.site.urls),
     path('', RedirectView.as_view(url=IndexUrl), name='index'),
     path('api/auth/', include('djoser.urls.jwt')),
-    path('mdeditor/', include('mdeditor.urls')),
     path('accounts/', include('accounts.urls')),
     path('project/', include('project.urls')),
     path('sample/', include('sample.urls')),
@@ -47,5 +46,7 @@ urlpatterns = [
     path('collect/', include('collect.urls')),
     path('general/', include('general.urls')),
     path('repository/', include('repository.urls')),
+    path('logger/', include('logger.urls')),
+    path('design/', include('design.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

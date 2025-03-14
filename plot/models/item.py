@@ -1,8 +1,6 @@
-from django.utils.module_loading import import_string
 from django.db import models
 from django.urls import reverse
-from project.models import Updated, Remote, FileSearch
-from value.models.value import CSVFile
+from project.models import Updated, Remote
 from .area import Area
 from io import BytesIO
 import requests
@@ -88,7 +86,7 @@ ColormapChoices = ((0, 'viridis'), (1, 'plasma'), (2, 'inferno'), (3, 'magma'), 
                    (75, 'cubehelix'), (76, 'brg'), (77, 'gist_rainbow'), (78, 'rainbow'), (79, 'jet'),
                    (80, 'turbo'), (81, 'nipy_spectral'), (82, 'gist_ncar'))
 
-class Item(Updated, Remote, FileSearch):
+class Item(Updated, Remote):
     upper = models.ForeignKey(Area, verbose_name='Plot area', on_delete=models.CASCADE)
     url = models.CharField(verbose_name='URL', max_length=256)
     columnx =  models.CharField(verbose_name='Column X', max_length=100)
@@ -122,22 +120,21 @@ class Item(Updated, Remote, FileSearch):
     def get_delete_url(self):
         return reverse('plot:item_delete', kwargs={'pk': self.id})
 
-    def get_xy(self, host):
+    def get_xy(self, **kwargs):
         if self.url.startswith('http'):
-            response = requests.get(self.url)
-            if response.status_code != 200:
-                return [0, 0], [0, 0], None
+            if self.url.startswith(kwargs['request_host'] ):
+                response = requests.get(self.url, cookies=kwargs['request_cookies'])
             else:
-                buf = BytesIO(response.content)
-                df = pd.read_csv(buf)
-                buf.close()
+                response = requests.get(self.url)
         else:
-            file = self.file_search(self.url)
-            if file is None:
-                return [0, 0], [0, 0], None
-            else:
-                with file.open('r') as f:
-                    df = pd.read_csv(f)
+            response = requests.get(kwargs['request_host'] + self.url,
+                                    cookies=kwargs['request_cookies'])
+        if response.status_code != 200:
+            return [0, 0], [0, 0], None
+        else:
+            buf = BytesIO(response.content)
+            df = pd.read_csv(buf)
+            buf.close()
         if self.columnx in df.columns.values:
             x = df[self.columnx]
         else:
@@ -152,32 +149,29 @@ class Item(Updated, Remote, FileSearch):
             c = None
         return x, y, c
 
-    def plot(self, host):
+    def plot(self, **kwargs):
         if self.type == 0:
-            x, y, c = self.get_xy(host)
+            x, y, c = self.get_xy(**kwargs)
             plt.plot(x, y, linewidth=self.linewidth, linestyle=LineStyles[self.linestyle],
                      color=self.get_color_display(), label=self.label)
         elif self.type == 1:
-            x, y, c = self.get_xy(host)
+            x, y, c = self.get_xy(**kwargs)
             plt.plot(x, y, linewidth=self.linewidth, linestyle=LineStyles[self.linestyle],
                      color=self.get_color_display(), marker=Markers[self.marker], label=self.label)
         elif self.type == 2:
-            x, y, c = self.get_xy(host)
+            x, y, c = self.get_xy(**kwargs)
             if c is None:
                 plt.scatter(x, y, color=self.get_color_display(), edgecolors=self.get_edgecolor_display(),
                             marker=Markers[self.marker], s=self.markersize, label=self.label)
             else:
-                cmap = plt.cm.get_cmap(self.get_colormap_display())
+                cmap = matplotlib.colormaps[self.get_colormap_display()]
                 plt.scatter(x, y, marker=Markers[self.marker], s=self.markersize, label=self.label,
                             c=c, cmap=cmap)
         elif self.type == 3:
-            x, y, c = self.get_xy(host)
+            x, y, c = self.get_xy(**kwargs)
             plt.bar(x, y, color=self.get_color_display(), edgecolor=self.get_edgecolor_display(),
                     linewidth=self.linewidth, align='center', label=self.label)
         elif self.type == 4:
-            x, y, c = self.get_xy(host)
+            x, y, c = self.get_xy(**kwargs)
             plt.hist(x, color=self.get_color_display(), edgecolor=self.get_edgecolor_display(),
                      bins=self.bins)
-
-    def detail_url(self):
-        return self.detail_search(self.url)

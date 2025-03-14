@@ -42,6 +42,9 @@ class Filter(Created, Updated, Remote, Unique):
     def get_table_url(self):
         return reverse('value:filter_table', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('value:api_filter_update', kwargs={'pk': self.id})
+
     def entity_id(self):
         if self.alias:
             return self.alias
@@ -102,7 +105,7 @@ class Filter(Created, Updated, Remote, Unique):
         return df
 
     def savefile(self):
-        df = self.upper.read_csv()
+        df = self.upper.read_data()
         df = self.procval(df)
         self.save_csv(df)
 

@@ -1,6 +1,6 @@
 from project.views import base, base_api, remote
 from project.models import Project
-from project.forms import EditNoteForm, ImportForm, CloneForm, TokenForm, SetRemoteForm
+from project.forms import ImportForm, CloneForm, TokenForm, SetRemoteForm
 from ..models import Poll, Question, Answer
 from ..forms import PollUpdateForm
 from ..serializer import PollSerializer
@@ -73,10 +73,10 @@ class UpdateView(base.UpdateView):
         context['question'] = question
         return context
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Poll
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class FileView(base.FileView):
     model = Poll
@@ -153,6 +153,9 @@ class PushView(remote.PushView):
     remote_class = PollRemote
     success_name = 'poll:detail'
     fail_name = 'poll:token'
+
+class LogView(remote.LogView):
+    model = Poll
 
 class SetRemoteView(remote.SetRemoteView):
     model = Poll

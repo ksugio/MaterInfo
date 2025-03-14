@@ -28,19 +28,17 @@ class General(Created, Updated, Remote, PrefixPtr):
     def get_delete_url(self):
         return reverse('general:delete', kwargs={'pk': self.id})
 
-    def pathname(self):
-        return '%s' % (self.upper)
+    def get_apiupdate_url(self):
+        return reverse('general:api_update', kwargs={'pk': self.id})
 
     def feature(self):
         if self.status or self.upper.status:
             return {}
         else:
+            upper_feature = self.upper.feature()
             prefix = self.prefix_display()
             return {
-                'Project_id': self.upper.upper.id,
-                'Project_title': self.upper.upper.title,
-                'Sample_id': self.upper.id,
-                'Sample_title': self.upper.title,
+                **upper_feature,
                 'Model': self.__class__.__name__,
                 'Model_id': self.id,
                 'Category': self.get_category_display(),

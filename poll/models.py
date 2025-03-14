@@ -26,6 +26,9 @@ class Poll(Created, Updated, RemoteRoot):
     def get_update_url(self):
         return reverse('poll:update', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('poll:api_update', kwargs={'pk': self.id})
+
     def basename(self):
         return os.path.basename(self.file.name)
 

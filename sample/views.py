@@ -1,8 +1,8 @@
-from django.shortcuts import render, redirect
+from django.utils.module_loading import import_string
 from config.settings import SAMPLE_LOWER
 from project.views import base, base_api, remote
 from project.models import Project
-from project.forms import EditNoteForm, ImportForm, CloneForm, TokenForm, SetRemoteForm, SearchForm
+from project.forms import ImportForm, SearchForm
 from .models import Sample
 from .serializer import SampleSerializer
 
@@ -18,7 +18,6 @@ class ListView(base.ListView):
     template_name = "project/default_list.html"
     navigation = [['Add', 'sample:add'],
                   ['Import', 'sample:import'],
-                  ['Clone', 'sample:clone'],
                   ['Search', 'sample:search']]
 
 class DetailView(base.DetailView):
@@ -26,11 +25,24 @@ class DetailView(base.DetailView):
     template_name = "sample/sample_detail.html"
 
     def get_context_data(self, **kwargs):
+        model = self.model.objects.get(pk=self.kwargs['pk'])
         self.navigation = []
+        lowers = []
         for item in SAMPLE_LOWER:
             if 'ListName' in item:
                 self.navigation.append(item['ListName'])
-        return super().get_context_data(**kwargs)
+            if 'Search' in item:
+                cls = import_string(item['Search'])
+                for item in cls.model.objects.filter(upper=model):
+                    lowers.append({'name': cls.model.__name__, 'item': item})
+        context = super().get_context_data(**kwargs)
+        if lowers:
+            context['lowers'] = lowers
+        if model.design:
+            condition = model.get_condition()
+            context['condition'] = condition
+            context['condition_keys'] = condition.keys()
+        return context
 
 class UpdateView(base.UpdateView):
     model = Sample
@@ -41,10 +53,10 @@ class DeleteView(base.DeleteManagerView):
     model = Sample
     template_name = "project/default_delete.html"
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Sample
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class SearchView(base.SearchView):
     model = Sample
@@ -62,8 +74,8 @@ class AddAPIView(base_api.AddAPIView):
     serializer_class = SampleSerializer
 
 class ListAPIView(base_api.ListAPIView):
-    model = Sample
     upper = Project
+    model = Sample
     serializer_class = SampleSerializer
 
 class RetrieveAPIView(base_api.RetrieveAPIView):
@@ -88,6 +100,8 @@ class ImportView(remote.ImportView):
     upper = Project
     form_class = ImportForm
     remote_class = SampleRemote
+    remote_name = 'sample.views.SampleRemote'
+    upper_name = 'project.models.Project'
     template_name = "project/default_import.html"
     title = 'Sample Import'
     success_name = 'sample:list'
@@ -95,42 +109,43 @@ class ImportView(remote.ImportView):
     hidden_lower = False
     default_lower = True
 
-class CloneView(remote.CloneView):
-    model = Sample
-    form_class = CloneForm
-    upper = Project
-    remote_class = SampleRemote
-    template_name = "project/default_clone.html"
-    title = 'Sample Clone'
-    success_name = 'sample:list'
-    view_name = 'sample:detail'
-
-class TokenView(remote.TokenView):
-    model = Sample
-    form_class = TokenForm
-    success_names = ['sample:pull', 'sample:push']
-
-class PullView(remote.PullView):
-    model = Sample
-    remote_class = SampleRemote
-    success_name = 'sample:detail'
-    fail_name = 'sample:token'
-
-class PushView(remote.PushView):
-    model = Sample
-    remote_class = SampleRemote
-    success_name = 'sample:detail'
-    fail_name = 'sample:token'
-
-class SetRemoteView(remote.SetRemoteView):
-    model = Sample
-    form_class = SetRemoteForm
-    remote_class = SampleRemote
-    title = 'Sample Set Remote'
-    success_name = 'sample:detail'
-    view_name = 'sample:detail'
-
-class ClearRemoteView(remote.ClearRemoteView):
-    model = Sample
-    remote_class = SampleRemote
-    success_name = 'sample:detail'
+# class CloneView(remote.CloneView):
+#     model = Sample
+#     upper = Project
+#     form_class = CloneForm
+#     remote_name = 'sample.views.SampleRemote'
+#     upper_name = 'project.models.Project'
+#     template_name = "project/default_clone.html"
+#     title = 'Sample Clone'
+#     success_name = 'sample:list'
+#     view_name = 'sample:detail'
+#
+# class TokenView(remote.TokenView):
+#     model = Sample
+#     form_class = TokenForm
+#     success_names = ['sample:pull', 'sample:push']
+#
+# class PullView(remote.PullView):
+#     model = Sample
+#     remote_class = SampleRemote
+#     success_name = 'sample:detail'
+#     fail_name = 'sample:token'
+#
+# class PushView(remote.PushView):
+#     model = Sample
+#     remote_class = SampleRemote
+#     success_name = 'sample:detail'
+#     fail_name = 'sample:token'
+#
+# class SetRemoteView(remote.SetRemoteView):
+#     model = Sample
+#     form_class = SetRemoteForm
+#     remote_class = SampleRemote
+#     title = 'Sample Set Remote'
+#     success_name = 'sample:detail'
+#     view_name = 'sample:detail'
+#
+# class ClearRemoteView(remote.ClearRemoteView):
+#     model = Sample
+#     remote_class = SampleRemote
+#     success_name = 'sample:detail'

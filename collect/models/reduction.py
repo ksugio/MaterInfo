@@ -79,6 +79,9 @@ class Reduction(Created, Updated, Remote, Unique):
     def get_delete_url(self):
         return reverse('collect:reduction_delete', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('collect:api_reduction_update', kwargs={'pk': self.id})
+
     def recent_updated_at(self):
         updated_at = self.upper.recent_updated_at()
         if self.updated_at > updated_at:
@@ -139,7 +142,7 @@ class Reduction(Created, Updated, Remote, Unique):
         drdf = self.read_csv()
         fig, ax = plt.subplots()
         if 'Label' in drdf.columns:
-            cmap = plt.cm.get_cmap(self.get_colormap_display())
+            cmap = matplotlib.colormaps[self.get_colormap_display()]
             sc = ax.scatter(drdf['PC1'], drdf['PC2'], marker='.', c=list(drdf['Label']), cmap=cmap)
             if self.colorbar:
                 fig.colorbar(sc)

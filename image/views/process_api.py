@@ -214,3 +214,24 @@ class TransformRemote(ProcessRemote):
     retrieve_name = 'image:api_transform_retrieve'
     update_name = 'image:api_transform_update'
     serializer_class = serializer.TransformSerializer
+
+#
+# Draw
+#
+class DrawAddAPIView(AddAPIView):
+    serializer_class = serializer.DrawSerializer
+
+class DrawRetrieveAPIView(base_api.RetrieveAPIView):
+    model = process.Draw
+    serializer_class = serializer.DrawSerializer
+
+class DrawUpdateAPIView(base_api.UpdateAPIView):
+    model = process.Draw
+    serializer_class = serializer.DrawSerializer
+
+class DrawRemote(ProcessRemote):
+    model = process.Draw
+    add_name = 'image:api_draw_add'
+    retrieve_name = 'image:api_draw_retrieve'
+    update_name = 'image:api_draw_update'
+    serializer_class = serializer.DrawSerializer

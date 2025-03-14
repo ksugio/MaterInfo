@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load utils %}
+
+{% block title %}{{ brand_name }} {{ title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% if breadcrumb_list %}
+        {% include 'breadcrumb.html' %}
+        <h1>{{ title }}</h1>
+    {% else %}
+        <h1 class="mt-3">{{ title }}</h1>
+    {% endif %}
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="mt-3">
+        <table class="table mt-3 border-bottom">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Title</th>
+                    {% for col in columns %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                    <th>{{ upper.prefix_display }}</th>
+                    <th>Sample</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for object in object_list %}
+                <tr>
+                    <td>{{ forloop.counter0 }}</td>
+                    <td><a href="{% url 'design:experiment_update' object.id %}">{{ object.title }}</a></td>
+                    {% if object.get_condition %}
+                        {% for col in columns %}
+                        <td>
+                            {{ object.get_condition | get_dict_value:col }}
+                        </td>
+                        {% endfor %}
+                    {% else %}
+                        {% for col in columns %}
+                        <td>-</td>
+                        {% endfor %}
+                    {% endif %}
+                    <td>{{ object.property }}</td>
+                    <td>
+                        {% if object.sampleid %}
+                            <a href="{% url 'sample:detail' object.sampleid %}">Detail</a>
+                        {% else %}
+                            <a href="{% url 'design:experiment_add_sample' object.id %}">Add</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'design:experiment_delete' object.id %}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <img src="{% url 'design:plot' upper.id %}">
+    </div>
+</div>
+
+{% endblock %}

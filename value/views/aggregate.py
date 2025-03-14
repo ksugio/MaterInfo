@@ -1,5 +1,4 @@
 from project.views import base, base_api, remote, prefix
-from project.forms import EditNoteForm
 from ..models.filter import Filter
 from ..models.aggregate import Aggregate
 from ..forms import AggregateAddForm, AggregateUpdateForm
@@ -46,10 +45,10 @@ class UpdateView(prefix.UpdatePrefixView):
         model.measure()
         return super().form_valid(form)
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Aggregate
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = Aggregate

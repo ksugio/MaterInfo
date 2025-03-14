@@ -3,49 +3,70 @@ from project.forms import ClearableFileInput
 from .models.collect import Collect
 from .models.process import Fillna, Drop, Select, Exclude, PCAF
 from .models.reduction import Reduction, ReductionModel
-from .models.clustering import Clustering, ClusteringModel
+from .models.clustering import Clustering
+from .models.clustering_lib import ClusteringModel
 from .models.classification import Classification
 from .models.classification_lib import ClassificationModel
 from .models.regression import Regression
 from .models.regression_lib import HParam2Dict, RegressionModel
 from .models.inverse import Inverse
 
-class CollectAddForm(forms.ModelForm):
-    method = forms.ChoiceField(label='Method', choices=((0, 'Collect'), (1, 'Upload'), (2, 'Get')), initial=0)
-    uploadfile = forms.fields.FileField(label='File', required=False)
-    url = forms.CharField(label='URL', max_length=256, required=False,
-                          widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
+# class CollectAddForm(forms.ModelForm):
+#     method = forms.ChoiceField(label='Method', choices=((0, 'Collect'), (1, 'Upload'), (2, 'Get')), initial=0)
+#     uploadfile = forms.fields.FileField(label='File', required=False)
+#     EncodingChoices = ((0, 'utf-8'), (1, 'shift-jis'), (2, 'cp932'))
+#     encoding = forms.ChoiceField(label='Encoding', choices=EncodingChoices, initial=0)
+#     sheetname = forms.CharField(label='Sheet name', max_length=100, required=False)
+#     url = forms.CharField(label='URL', max_length=256, required=False,
+#                           widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
+#
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         method = cleaned_data['method']
+#         uploadfile = cleaned_data['uploadfile']
+#         url = cleaned_data['url']
+#         if method == '1' and not uploadfile:
+#             raise forms.ValidationError("File is required for upload method.")
+#         elif method == '2' and not url:
+#             raise forms.ValidationError("URL is required for get method.")
+#
+#     class Meta:
+#         model = Collect
+#         fields = ('title', 'note', 'projectids', 'disp_head', 'disp_tail')
 
-    def clean(self):
-        cleaned_data = super().clean()
-        method = cleaned_data['method']
-        uploadfile = cleaned_data['uploadfile']
-        url = cleaned_data['url']
-        if method == '1' and not uploadfile:
-            raise forms.ValidationError("File is required for upload method.")
-        elif method == '2' and not url:
-            raise forms.ValidationError("URL is required for get method.")
+class CollectUploadForm(forms.ModelForm):
+    uploadfile = forms.fields.FileField(label='File (.csv, .xlsx)', required=True)
+    EncodingChoices = ((0, 'utf-8'), (1, 'shift-jis'), (2, 'cp932'))
+    encoding = forms.ChoiceField(label='Encoding', choices=EncodingChoices, initial=0)
+    sheetname = forms.CharField(label='Sheet name', max_length=100, required=False)
 
     class Meta:
         model = Collect
-        fields = ('title', 'note', 'projectids', 'disp_head', 'disp_tail')
+        fields = ('title', 'note', 'disp_head', 'disp_tail')
 
+class CollectGetForm(forms.ModelForm):
+    url = forms.CharField(label='URL', max_length=256, required=True,
+                          widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
+
+    class Meta:
+        model = Collect
+        fields = ('title', 'note', 'disp_head', 'disp_tail')
 
 class CollectUpdateForm(forms.ModelForm):
-    collect = forms.fields.BooleanField(label='Collect', required=False, initial=False)
+    collect = forms.fields.BooleanField(label='Collect', required=False, initial=True)
 
     class Meta:
         model = Collect
         fields = ('title', 'status', 'note', 'projectids', 'disp_head', 'disp_tail')
 
-class CollectLoadForm(forms.ModelForm):
-    uploadfile = forms.fields.FileField(label='File', required=False)
-    url = forms.CharField(label='URL', max_length=256, required=False,
-                          widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
-
-    class Meta:
-        model = Collect
-        fields = ('title', 'note')
+# class CollectLoadForm(forms.ModelForm):
+#     uploadfile = forms.fields.FileField(label='File', required=False)
+#     url = forms.CharField(label='URL', max_length=256, required=False,
+#                           widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
+#
+#     class Meta:
+#         model = Collect
+#         fields = ('title', 'note')
 
 class ReductionAddForm(forms.ModelForm):
     class Meta:
@@ -113,8 +134,9 @@ class ClassificationAddForm(forms.ModelForm):
 
     class Meta:
         model = Classification
-        fields = ('title', 'note', 'scaler', 'pca', 'n_components', 'method', 'hparam',
-                  'objective', 'drop', 'nsplits', 'random', 'nplot', 'ntrials', 'optimize')
+        fields = ('title', 'note', 'testsize', 'randomts', 'scaler', 'pca', 'n_components',
+                  'method', 'hparam', 'objective', 'drop', 'nsplits', 'random', 'nplot',
+                  'ntrials', 'optimize')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -131,8 +153,9 @@ class ClassificationUpdateForm(forms.ModelForm):
 
     class Meta:
         model = Classification
-        fields = ('title', 'status', 'note', 'scaler', 'pca', 'n_components', 'method', 'hparam',
-                  'objective', 'drop', 'nsplits', 'random', 'nplot', 'ntrials', 'optimize')
+        fields = ('title', 'status', 'note', 'testsize', 'randomts', 'scaler', 'pca', 'n_components',
+                  'method', 'hparam', 'objective', 'drop', 'nsplits', 'random', 'nplot',
+                  'ntrials', 'optimize')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -150,8 +173,9 @@ class RegressionAddForm(forms.ModelForm):
 
     class Meta:
         model = Regression
-        fields = ('title', 'note', 'scaler', 'pca', 'n_components', 'method', 'hparam',
-                  'objective', 'drop', 'nsplits', 'random', 'nplot', 'ntrials', 'optimize')
+        fields = ('title', 'note', 'testsize', 'randomts', 'scaler', 'pca', 'n_components',
+                  'method', 'hparam', 'objective', 'drop', 'nsplits', 'random', 'nplot',
+                  'ntrials', 'optimize')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -175,8 +199,9 @@ class RegressionUpdateForm(forms.ModelForm):
 
     class Meta:
         model = Regression
-        fields = ('title', 'status', 'note', 'scaler', 'pca', 'n_components', 'method', 'hparam',
-                  'objective', 'drop', 'nsplits', 'random', 'nplot', 'ntrials', 'optimize')
+        fields = ('title', 'status', 'note', 'testsize', 'randomts', 'scaler', 'pca', 'n_components',
+                  'method', 'hparam', 'objective', 'drop', 'nsplits', 'random', 'nplot',
+                  'ntrials', 'optimize')
 
     def clean(self):
         cleaned_data = super().clean()

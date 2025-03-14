@@ -2,7 +2,6 @@ from django.db import models
 from django.urls import reverse
 from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from sample.models import Sample
-import os
 import cv2
 import numpy as np
 
@@ -38,6 +37,9 @@ class Image(Created, Updated, Remote, Unique):
 
     def get_delete_url(self):
         return reverse('image:delete', kwargs={'pk': self.id})
+
+    def get_apiupdate_url(self):
+        return reverse('image:api_update', kwargs={'pk': self.id})
 
     def pixelsize(self):
         return self.scale / self.scalepixels

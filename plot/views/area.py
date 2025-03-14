@@ -22,7 +22,7 @@ class AddView(base.AddView):
     template_name = "project/default_add.html"
     bdcl_remove = 1
 
-class UpdateView(base.UpdateView):
+class UpdateView(base.UpdateView, base.FileSearch):
     model = Area
     fields = ('xlabel', 'ylabel', 'xmin', 'xmax', 'ymin', 'ymax', 'legend', 'order')
     template_name = "plot/area_update.html"
@@ -34,7 +34,7 @@ class UpdateView(base.UpdateView):
         items = Item.objects.filter(upper=model).order_by('order')
         item_detail = []
         for item in items:
-            item_detail.append((item, item.detail_url()))
+            item_detail.append((item, self.detail_search(item.url)))
         context['item_detail'] = item_detail
         return context
 
@@ -46,10 +46,10 @@ class DeleteView(base.DeleteView):
     template_name = "project/default_delete.html"
     bdcl_remove = 1
 
-def AreaPlot(area, host):
+def AreaPlot(area, **kwargs):
     items = Item.objects.filter(upper=area).order_by('order')
     for item in items:
-        item.plot(host)
+        item.plot(**kwargs)
     fp = fm.FontProperties(fname=FONT_PATH)
     plt.xlabel(area.xlabel, fontproperties=fp)
     plt.ylabel(area.ylabel, fontproperties=fp)
@@ -74,7 +74,8 @@ class PlotView(base.View):
      def get(self, request, **kwargs):
          area = self.model.objects.get(pk=kwargs['pk'])
          plt.figure()
-         AreaPlot(area, self.request._current_scheme_host)
+         AreaPlot(area, request_host=self.request._current_scheme_host,
+                  request_cookies=self.request.COOKIES)
          buf = BytesIO()
          plt.savefig(buf, format='svg', bbox_inches='tight')
          svg = buf.getvalue()

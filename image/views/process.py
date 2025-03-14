@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from project.views import base
-from ..models.filter import Filter
+from ..models.filter import Filter, cv2PIL
 from ..models import process
+from io import BytesIO
+import base64
 
 class AddView(base.AddView):
     model = process.Process
@@ -23,6 +25,31 @@ class UpdateView(base.UpdateView):
 
     def get_success_url(self):
         return self.object.get_update_url()
+
+class UpdateAppView(base.TemplateView):
+    model = process.Process
+    template_name = ""
+    bdcl_remove = 1
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        model = self.model.objects.get(pk=kwargs['pk'])
+        orgimg = model.upper.upper.read_img()
+        proc = model.upper.previous_proc(model)
+        if proc is not None:
+            procimg, _ = model.upper.procimg(orgimg, procid=proc.id)
+        else:
+            procimg = orgimg
+        pilimg = cv2PIL(procimg)
+        buf = BytesIO()
+        pilimg.save(buf, format='png')
+        image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+        buf.close()
+        context['object'] = model
+        context['pilimg'] = pilimg
+        context['image_base64'] = image_base64
+        context['server_host'] = self.request._current_scheme_host
+        return context
 
 class DeleteView(base.View):
     model = process.Process
@@ -64,9 +91,9 @@ class TrimAddView(AddView):
     model = process.Trim
     fields = ('startx', 'starty', 'endx', 'endy', 'order')
 
-class TrimUpdateView(UpdateView):
+class TrimUpdateView(UpdateAppView):
     model = process.Trim
-    fields = ('startx', 'starty', 'endx', 'endy', 'order')
+    template_name = "image/trim_update.html"
 
 #
 # Smoothing
@@ -139,3 +166,15 @@ class TransformAddView(AddView):
 class TransformUpdateView(UpdateView):
     model = process.Transform
     fields = ('method', 'angle', 'order')
+
+#
+# Draw
+#
+class DrawAddView(AddView):
+    model = process.Draw
+    fields = ('order',)
+
+class DrawUpdateView(UpdateAppView):
+    model = process.Draw
+    template_name = "image/draw_update.html"
+

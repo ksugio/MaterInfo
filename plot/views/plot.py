@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from project.views import base, base_api, remote
 from project.models import Project
-from project.forms import EditNoteForm
+from project.forms import ImportForm
 from ..models.plot import Plot
 from ..models.area import Area
 from ..views.area import AreaPlot, AreaRemote
@@ -27,7 +27,8 @@ class ListView(base.ListView):
     model = Plot
     upper = Project
     template_name = "project/default_list.html"
-    navigation = [['Add', 'plot:add']]
+    navigation = [['Add', 'plot:add'],
+                  ['Import', 'plot:import']]
 
 class DetailView(base.DetailView):
     model = Plot
@@ -46,16 +47,16 @@ class UpdateView(base.UpdateView):
         context['areas'] = areas
         return context
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Plot
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = Plot
     template_name = "project/default_delete.html"
 
-def PlotPlot(plot, host):
+def PlotPlot(plot, **kwargs):
     areas = Area.objects.filter(upper=plot).order_by('order')
     if areas.count() == 0:
         plt.subplot(1,1,1)
@@ -65,7 +66,7 @@ def PlotPlot(plot, host):
     i = 1
     for area in areas:
         plt.subplot(nrow, plot.ncol, i)
-        AreaPlot(area, host)
+        AreaPlot(area, **kwargs)
         i = i + 1
 
 class PlotView(base.View):
@@ -74,7 +75,8 @@ class PlotView(base.View):
     def get(self, request, **kwargs):
         plot = self.model.objects.get(pk=kwargs['pk'])
         plt.figure(figsize=(plot.sizex, plot.sizey))
-        PlotPlot(plot, self.request._current_scheme_host)
+        PlotPlot(plot, request_host=self.request._current_scheme_host,
+                 request_cookies=self.request.COOKIES)
         buf = BytesIO()
         plt.savefig(buf, format='svg', bbox_inches='tight')
         svg = buf.getvalue()
@@ -117,12 +119,12 @@ class PlotRemote(remote.Remote):
     serializer_class = PlotSerializer
     child_remote = [AreaRemote]
 
-# class ImportView(remote.ImportView):
-#     model = Plot
-#     upper = Project
-#     form_class = ImportForm
-#     remote_class = PlotRemote
-#     template_name = "project/default_import.html"
-#     title = 'Plot Import'
-#     success_name = 'plot:list'
-#     view_name = 'plot:detail'
+class ImportView(remote.ImportView):
+    model = Plot
+    upper = Project
+    form_class = ImportForm
+    remote_class = PlotRemote
+    template_name = "project/default_import.html"
+    title = 'Plot Import'
+    success_name = 'plot:list'
+    view_name = 'plot:detail'

@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
 from config.settings import COLLECT_FILTER_PROCESS
 from collect.models.process import Process

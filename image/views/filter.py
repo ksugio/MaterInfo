@@ -3,7 +3,7 @@ from django.forms import HiddenInput
 from rest_framework import views, status, response
 from config.settings import IMAGE_FILTER_LOWER, IMAGE_FILTER_PROCESS
 from project.views import base, base_api, remote
-from project.forms import AliasForm, EditNoteForm, ImportForm
+from project.forms import AliasForm, ImportForm
 from album.models.item import Item
 from ..models.image import Image
 from ..models.filter import Filter
@@ -124,10 +124,10 @@ class UpdateView(base.UpdateView):
             item.save()
         return response
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Filter
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteAliasView):
     model = Filter

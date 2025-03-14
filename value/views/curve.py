@@ -1,7 +1,7 @@
 from django.forms import HiddenInput
 from config.settings import VALUE_CURVE_EQUATION
 from project.views import base, base_api, remote, prefix
-from project.forms import AliasForm, EditNoteForm, ImportForm
+from project.forms import AliasForm, ImportForm
 from ..models.filter import Filter
 from ..models.curve import Curve
 from ..models.equation import Equation
@@ -110,10 +110,10 @@ class UpdateView(prefix.UpdatePrefixView):
         model.measure()
         return super().form_valid(form)
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Curve
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = Curve

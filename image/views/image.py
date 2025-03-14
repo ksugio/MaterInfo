@@ -3,11 +3,9 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from config.settings import IMAGE_LOWER
 from project.views import base, base_api, remote
-from project.forms import EditNoteForm, ImportForm, SearchForm
-from project.models import FileSearch
+from project.forms import ImportForm, SearchForm
 from sample.models import Sample
 from ..models.image import Image
-from ..models.filter import Filter
 from ..serializer import ImageSerializer
 from ..forms import ImageAddForm, ImageUpdateForm, ImageGetForm
 import os
@@ -37,7 +35,7 @@ class AddView(base.FormView):
                 title=title, note=note, file=file, scale=scale, scaleunit=scaleunit, scalepixels=scalepixels, device=device)
         return super().form_valid(form)
 
-class GetView(base.FormView, FileSearch):
+class GetView(base.FormView):
     model = Image
     upper = Sample
     form_class = ImageGetForm
@@ -48,29 +46,24 @@ class GetView(base.FormView, FileSearch):
     def get_file(self, url):
         if url.startswith('http'):
             response = requests.get(url)
-            if response.status_code != 200:
-                return None
-            else:
-                data = response.content
-                ctype = response.headers['Content-Type']
-                if ctype == 'image/jpeg':
-                    fname = 'Image.jpg'
-                elif ctype == 'image/png':
-                    fname = 'Image.png'
-                elif ctype == 'image/bmp':
-                    fname = 'Image.bmp'
-                elif ctype == 'image/tiff':
-                    fname = 'Image.tif'
-                else:
-                    return None
         else:
-            file = self.file_search(url)
-            if file is None:
-                return None
+            response = requests.get(self.request._current_scheme_host + url,
+                                    headers=self.request.headers)
+        if response.status_code != 200:
+            return None
+        else:
+            data = response.content
+            ctype = response.headers['Content-Type']
+            if ctype == 'image/jpeg':
+                fname = 'Image.jpg'
+            elif ctype == 'image/png':
+                fname = 'Image.png'
+            elif ctype == 'image/bmp':
+                fname = 'Image.bmp'
+            elif ctype == 'image/tiff':
+                fname = 'Image.tif'
             else:
-                with file.open('rb') as f:
-                    data = f.read()
-                fname = os.path.basename(file.name)
+                return None
         return InMemoryUploadedFile(ContentFile(data), None, fname,
                                     None, len(data), None)
 
@@ -120,10 +113,14 @@ class DeleteView(base.DeleteManagerView):
     model = Image
     template_name = "project/default_delete.html"
 
-class EditNoteView(base.EditNoteView):
+class MoveView(base.MoveManagerView):
     model = Image
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    template_name = "project/default_update.html"
+
+class EditNoteView(base.MDEditView):
+    model = Image
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class FileView(base.FileView):
     model = Image

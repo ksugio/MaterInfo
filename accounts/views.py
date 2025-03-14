@@ -1,24 +1,21 @@
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.views import generic
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import render
 from django.contrib.auth import views as auth
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.hashers import make_password
 from django.urls import reverse, reverse_lazy
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from config import settings
 from project.models import CreateUserProject
 from project.views.base import BrandName
 from .models import CustomUser
-from .forms import UserAddForm, UserUploadForm, UserCloneForm, ProfileUpdateForm, PasswordForm
-from .serializer import UserSerializer
+from .forms import UserAddForm, UserUploadForm, ProfileUpdateForm, PasswordForm
 from .ldap import LDAPUpdateUser, LDAPChangePassword
 import io
 import csv
 import datetime
-import requests
 
 UserUploadDateFormat = '%B %d %Y'
 
@@ -38,6 +35,17 @@ class LogoutView(auth.LogoutView):
         context = super().get_context_data(**kwargs)
         context['brand_name'] = BrandName()
         return context
+
+class AlphabeticPasswordValidator:
+    def validate(self, password, user=None):
+        if password.isalpha():
+            raise ValidationError(
+                ("This password is entirely alphabetic."),
+                code='password_entirely_alpahbetic',
+            )
+
+    def get_help_text(self):
+        return ("Your password can't be entirely alphabetic.")
 
 class PasswordChangeView(LoginRequiredMixin, auth.PasswordChangeView):
     template_name = 'accounts/password_change.html'
@@ -158,7 +166,6 @@ class ProfileUpdateView(LoginRequiredMixin, generic.FormView):
         return reverse_lazy('accounts:profile')
 
 class TokenView(LoginRequiredMixin, generic.View):
-    model = CustomUser
     form_class = PasswordForm
     template_name = "accounts/token_view.html"
 

@@ -7,6 +7,7 @@ app_name = 'plot'
 urlpatterns = [
     # Plot
     path('<int:pk>/add', plot.AddView.as_view(), name='add'),
+    path('<int:pk>/import', plot.ImportView.as_view(), name='import'),
     path('<int:pk>/list', plot.ListView.as_view(), name='list'),
     path('plot/<int:pk>', plot.DetailView.as_view(), name='detail'),
     path('plot/<int:pk>/update', plot.UpdateView.as_view(), name='update'),

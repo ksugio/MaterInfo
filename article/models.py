@@ -2,13 +2,13 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from accounts.models import CustomUser
-from project.models import Created, Updated, RemoteRoot, Remote, Project, UpperModelUploadTo, Unique
+from project.models import Created, Updated, Remote, Project, UpperModelUploadTo, Unique
 import os
 
 def ArticleUploadTo(instance, filename):
     return filename
 
-class Article(Created, Updated, RemoteRoot):
+class Article(Created, Updated, Remote):
     upper = models.ForeignKey(Project, verbose_name='Project', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Writing'), (1, 'Reviewing'), (2, 'Revising'), (3, 'Finish'))
@@ -36,6 +36,9 @@ class Article(Created, Updated, RemoteRoot):
     def get_public_url(self):
         return reverse('article:public_detail', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('article:api_update', kwargs={'pk': self.id})
+
 class File(Updated, Remote, Unique):
     upper = models.ForeignKey(Article, verbose_name='Article', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
@@ -43,7 +46,7 @@ class File(Updated, Remote, Unique):
     file = models.FileField(verbose_name='File', upload_to=UpperModelUploadTo)
 
     def get_detail_url(self):
-        return reverse('article:update', kwargs={'pk': self.upper.id})
+        return reverse('article:edit', kwargs={'pk': self.upper.id})
 
 class Diff(Remote):
     upper = models.ForeignKey(Article, verbose_name='Article', on_delete=models.CASCADE)

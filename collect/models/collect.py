@@ -2,12 +2,11 @@ from django.utils.module_loading import import_string
 from django.db import models
 from django.urls import reverse
 from config.settings import COLLECT_FEATURES
-from project.models import Created, Updated, RemoteRoot, Project, ModelUploadTo, Unique, FileSearch
+from project.models import Created, Updated, Remote, Project, ModelUploadTo, Unique
 from io import BytesIO
-import os
 import pandas as pd
-import json
 import requests
+import os
 
 HeadColumns = [
     ('Project_id', 0), ('Project_title', '-'),
@@ -22,7 +21,7 @@ HeadColumns = [
 def CollectUploadTo(instance, filename):
     return filename
 
-class Collect(Created, Updated, RemoteRoot, Unique, FileSearch):
+class Collect(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Project, verbose_name='Project', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))
@@ -52,6 +51,9 @@ class Collect(Created, Updated, RemoteRoot, Unique, FileSearch):
 
     def get_table_url(self):
         return reverse('collect:table', kwargs={'pk': self.id, 'name': 'Total'})
+
+    def get_apiupdate_url(self):
+        return reverse('collect:api_update', kwargs={'pk': self.id})
 
     def save_csv(self, df):
         buf = BytesIO()
@@ -145,8 +147,14 @@ class Collect(Created, Updated, RemoteRoot, Unique, FileSearch):
             self.overview(dfall)
             self.save_csv(dfall)
 
-    def upload_features(self, file):
-        df = pd.read_csv(file)
+    def upload_features(self, file, encoding, sheetname):
+        fn, ext = os.path.splitext(file.name)
+        if ext == '.csv':
+            df = pd.read_csv(file, encoding=encoding)
+        elif ext == '.xlsx':
+            if not sheetname:
+                sheetname = 0
+            df = pd.read_excel(file, sheet_name=sheetname)
         self.checksave_df(df)
 
     def checksave_df(self, df):
@@ -163,25 +171,21 @@ class Collect(Created, Updated, RemoteRoot, Unique, FileSearch):
         self.overview(df)
         self.save_csv(df)
 
-    def get_features(self, url):
+    def get_features(self, url, **kwargs):
         if url.startswith('http'):
-            response = requests.get(url)
-            if response.status_code != 200:
-                return
+            if url.startswith(kwargs['request_host']):
+                response = requests.get(url, cookies=kwargs['request_cookies'])
             else:
-                try:
-                    buf = BytesIO(response.content)
-                    df = pd.read_csv(buf)
-                    buf.close()
-                except:
-                    return
+                response = requests.get(url)
         else:
-            file = self.file_search(url)
-            if file is None:
-                return
-            else:
-                with file.open('r') as f:
-                    df = pd.read_csv(f)
+            response = requests.get(kwargs['request_host'] + url,
+                                    cookies=kwargs['request_cookies'])
+        try:
+            buf = BytesIO(response.content)
+            df = pd.read_csv(buf)
+            buf.close()
+        except:
+            return
         self.checksave_df(df)
 
     def overview(self, df):
@@ -223,18 +227,17 @@ class Collect(Created, Updated, RemoteRoot, Unique, FileSearch):
         latest = []
         for item in COLLECT_FEATURES:
             cls = import_string(item['Model'])
-            if hasattr(cls, 'upper_updated'):
-                if item['Depth'] == 2:
-                    features = cls.objects.filter(upper__upper=project)
-                elif item['Depth'] == 3:
-                    features = cls.objects.filter(upper__upper__upper=project)
-                elif item['Depth'] == 4:
-                    features = cls.objects.filter(upper__upper__upper__upper=project)
-                for feature in features:
-                    if feature.upper_updated():
-                        latest.append((feature, True))
-                    elif feature.updated_at > self.updated_at:
-                        latest.append((feature, False))
+            if item['Depth'] == 2:
+                features = cls.objects.filter(upper__upper=project)
+            elif item['Depth'] == 3:
+                features = cls.objects.filter(upper__upper__upper=project)
+            elif item['Depth'] == 4:
+                features = cls.objects.filter(upper__upper__upper__upper=project)
+            for feature in features:
+                if hasattr(feature, 'upper_updated') and feature.upper_updated():
+                    latest.append((feature, True))
+                elif feature.updated_at > self.updated_at:
+                    latest.append((feature, False))
         return latest
 
     def latest_features(self, user):

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load mifilter %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block script %}
+
+    {% include 'mathjax.html' %}
+    {% include 'highlight.html' %}
+
+{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="row mt-3 g-0">
+        <div class="col">ID : {{ object.id }}</div>
+        <div class="col">Page : {{ object.page }}</div>
+        <div class="col">Scale : {{ object.scale }}</div>
+        <div class="col">Rotate : {{ object.rotate }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Region : ({{ object.startx }}, {{ object.starty }}) - ({{ object.endx }}, {{ object.endy }})</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">{{ object.note | markdown2html | safe }}</div>
+    </div>
+    <div class="row mt-3 g-0">
+        <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
+        <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+    </div>
+    <div class="mt-3">
+        <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'reference:image_trim' object.id %}">Trim</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'reference:image_edit_note' object.id %}">Edit Note</a>
+        {% if object.get_delete_url %}
+        <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
+        {% endif %}
+    </div>
+    <div class="mt-3">
+        <img src="{% url 'reference:image_image' object.id %}">
+    </div>
+</div>
+
+{% endblock %}

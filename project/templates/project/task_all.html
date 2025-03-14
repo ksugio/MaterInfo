@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} Task All{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    <div class="mt-3">
+        <h1>Task All</h1>
+    </div>
+    <div class="mt-3">
+        {% for object in object_list %}
+        <div class="row mt-1 border g-0">
+            <div class="col">
+                <div class="row ms-0 me-0">
+                    <div class="col-5">Task ID : {{ object.0.task_id }}</div>
+                    <div class="col-5">Task Name : {{ object.0.task_name }}</div>
+                    <div class="col-2">User : {{ object.1 }}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col-5">Completed : {{ object.0.date_done }}</div>
+                    <div class="col-5">Status : {{ object.0.status }}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col-5">Worker : {{ object.0.worker }}</div>
+                    {% if object.2 %}
+                        <div class="col-5">URL : <a href="{{ object.2 }}">{{ object.2 }}</a></div>
+                    {% else %}
+                        <div class="col-5"> </div>
+                    {% endif %}
+                    {% if object.0.status == 'STARTED' %}
+                        <div class="col-2"><a href="{% url 'project:task_revoke' object.0.task_id  1 %}">Revoke</a></div>
+                    {% else %}
+                        <div class="col-2"><a href="{% url 'project:task_delete' object.0.task_id 1 %}">Delete</a></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% include 'pagination.html' %}
+    </div>
+</div>
+
+{% endblock %}

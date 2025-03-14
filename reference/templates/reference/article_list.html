@@ -6,42 +6,100 @@
 
 <div class="container">
     {% include 'breadcrumb.html' %}
-    <h1>{{ title }}</h1>
+    <div class="row">
+        <div class="col"><h1>{{ title }}</h1></div>
+        <div class="col-2">
+            Order
+            <select class="form-select" id="selectOrder">
+                <option value="0">Latest Create</option>
+                <option value="1">Earliest Create</option>
+                <option value="2">Latest Update</option>
+                <option value="3">Earliest Update</option>
+                <option value="4">Latest</option>
+                <option value="5">Earliest</option>
+                <option value="6">Aescending Key</option>
+                <option value="7">Descending Key</option>
+            </select>
+        </div>
+        <div class="col-1">
+            Page Size
+            <select class="form-select" id="selectSize">
+                <option value="0">10</option>
+                <option value="1">20</option>
+                <option value="2">50</option>
+                <option value="3">100</option>
+                <option value="4">200</option>
+                <option value="5">500</option>
+            </select>
+        </div>
+    </div>
     {% include 'navigation.html' %}
     <div class="mt-3">
         {% for article in article_list %}
         <div class="row mt-1 border g-0">
             <div class="col">
                 <div class="row ms-0 me-0">
-                    <div class="col-10">
-                        <a href="{{ article.get_detail_url }}">{{ article.title }}</a>
+                    <div class="col">
+                        [{{ forloop.counter0|add:startid }}] <a href="{{ article.get_detail_url }}">{{ article.title }}</a>
                     </div>
                     <div class="col-2">{{ article.get_type_display }}</div>
                 </div>
                 {% if article.author %}
                 <div class="row ms-0 me-0">
-                    <div class="col">{{ article.author }}</div>
+                    <div class="col">{{ article.author_display }}</div>
                 </div>
                 {% endif %}
                 <div class="row ms-0 me-0">
-                    <div class="col-6">{{ article.journal }}</div>
-                    <div class="col-2">Vol. {{ article.volume }}</div>
-                    <div class="col-2">({{ article.year }})</div>
-                    <div class="col-2">pp. {{ article.page }}</div>
+                    {% if article.journal %}
+                    <div class="col">
+                        {% if article.impact %}
+                            {{ article.journal }}
+                            [IF : {{ article.impact }}],
+                            {% else %}
+                            {{ article.journal }},
+                        {% endif %}
+                        Vol. {{ article.volume }},
+                        {% if article.month %}
+                            {{ article.month }},
+                        {% elif article.number %}
+                            No. {{ article.number }},
+                        {% endif %}
+                        ({{ article.year }}),
+                        pp. {{ article.pages }}
+                        {% if article.cited %}
+                            [Cited : {{ article.cited }}]
+                        {% endif %}
+                    </div>
+                    {% elif article.booktitle %}
+                        <div class="col">
+                        {{ article.booktitle }},
+                        ({{ article.year }}),
+                        pp. {{ article.pages }}
+                        </div>
+                    {% endif %}
                 </div>
+                {% if article.conference %}
+                    <div class="row ms-0 me-0">
+                        <div class="col">{{ article.conference }}</div>
+                    </div>
+                {% endif %}
                 {% if article.url or article.file %}
                 <div class="row ms-0 me-0">
                     {% if article.url %}
-                    <div class="col">URL : <a href="{{ article.url }}">{{ article.url }}</a></div>
+                    <div class="col">URL : <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.url }}</a></div>
                     {% endif %}
                     {% if article.file %}
-                    <div class="col">File : <a href="{% url 'article:file' article.id %}">{% url 'article:file' article.id %}</a></div>
+                    <div class="col">File : <a href="{% url 'reference:article_file' article.id %}" target="_blank" rel="noopener noreferrer">
+                        {% url 'reference:article_file' article.id %}</a></div>
                     {% endif %}
                 </div>
                 {% endif %}
                 <div class="row ms-0 me-0">
-                    <div class="col">Created by {{ article.created_by }} at {{ article.created_at }}</div>
-                    <div class="col">Updated by {{ article.updated_by }} at {{ article.updated_at }}</div>
+                    <div class="col-6">Created by {{ article.created_by }} at {{ article.created_at }}</div>
+                    <div class="col-5">Updated by {{ article.updated_by }} at {{ article.updated_at }}</div>
+                    <div class="col-1">
+                        <a href="{{ article.get_update_url }}">update</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -49,5 +107,26 @@
         {% include 'pagination.html' %}
     </div>
 </div>
+
+{% endblock %}
+
+{% block script2 %}
+
+    <script>
+        const request_path = '{{ request.path }}'.split('/').slice(0, -2).join('/');
+        function init() {
+            let order = document.getElementById('selectOrder');
+            let size = document.getElementById('selectSize');
+            order.value = {{ view.kwargs.order }};
+            order.addEventListener('change', function(e) {
+                location.href = request_path + '/' + order.value + '/' + size.value;
+            });
+            size.value = {{ view.kwargs.size }};
+            size.addEventListener('change', function(e) {
+                location.href = request_path + '/' + order.value + '/' + size.value;
+            });
+        }
+        window.onload = init;
+    </script>
 
 {% endblock %}

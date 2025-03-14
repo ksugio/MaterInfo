@@ -1,14 +1,15 @@
 from django.urls import path
 from .views import (
     collect, filter, process, process_api, reduction, correlation, clustering, classification,
-    regression, inverse, regreshap, classshap
+    regression, inverse, regreshap, classshap, regrepred, classpred
 )
 
 app_name = 'collect'
 urlpatterns = [
     path('<int:pk>/add', collect.AddView.as_view(), name='add'),
+    path('<int:pk>/upload', collect.UploadView.as_view(), name='upload'),
+    path('<int:pk>/get', collect.GetView.as_view(), name='get'),
     path('<int:pk>/import', collect.ImportView.as_view(), name='import'),
-    path('<int:pk>/clone', collect.CloneView.as_view(), name='clone'),
     path('<int:pk>/list', collect.ListView.as_view(), name='list'),
     path('<int:pk>/search', collect.SearchView.as_view(), name='search'),
     path('collect/<int:pk>', collect.DetailView.as_view(), name='detail'),
@@ -18,11 +19,6 @@ urlpatterns = [
     path('collect/<str:unique>/file', collect.FileView.as_view(), name='file'),
     path('collect/<int:pk>/update_upper_updated', collect.UpdateUpperUpdatedView.as_view(), name='update_upper_updated'),
     path('collect/<int:pk>/table/<str:name>', collect.TableView.as_view(), name='table'),
-    path('collect/<int:pk>/token/<int:ind>', collect.TokenView.as_view(), name='token'),
-    path('collect/<int:pk>/pull', collect.PullView.as_view(), name='pull'),
-    path('collect/<int:pk>/push', collect.PushView.as_view(), name='push'),
-    path('collect/<int:pk>/set_remote', collect.SetRemoteView.as_view(), name='set_remote'),
-    path('collect/<int:pk>/clear_remote', collect.ClearRemoteView.as_view(), name='clear_remote'),
     # API
     path('api/<int:pk>/add', collect.AddAPIView.as_view(), name='api_add'),
     path('api/<int:pk>/list', collect.ListAPIView.as_view(), name='api_list'),
@@ -152,6 +148,8 @@ urlpatterns = [
     path('classification/<int:pk>/update', classification.UpdateView.as_view(), name='classification_update'),
     path('classification/<int:pk>/edit_note', classification.EditNoteView.as_view(), name='classification_edit_note'),
     path('classification/<int:pk>/delete', classification.DeleteView.as_view(), name='classification_delete'),
+    path('classification/<int:pk>/revoke', classification.RevokeView.as_view(), name='classification_revoke'),
+    path('classification/<int:pk>/onnx', classification.ONNXView.as_view(), name='classification_onnx'),
     path('classification/<int:pk>/file', classification.FileView.as_view(), name='classification_file'),
     path('classification/<int:pk>/plot/importance', classification.PlotImportanceView.as_view(), name='classification_plot_importance'),
     path('classification/<int:pk>/plot/trials/<str:name>', classification.PlotTrialsView.as_view(), name='classification_plot_trials'),
@@ -170,6 +168,8 @@ urlpatterns = [
     path('regression/<int:pk>/update', regression.UpdateView.as_view(), name='regression_update'),
     path('regression/<int:pk>/edit_note', regression.EditNoteView.as_view(), name='regression_edit_note'),
     path('regression/<int:pk>/delete', regression.DeleteView.as_view(), name='regression_delete'),
+    path('regression/<int:pk>/revoke', regression.RevokeView.as_view(), name='regression_revoke'),
+    path('regression/<int:pk>/onnx', regression.ONNXView.as_view(), name='regression_onnx'),
     path('regression/<str:unique>/file', regression.FileView.as_view(), name='regression_file'),
     path('regression/<int:pk>/file2', regression.File2View.as_view(), name='regression_file2'),
     path('regression/<int:pk>/plot/<int:pid>', regression.PlotView.as_view(), name='regression_plot'),
@@ -191,6 +191,7 @@ urlpatterns = [
     path('inverse/<int:pk>/update', inverse.UpdateView.as_view(), name='inverse_update'),
     path('inverse/<int:pk>/edit_note', inverse.EditNoteView.as_view(), name='inverse_edit_note'),
     path('inverse/<int:pk>/delete', inverse.DeleteView.as_view(), name='inverse_delete'),
+    path('inverse/<int:pk>/revoke', inverse.RevokeView.as_view(), name='inverse_revoke'),
     path('inverse/<int:pk>/file', inverse.FileView.as_view(), name='inverse_file'),
     path('inverse/<int:pk>/table', inverse.TableView.as_view(), name='inverse_table'),
     path('inverse/<int:pk>/plot', inverse.PlotView.as_view(), name='inverse_plot'),
@@ -208,6 +209,7 @@ urlpatterns = [
     path('regreshap/<int:pk>/update', regreshap.UpdateView.as_view(), name='regreshap_update'),
     path('regreshap/<int:pk>/edit_note', regreshap.EditNoteView.as_view(), name='regreshap_edit_note'),
     path('regreshap/<int:pk>/delete', regreshap.DeleteView.as_view(), name='regreshap_delete'),
+    path('regreshap/<int:pk>/revoke', regreshap.RevokeView.as_view(), name='regreshap_revoke'),
     path('regreshap/<int:pk>/plot', regreshap.PlotView.as_view(), name='regreshap_plot'),
     path('regreshap/<int:pk>/plot/dependence/<str:name>', regreshap.PlotDependenceView.as_view(), name='regreshap_plot_dependence'),
     # RegreSHAP API
@@ -223,6 +225,7 @@ urlpatterns = [
     path('classshap/<int:pk>/update', classshap.UpdateView.as_view(), name='classshap_update'),
     path('classshap/<int:pk>/edit_note', classshap.EditNoteView.as_view(), name='classshap_edit_note'),
     path('classshap/<int:pk>/delete', classshap.DeleteView.as_view(), name='classshap_delete'),
+    path('classshap/<int:pk>/revoke', classshap.RevokeView.as_view(), name='classshap_revoke'),
     path('classshap/<int:pk>/plot', classshap.PlotView.as_view(), name='classshap_plot'),
     # ClassSHAP API
     path('api/classification/<int:pk>/classshap/add', classshap.AddAPIView.as_view(), name='api_classshap_add'),
@@ -230,4 +233,36 @@ urlpatterns = [
     path('api/classshap/<int:pk>', classshap.RetrieveAPIView.as_view(), name='api_classshap_retrieve'),
     path('api/classshap/<int:pk>/update', classshap.UpdateAPIView.as_view(), name='api_classshap_update'),
     path('api/classshap/<int:pk>/delete', classshap.DeleteAPIView.as_view(), name='api_classshap_delete'),
+    # RegrePred
+    path('regression/<int:pk>/regrepred/add', regrepred.AddView.as_view(), name='regrepred_add'),
+    path('regression/<int:pk>/regrepred/list', regrepred.ListView.as_view(), name='regrepred_list'),
+    path('regrepred/<int:pk>', regrepred.DetailView.as_view(), name='regrepred_detail'),
+    path('regrepred/<int:pk>/update', regrepred.UpdateView.as_view(), name='regrepred_update'),
+    path('regrepred/<int:pk>/edit_note', regrepred.EditNoteView.as_view(), name='regrepred_edit_note'),
+    path('regrepred/<int:pk>/delete', regrepred.DeleteView.as_view(), name='regrepred_delete'),
+    path('regrepred/<int:pk>/table', regrepred.TableView.as_view(), name='regrepred_table'),
+    path('regrepred/<int:pk>/download', regrepred.DownloadView.as_view(), name='regrepred_download'),
+    # RegrePred API
+    path('api/regression/<int:pk>/regrepred/add', regrepred.AddAPIView.as_view(), name='api_regrepred_add'),
+    path('api/regression/<int:pk>/regrepred/list', regrepred.ListAPIView.as_view(), name='api_regrepred_list'),
+    path('api/regrepred/<int:pk>', regrepred.RetrieveAPIView.as_view(), name='api_regrepred_retrieve'),
+    path('api/regrepred/<int:pk>/update', regrepred.UpdateAPIView.as_view(), name='api_regrepred_update'),
+    path('api/regrepred/<int:pk>/delete', regrepred.DeleteAPIView.as_view(), name='api_regrepred_delete'),
+    path('api/regrepred/<int:pk>/file', regrepred.FileAPIView.as_view(), name='api_regrepred_file'),
+    # ClassPred
+    path('classification/<int:pk>/classpred/add', classpred.AddView.as_view(), name='classpred_add'),
+    path('classification/<int:pk>/classpred/list', classpred.ListView.as_view(), name='classpred_list'),
+    path('classpred/<int:pk>', classpred.DetailView.as_view(), name='classpred_detail'),
+    path('classpred/<int:pk>/update', classpred.UpdateView.as_view(), name='classpred_update'),
+    path('classpred/<int:pk>/edit_note', classpred.EditNoteView.as_view(), name='classpred_edit_note'),
+    path('classpred/<int:pk>/delete', classpred.DeleteView.as_view(), name='classpred_delete'),
+    path('classpred/<int:pk>/table', classpred.TableView.as_view(), name='classpred_table'),
+    path('classpred/<int:pk>/download', classpred.DownloadView.as_view(), name='classpred_download'),
+    # ClassPred API
+    path('api/classification/<int:pk>/classpred/add', classpred.AddAPIView.as_view(), name='api_classpred_add'),
+    path('api/classification/<int:pk>/classpred/list', classpred.ListAPIView.as_view(), name='api_classpred_list'),
+    path('api/classpred/<int:pk>', classpred.RetrieveAPIView.as_view(), name='api_classpred_retrieve'),
+    path('api/classpred/<int:pk>/update', classpred.UpdateAPIView.as_view(), name='api_classpred_update'),
+    path('api/classpred/<int:pk>/delete', classpred.DeleteAPIView.as_view(), name='api_classpred_delete'),
+    path('api/classpred/<int:pk>/file', classpred.FileAPIView.as_view(), name='api_classpred_file'),
 ]

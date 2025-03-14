@@ -1,8 +1,12 @@
 from django.db.models import Q
+from django.utils.module_loading import import_string
+from config.settings import COLLECT_FEATURES
 from project.views import base, base_api, remote
 from project.models import Project, Prefix
-from ..forms import EditNoteForm, ImportForm
+from sample.models import Sample
+from ..forms import ImportForm
 from ..serializer import PrefixSerializer
+import json
 
 class AddView(base.AddView):
     model = Prefix
@@ -22,30 +26,61 @@ class DetailView(base.DetailView):
     model = Prefix
     template_name = "project/prefix_detail.html"
 
+    def prefix_features(self, model):
+        features = []
+        for samp in Sample.objects.all():
+            expr = samp.get_experiment()
+            if expr:
+                columns = json.loads(expr.upper.columns)
+                if model.unique in columns:
+                    features.append(samp)
+        for item in COLLECT_FEATURES:
+            cls = import_string(item['Model'])
+            if hasattr(cls, 'prefix'):
+                if item['Depth'] == 2:
+                    feats = cls.objects.filter(upper__upper=model.upper, prefix=model.unique)
+                elif item['Depth'] == 3:
+                    feats = cls.objects.filter(upper__upper__upper=model.upper, prefix=model.unique)
+                elif item['Depth'] == 4:
+                    feats = cls.objects.filter(upper__upper__upper__upper=model.upper, prefix=model.unique)
+                for feat in feats:
+                    features.append(feat)
+        return features
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        model = self.model.objects.get(pk=self.kwargs['pk'])
+        context['features'] = self.prefix_features(model)
+        return context
+
 class UpdateView(base.UpdateView):
     model = Prefix
     fields = ('prefix', 'note')
     template_name = "project/default_update.html"
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Prefix
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 # Prefix Default Class
 class AddPrefixView(base.AddView):
     model = None
     upper = None
     template_name = "project/default_add.html"
+    disp_default = True
 
     def get_form(self, form_class=None):
         upper = self.upper.objects.get(pk=self.kwargs['pk'])
         project = base.ProjectModel(upper)
         prefix = Prefix.objects.filter(upper=project)
-        if self.model.default_prefix:
-            choices = [('000000', self.model.default_prefix)]
+        if self.disp_default:
+            if self.model.default_prefix:
+                choices = [('000000', self.model.default_prefix)]
+            else:
+                choices = [('000000', self.model.__name__)]
         else:
-            choices = [('000000', self.model.__name__)]
+            choices = []
         for p in prefix:
             choices.append((p.unique, p.prefix))
         form = super().get_form(form_class=form_class)
@@ -55,15 +90,19 @@ class AddPrefixView(base.AddView):
 class UpdatePrefixView(base.UpdateView):
     model = None
     template_name = "project/default_update.html"
+    disp_default = True
 
     def get_form(self, form_class=None):
         model = self.model.objects.get(pk=self.kwargs['pk'])
         project = base.ProjectModel(model)
         prefix = Prefix.objects.filter(upper=project)
-        if self.model.default_prefix:
-            choices = [('000000', self.model.default_prefix)]
+        if self.disp_default:
+            if self.model.default_prefix:
+                choices = [('000000', self.model.default_prefix)]
+            else:
+                choices = [('000000', self.model.__name__)]
         else:
-            choices = [('000000', self.model.__name__)]
+            choices = []
         for p in prefix:
             choices.append((p.unique, p.prefix))
         form = super().get_form(form_class=form_class)

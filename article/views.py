@@ -6,7 +6,7 @@ from project.models import Project
 from project.forms import ImportForm, CloneForm, TokenForm, SetRemoteForm, SearchForm
 from diff_match_patch import diff_match_patch
 from .models import Article, File, Diff
-from .forms import AddForm, UpdateForm, MDFileForm, FileUpdateForm
+from .forms import MDFileForm, FileUpdateForm
 from .serializer import ArticleSerializer, FileSerializer, DiffSerializer
 from io import TextIOWrapper
 import datetime
@@ -14,7 +14,7 @@ import datetime
 class AddView(base.AddView):
     model = Article
     upper = Project
-    form_class = AddForm
+    fields = ('title', 'category', 'public', 'text')
     template_name ="article/article_add.html"
 
 class ListView(base.ListView):
@@ -23,7 +23,6 @@ class ListView(base.ListView):
     template_name = "article/article_list.html"
     navigation = [['Add', 'article:add'],
                   ['Import', 'article:import'],
-                  ['Clone', 'article:clone'],
                   ['Search', 'article:search']]
 
 class DetailView(base.DetailView):
@@ -39,14 +38,12 @@ def CreateDiff(current, previous, upper, user):
 
 class UpdateView(base.UpdateView):
     model = Article
-    form_class = UpdateForm
+    fields = ('title', 'status', 'category', 'public')
     template_name = "article/article_update.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         model = self.model.objects.get(pk=self.kwargs['pk'])
-        files = File.objects.filter(upper=model).order_by('-updated_at')
-        context['article_files'] = files
         diffs = Diff.objects.filter(upper=model).order_by('-updated_at')
         context['article_diffs'] = diffs
         return context
@@ -56,6 +53,18 @@ class UpdateView(base.UpdateView):
         prev = self.model.objects.get(pk=self.kwargs['pk'])
         CreateDiff(curr.text, prev.text, prev, self.request.user)
         return super().form_valid(form)
+
+class EditView(base.MDEditView):
+    model = Article
+    text_field = 'text'
+    template_name = "article/article_edit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        model = self.model.objects.get(pk=self.kwargs['pk'])
+        files = File.objects.filter(upper=model).order_by('-updated_at')
+        context['article_files'] = files
+        return context
 
 class DeleteView(base.DeleteManagerView):
     model = Article
@@ -123,7 +132,7 @@ def PreviousText(model):
     for diff in diffs:
         patches = dmp.patch_fromText(diff.diff)
         text, _ = dmp.patch_apply(patches, text)
-        if diff.id is model.id:
+        if diff.id == model.id:
             break
     return text
 
@@ -213,6 +222,11 @@ class RetrieveAPIView(base_api.RetrieveAPIView):
 class UpdateAPIView(base_api.UpdateAPIView):
     model = Article
     serializer_class = ArticleSerializer
+
+    def perform_update(self, serializer):
+        prev = self.model.objects.get(pk=self.kwargs['pk'])
+        instance = serializer.save()
+        CreateDiff(instance.text, prev.text, prev, self.request.user)
 
 class FileAddAPIView(base_api.AddAPIView):
     upper = Article
@@ -307,42 +321,42 @@ class ImportView(remote.ImportView):
     success_name = 'article:list'
     view_name = 'article:detail'
 
-class CloneView(remote.CloneView):
-    model = Article
-    form_class = CloneForm
-    upper = Project
-    remote_class = ArticleRemote
-    template_name = "project/default_clone.html"
-    title = 'Article Clone'
-    success_name = 'article:list'
-    view_name = 'article:detail'
-
-class TokenView(remote.TokenView):
-    model = Article
-    form_class = TokenForm
-    success_names = ['article:pull', 'article:push']
-
-class PullView(remote.PullView):
-    model = Article
-    remote_class = ArticleRemote
-    success_name = 'article:detail'
-    fail_name = 'article:token'
-
-class PushView(remote.PushView):
-    model = Article
-    remote_class = ArticleRemote
-    success_name = 'article:detail'
-    fail_name = 'article:token'
-
-class SetRemoteView(remote.SetRemoteView):
-    model = Article
-    form_class = SetRemoteForm
-    remote_class = ArticleRemote
-    title = 'Article Set Remote'
-    success_name = 'article:detail'
-    view_name = 'article:detail'
-
-class ClearRemoteView(remote.ClearRemoteView):
-    model = Article
-    remote_class = ArticleRemote
-    success_name = 'article:detail'
+# class CloneView(remote.CloneView):
+#     model = Article
+#     form_class = CloneForm
+#     upper = Project
+#     remote_class = ArticleRemote
+#     template_name = "project/default_clone.html"
+#     title = 'Article Clone'
+#     success_name = 'article:list'
+#     view_name = 'article:detail'
+#
+# class TokenView(remote.TokenView):
+#     model = Article
+#     form_class = TokenForm
+#     success_names = ['article:pull', 'article:push']
+#
+# class PullView(remote.PullView):
+#     model = Article
+#     remote_class = ArticleRemote
+#     success_name = 'article:detail'
+#     fail_name = 'article:token'
+#
+# class PushView(remote.PushView):
+#     model = Article
+#     remote_class = ArticleRemote
+#     success_name = 'article:detail'
+#     fail_name = 'article:token'
+#
+# class SetRemoteView(remote.SetRemoteView):
+#     model = Article
+#     form_class = SetRemoteForm
+#     remote_class = ArticleRemote
+#     title = 'Article Set Remote'
+#     success_name = 'article:detail'
+#     view_name = 'article:detail'
+#
+# class ClearRemoteView(remote.ClearRemoteView):
+#     model = Article
+#     remote_class = ArticleRemote
+#     success_name = 'article:detail'

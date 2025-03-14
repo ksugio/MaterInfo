@@ -1,15 +1,15 @@
 from django.shortcuts import render
-from project.views import base, base_api, remote
-from project.forms import EditNoteForm
+from project.views import base, base_api, remote, task
 from ..models.classification import Classification
 from ..models.classshap import ClassSHAP
+from ..tasks import ClassSHAPTask
 from ..serializer import ClassSHAPSerializer
 import json
 
-class AddView(base.AddView):
+class AddView(task.AddView):
     model = ClassSHAP
     upper = Classification
-    fields = ('title', 'note', 'test_size')
+    fields = ('title', 'note', 'use_kernel', 'kmeans', 'nsample')
     template_name ="project/default_add.html"
 
     def get_form(self, form_class=None):
@@ -18,13 +18,16 @@ class AddView(base.AddView):
         form.fields['title'].initial = 'CSH' + base.DateToday()[2:]
         return form
 
-    def form_valid(self, form):
-        model = form.save(commit=False)
-        model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
-        model.created_by = self.request.user
-        model.updated_by = self.request.user
-        model.explain()
-        return super().form_valid(form)
+    def start_task(self, form, model):
+        features, obj = model.upper.dataset(shuffle=True)
+        if features is not None:
+            model.task_id = ClassSHAPTask.delay(
+                model.upper.read_model(raw_data=True),
+                features.values.tolist(), obj.values.tolist(),
+                features.columns.tolist(),
+                model.use_kernel, model.kmeans, model.nsample,
+                request_user_id=self.request.user.id
+            )
 
 class ListView(base.ListView):
     model = ClassSHAP
@@ -32,35 +35,48 @@ class ListView(base.ListView):
     template_name = "project/default_list.html"
     navigation = [['Add', 'collect:classshap_add'],]
 
-class DetailView(base.DetailView):
+class DetailView(task.DetailView):
     model = ClassSHAP
     template_name = "collect/classshap_detail.html"
+    result_fields = ('results',)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         model = self.model.objects.get(pk=self.kwargs['pk'])
-        context['results'] = json.loads(model.results)
+        if self.result_saved(model):
+            context['results'] = json.loads(model.results)
         return context
 
-class UpdateView(base.UpdateView):
+class UpdateView(task.UpdateView):
     model = ClassSHAP
-    fields = ('title', 'status', 'note', 'test_size')
+    fields = ('title', 'status', 'note', 'use_kernel', 'kmeans', 'nsample')
     template_name = "project/default_update.html"
 
-    def form_valid(self, form):
-        model = form.save(commit=False)
-        model.updated_by = self.request.user
-        model.explain()
-        return super().form_valid(form)
+    def start_task(self, form, model):
+        features, obj = model.upper.dataset(shuffle=True)
+        if features is not None:
+            model.task_id = ClassSHAPTask.delay(
+                model.upper.read_model(raw_data=True),
+                features.values.tolist(), obj.values.tolist(),
+                features.columns.tolist(),
+                model.use_kernel, model.kmeans, model.nsample,
+                request_user_id=self.request.user.id
+            )
+            model.results = ''
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = ClassSHAP
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
-class DeleteView(base.DeleteView):
+class DeleteView(task.DeleteView):
     model = ClassSHAP
     template_name = "project/default_delete.html"
+
+class RevokeView(task.RevokeView):
+    model = ClassSHAP
+    template_name = "project/default_revoke.html"
+    success_name = 'collect:classshap_detail'
 
 class PlotView(base.PlotView):
     model = ClassSHAP

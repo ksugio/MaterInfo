@@ -115,6 +115,9 @@ class IMFP(Created, Updated, Remote, IMFPMixin):
     def get_delete_url(self):
         return reverse('image:imfp_delete', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('image:api_imfp_update', kwargs={'pk': self.id})
+
     # def basename(self):
     #     return os.path.basename(self.file.name)
     #

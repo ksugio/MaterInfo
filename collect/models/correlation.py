@@ -60,6 +60,10 @@ class Correlation(Created, Updated, Remote):
     def get_delete_url(self):
         return reverse('collect:correlation_delete', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('collect:api_correlation_update', kwargs={'pk': self.id})
+
+
     def save_csv(self, df):
         buf = BytesIO()
         df.to_csv(buf, mode="wb", encoding="UTF-8")

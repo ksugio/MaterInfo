@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ object.title }}</h1>
+    <div class="mt-3">
+        Last updated by {{ object.updated_by }} at {{ object.updated_at }}
+    </div>
+    <form>
+        <div class="mt-3">
+            <button type="button" class="btn btn-primary btn-sm" id="buttonSave">Update</button>
+            <a class="btn btn-primary btn-sm" href="{{ object.get_detail_url }}">Back</a>
+        </div>
+        <div class="row mt-3">
+            <div class="col-2">
+                Method
+                <select class="form-select" id="selectShape">
+                    <option value="">Line</option>
+                    <option value="">Arrow</option>
+                    <option value="">Rectangle</option>
+                    <option value="">Circle</option>
+                    <option value="">Delete</option>
+                </select>
+            </div>
+            <div class="col-1">
+                Color<input class="form-control form-control" type="color" name="color" id="selectColor">
+            </div>
+            <div class="col-1">
+                Thickness<input class="form-control" type="number" name="thickness" id="Thickness" value="1">
+            </div>
+            <div class="col-1">
+                Order<input class="form-control" type="number" name="order" id="Order" value="{{ object.order }}">
+            </div>
+            <div class="col-2">
+                Background
+                <select class="form-select" id="selectBackground">
+                    <option value="">Image</option>
+                    <option value="">White</option>
+                    <option value="">Gray</option>
+                    <option value="">Black</option>
+                </select>
+            </div>
+            <div class="col-1">
+                <button type="button" class="btn btn-outline-secondary" id="buttonPop">Pop</button>
+            </div>
+            <div class="ms-auto col-3">
+                Zoom <span id="ZoomValue"></span> %
+                <input class="form-control" type="range" min="10" max="100" step="5" name="zoom" id="Zoom">
+            </div>
+        </div>
+    </form>
+    <div class="mt-3" id="stage">
+        <canvas width="{{ pilimg.width }}" height="{{ pilimg.height }}", id="canvas"></canvas>
+        <canvas width="{{ pilimg.width }}" height="{{ pilimg.height }}", id="canvas_front"></canvas>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script2 %}
+
+    <style>
+        #stage {
+            width: {{ pilimg.width }}px;
+            height: {{ pilimg.height }}px;
+            position: relative;
+        }
+        canvas {
+            position: absolute;
+        }
+    </style>
+
+    <script>
+        const imageBase64 = '{{ image_base64 }}';
+        const imageWidth = {{ pilimg.width }};
+        const imageHeight = {{ pilimg.height }};
+        const csrfToken = '{{ csrf_token }}';
+        const apiupdateURL = '{{ object.get_apiupdate_url }}';
+        let imageRatio = 1.0;
+        {% if object.data %}
+            let drawData = {{ object.data | safe }};
+        {% else %}
+            let drawData = [];
+        {% endif %}
+    </script>
+    <script src="{% static 'image/js/draw.js' %}"></script>
+
+{% endblock %}

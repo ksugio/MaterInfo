@@ -49,7 +49,7 @@ class Process(Updated, Remote):
         return self.entity().process(df)
 
     def procval(self):
-        df = self.upper.upper.read_csv()
+        df = self.upper.upper.read_data()
         df = self.upper.procval(df, self.id)
         return df
 

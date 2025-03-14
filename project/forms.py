@@ -1,6 +1,6 @@
 from django import forms
-from .views.token import GetAccessToken, GetSessionAccessToken, SetSessionRefreshToken, VerifyID, ParseURL
-from mdeditor.fields import MDTextFormField
+from .views.requests import GetAccessToken, GetSessionAccessToken, SetSessionRefreshToken, VerifyID, ParseURL
+from .models import Project
 
 class AliasForm(forms.Form):
     template = forms.ChoiceField(label='Template', required=True)
@@ -16,34 +16,39 @@ class CloneForm(forms.Form):
     viwe_name = None
     view_args = 1
     session = None
-    refresh = None
     access = None
+    host = None
+    auth = ''
 
     def clean(self):
         cleaned_data = super().clean()
-        rooturl, id = ParseURL(cleaned_data['url'], self.view_name, self.view_args)
-        access = GetSessionAccessToken(rooturl, self.session)
-        if access == 'InvalidToken':
-            self.fields['token'].widget = forms.Textarea(attrs={'rows':5, 'cols':64})
-            raise forms.ValidationError("Input Token.")
-        elif access == 'NoToken':
-            refresh = cleaned_data['token']
-            if refresh:
-                access = GetAccessToken(rooturl, refresh)
-                if access is None:
+        if cleaned_data['url'].startswith(self.host):
+            self.auth = 'Cookie'
+        else:
+            rooturl, id, _ = ParseURL(cleaned_data['url'], self.view_name, self.view_args)
+            access = GetSessionAccessToken(rooturl, self.session)
+            if access == 'InvalidToken':
+                self.fields['token'].widget = forms.Textarea(attrs={'rows':5, 'cols':64})
+                raise forms.ValidationError("Input Token.")
+            elif access == 'NoToken':
+                refresh = cleaned_data['token']
+                if refresh:
+                    access = GetAccessToken(rooturl, refresh)
+                    if access is None:
+                        self.fields['token'].widget = forms.Textarea(attrs={'rows': 5, 'cols': 64})
+                        raise forms.ValidationError("Input Token.")
+                    data = VerifyID(rooturl, self.retrieve_name, access, id)
+                    if data is None:
+                        raise forms.ValidationError("Invalid ID (%d)." % (id))
+                    self.auth = 'JWT'
+                    self.access = access
+                    SetSessionRefreshToken(rooturl, self.session, refresh)
+                else:
                     self.fields['token'].widget = forms.Textarea(attrs={'rows': 5, 'cols': 64})
                     raise forms.ValidationError("Input Token.")
-                data = VerifyID(rooturl, self.retrieve_name, access, id)
-                if data is None:
-                    raise forms.ValidationError("Invalid ID (%d)." % (id))
-                self.refresh = refresh
-                self.access = access
-                SetSessionRefreshToken(rooturl, self.session, refresh)
             else:
-                self.fields['token'].widget = forms.Textarea(attrs={'rows': 5, 'cols': 64})
-                raise forms.ValidationError("Input Token.")
-        else:
-            self.access = access
+                self.auth = 'JWT'
+                self.access = access
 
 class ImportForm(CloneForm):
     lower = forms.BooleanField(label='Import Lower', required=False)
@@ -75,9 +80,6 @@ class TokenForm(forms.Form):
         self.access = access
         SetSessionRefreshToken(rooturl, self.session, refresh)
 
-class EditNoteForm(forms.Form):
-    note = MDTextFormField()
-
 class ClearableFileInput(forms.ClearableFileInput):
     template_name = 'project/clearable_file_input.html'
 
@@ -87,3 +89,21 @@ class SearchForm(forms.Form):
     lower = forms.BooleanField(label='Search Lower', initial=True, required=False)
     order = forms.ChoiceField(label='Order', choices=((0, 'New'), (1, 'Old')), initial=0)
 
+class RestartDaemonForm(forms.Form):
+    process = forms.ChoiceField(label='Process', required=True)
+
+class ProjectAddForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ('title', 'note', 'member')
+        widgets = {
+            'member': forms.CheckboxSelectMultiple(),
+        }
+
+class ProjectUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ('title', 'status', 'note', 'member')
+        widgets = {
+            'member': forms.CheckboxSelectMultiple(),
+        }

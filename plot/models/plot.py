@@ -29,3 +29,6 @@ class Plot(Created, Updated, Remote):
 
     def get_plot_url(self):
         return reverse('plot:plot', kwargs={'pk': self.id})
+
+    def get_apiupdate_url(self):
+        return reverse('plot:api_update', kwargs={'pk': self.id})

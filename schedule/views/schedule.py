@@ -1,9 +1,8 @@
 from django.http import HttpResponse
 from config.settings import FONT_PATH
-from accounts.models import CustomUser
 from project.views import base, base_api, remote
 from project.models import Project
-from project.forms import EditNoteForm, ImportForm, CloneForm, TokenForm, SetRemoteForm
+from project.forms import ImportForm, CloneForm, TokenForm, SetRemoteForm
 from ..models import Schedule, Plan
 from ..serializer import ScheduleSerializer
 from .plan import PlanRemote
@@ -210,6 +209,9 @@ class PushView(remote.PushView):
     remote_class = ScheduleRemote
     success_name = 'schedule:detail'
     fail_name = 'schedule:token'
+
+class LogView(remote.LogView):
+    model = Schedule
 
 class SetRemoteView(remote.SetRemoteView):
     model = Schedule

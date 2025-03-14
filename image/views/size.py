@@ -1,7 +1,6 @@
 from django.http import HttpResponse
 from django.urls import reverse
 from project.views import base, base_api, remote, prefix
-from project.forms import EditNoteForm
 from ..models.filter import Filter, cv2PIL
 from ..models.size import Size
 from ..serializer import SizeSerializer
@@ -69,10 +68,10 @@ class UpdateView(prefix.UpdatePrefixView):
         model.measure()
         return super().form_valid(form)
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Size
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = Size
@@ -201,6 +200,18 @@ class ContoursImageView(base.View):
             response = HttpResponse(buf.getvalue(), content_type='image/png')
             buf.close()
             return response
+
+# class ContoursJsonView(base.View):
+#     model = Size
+#
+#     def get(self, request, **kwargs):
+#         model = self.model.objects.get(pk=kwargs['pk'])
+#         data = model.contours_json()
+#         response = HttpResponse(data, content_type='application/json')
+#         now = datetime.datetime.now()
+#         filename = 'Contours%s.json' % (now.strftime('%Y%m%d%H%M%S')[2:])
+#         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'{}'.format(filename)
+#         return response
 
 class SizeSearch(base.Search):
     model = Size

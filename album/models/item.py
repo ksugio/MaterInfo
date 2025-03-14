@@ -1,13 +1,12 @@
-from django.utils.module_loading import import_string
 from django.db import models
 from django.urls import reverse
-from project.models import Updated, Remote, FileSearch
+from project.models import Updated, Remote
 from .album import Album
 from PIL import Image
 from io import BytesIO
 import requests
 
-class Item(Updated, Remote, FileSearch):
+class Item(Updated, Remote):
     upper = models.ForeignKey(Album, verbose_name='Album', on_delete=models.CASCADE)
     url = models.CharField(verbose_name='URL', max_length=256)
     width = models.PositiveSmallIntegerField(verbose_name='Width', blank=True, null=True)
@@ -36,17 +35,17 @@ class Item(Updated, Remote, FileSearch):
 
     def get_image(self, **kwargs):
         if self.url.startswith('http'):
-            response = requests.get(self.url)
-            if response.status_code != 200 or 'image' not in response.headers['Content-Type']:
-                return Image.new('L', (640, 480), 128)
+            if self.url.startswith(kwargs['request_host']):
+                response = requests.get(self.url, cookies=kwargs['request_cookies'])
             else:
-                src = Image.open(BytesIO(response.content))
+                response = requests.get(self.url)
         else:
-            file = self.file_search(self.url)
-            if file is None:
-                return Image.new('L', (640, 480), 128)
-            else:
-                src = Image.open(file)
+            response = requests.get(kwargs['request_host'] + self.url,
+                                    cookies=kwargs['request_cookies'])
+        if response.status_code != 200 or 'image' not in response.headers['Content-Type']:
+            return Image.new('L', (640, 480), 128)
+        else:
+            src = Image.open(BytesIO(response.content))
         if self.width is not None and self.height is not None:
             return src.resize((self.width, self.height))
         elif self.width is not None:
@@ -60,5 +59,3 @@ class Item(Updated, Remote, FileSearch):
         else:
             return src
 
-    def detail_url(self):
-        return self.detail_search(self.url)

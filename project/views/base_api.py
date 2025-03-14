@@ -17,14 +17,29 @@ class IsMember(BasePermission):
         model = get_object_or_404(view.model, id=view.kwargs['pk'])
         return request.user in ProjectMember(model)
 
+class IsManager(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_manager
+
+class IsManagerOrCreateUser(BasePermission):
+    def has_permission(self, request, view):
+        model = get_object_or_404(view.model, id=view.kwargs['pk'])
+        return request.user == model.created_by or request.user.is_manager
+
 class AddAPIView(generics.CreateAPIView):
     permission_classes = (IsAuthenticated, IsMemberUp)
     upper = None
     serializer_class = None
 
     def perform_create(self, serializer):
-        upper = self.upper.objects.get(pk=self.kwargs['pk'])
-        serializer.save(created_by=self.request.user, updated_by=self.request.user, upper=upper)
+        option = {}
+        if hasattr(self.serializer_class.Meta.model, 'created_by'):
+            option['created_by'] = self.request.user
+        if hasattr(self.serializer_class.Meta.model, 'updated_by'):
+            option['updated_by'] = self.request.user
+        if hasattr(self.serializer_class.Meta.model, 'upper'):
+            option['upper'] = self.upper.objects.get(pk=self.kwargs['pk'])
+        serializer.save(**option)
 
 class ListAPIView(generics.ListAPIView):
     permission_classes = (IsAuthenticated, IsMemberUp)
@@ -63,6 +78,10 @@ class DeleteAPIView(generics.DestroyAPIView):
     def get_queryset(self):
         return self.model.objects.all()
 
+class APIView(views.APIView):
+    permission_classes = (IsAuthenticated, IsMember)
+    model = None
+
 class FileAPIView(views.APIView):
     permission_classes = (IsAuthenticated, IsMember)
     model = None
@@ -92,34 +111,3 @@ class FileAPIView(views.APIView):
             return response
         else:
             return FileResponse(file.open("rb"), as_attachment=self.attachment, filename=basename)
-
-#
-# Good
-# class GoodAPIView(views.APIView):
-#     permission_classes = (IsAuthenticated, IsMember)
-#     model = None
-#
-#     def get(self, request, pk=None):
-#         object = get_object_or_404(self.model, pk=self.kwargs['pk'])
-#         url_ = object.get_detail_url()
-#         status = request.GET.getlist('status')
-#         print(status)
-#         status = bool(int(status[0]))
-#         status = True
-#         user = self.request.user
-#         if user in object.good.all():
-#             if not (status):
-#                 good = True
-#             else:
-#                 object.good.remove(user)
-#                 good = False
-#         else:
-#             if not (status):
-#                 good = False
-#             else:
-#                 object.good.add(user)
-#                 good = True
-#         data = {
-#             "good": good,
-#         }
-#         return Response(data)

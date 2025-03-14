@@ -4,6 +4,7 @@ from .views import album, item
 app_name = 'album'
 urlpatterns = [
     path('<int:pk>/add', album.AddView.as_view(), name='add'),
+    path('<int:pk>/import', album.ImportView.as_view(), name='import'),
     path('<int:pk>/list', album.ListView.as_view(), name='list'),
     path('album/<int:pk>', album.DetailView.as_view(), name='detail'),
     path('album/<int:pk>/update', album.UpdateView.as_view(), name='update'),

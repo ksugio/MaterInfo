@@ -19,16 +19,16 @@
         <div class="row mt-1 border g-0">
             <div class="col">
                 <div class="row ms-0 me-0">
-                    <div class="col-9">
+                    <div class="col">
                         <a href="{{ object.get_detail_url }}">{{ object.title }}</a>
                     </div>
-                    <div class="col-3">{{ object.get_status_display }}</div>
+                    <div class="col-2">{{ object.get_status_display }}</div>
                 </div>
                 <div class="row ms-0 me-0">
                     <div class="col">
-                        Latest File : <a href="{% url 'document:file' object.latest_file.id %}">{% url 'document:file' object.latest_file.id %}</a>
+                        Latest File : <a href="{% url 'document:file_file' object.latest_file.id %}">{% url 'document:file_file' object.latest_file.id %}</a>
                     </div>
-                    <div class="col-2">Edition : {{ object.latest_file.edition }}</div>
+                    <div class="col-5">Edition : {{ object.latest_file.edition }}</div>
                     <div class="col-1"><a href="{% url 'document:file_add' object.id %}">Upload</a></div>
                 </div>
                 <div class="row ms-0 me-0">

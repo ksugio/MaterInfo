@@ -9,6 +9,7 @@ urlpatterns = [
     path('hardness/<int:pk>', hardness.DetailView.as_view(), name='detail'),
     path('hardness/<int:pk>/update', hardness.UpdateView.as_view(), name='update'),
     path('hardness/<int:pk>/delete', hardness.DeleteView.as_view(), name='delete'),
+    path('hardness/<int:pk>/move', hardness.MoveView.as_view(), name='move'),
     path('hardness/<int:pk>/edit_note', hardness.EditNoteView.as_view(), name='edit_note'),
     path('hardness/<int:pk>/value/add', value.AddView.as_view(), name='value_add'),
     path('value/<int:pk>/update', value.UpdateView.as_view(), name='value_update'),

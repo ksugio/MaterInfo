@@ -1,8 +1,10 @@
+from .classification import Classification
+from .classshap import ClassSHAP
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.model_selection import KFold
-from sklearn.metrics import f1_score
+from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.metrics import f1_score, accuracy_score, classification_report
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -12,15 +14,13 @@ from sklearn.svm import LinearSVC, SVC
 from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
-from skl2onnx import convert_sklearn, update_registered_converter
-from skl2onnx.common.data_types import FloatTensorType
-from skl2onnx.common.shape_calculator import calculate_linear_classifier_output_shapes
-from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost
-from onnxmltools.convert.lightgbm.operator_converters.LightGbm import convert_lightgbm
-from onnxruntime import InferenceSession
-from .regression_lib import HParam2Dict
+from .regression_lib import HParam2Dict, Dict2HParam
+from io import BytesIO
 import numpy as np
 import optuna
+import shap
+import joblib
+import json
 
 def ClassificationModel(dparam, scaler, pca, n_components, method):
     pipeline = []
@@ -125,9 +125,9 @@ class ClassificationObjective:
             param['learning_rate'] = trial.suggest_float('learning_rate', 0.0, 1.0)
         model = ClassificationModel(param, self.scaler, self.pca, self.n_components, self.method)
         if self.random:
-            kf = KFold(n_splits=self.nsplits, shuffle=True, random_state=self.random)
+            kf = StratifiedKFold(n_splits=self.nsplits, shuffle=True, random_state=self.random)
         else:
-            kf = KFold(n_splits=self.nsplits)
+            kf = StratifiedKFold(n_splits=self.nsplits)
         scores = []
         for train, test in kf.split(self.X, self.Y):
             xtrain, ytrain = self.X[train], self.Y[train]
@@ -139,72 +139,149 @@ class ClassificationObjective:
             raise optuna.structs.TrialPruned()
         return np.mean(scores)
 
-def ToONNX(method, model, ncol):
-    if method == 10:
-        update_registered_converter(
-            XGBClassifier,
-            "XGBoostXGBClassifier",
-            calculate_linear_classifier_output_shapes,
-            convert_xgboost,
-            options={"nocl": [True, False], "zipmap": [True, False, "columns"]},
-        )
-        onx = convert_sklearn(
-            model,
-            "pipeline_xgboost",
-            [("input", FloatTensorType([None, ncol]))],
-            target_opset={"": 12, "ai.onnx.ml": 2},
-        )
-    elif method == 11:
-        update_registered_converter(
-            LGBMClassifier,
-            "LightGbmLGBMClassifier",
-            calculate_linear_classifier_output_shapes,
-            convert_lightgbm,
-            options={"nocl": [True, False], "zipmap": [True, False, "columns"]},
-        )
-        onx = convert_sklearn(
-            model,
-            "pipeline_lightgbm",
-            [("input", FloatTensorType([None, ncol]))],
-            target_opset={"": 12, "ai.onnx.ml": 2}
-        )
+def Optimize(features, obj, dparam, scaler, pca, n_components, method, nsplits, random, ntrials):
+    study = optuna.create_study(direction='maximize')
+    objective = ClassificationObjective(features, obj, dparam, scaler, pca,
+                                        n_components, method, nsplits, random)
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    study.optimize(objective, n_trials=ntrials)
+    dparam.update(study.best_params)
+    ids = [t._trial_id for t in study.get_trials()]
+    values = [t.values[0] for t in study.get_trials()]
+    params = [t.params for t in study.get_trials()]
+    trials = {
+        'ids': ids,
+        'values': values,
+        'params': params,
+        'best_id': study.best_trial._trial_id,
+        'best_value': study.best_trial.values[0],
+        'best_param': study.best_trial.params
+    }
+    return dparam, trials
+
+def ClassificationExec(features, obj, hparam, optimize, testsize, randomts, scaler,
+                       pca, n_components, method, nsplits, random, ntrials, columns, task_id):
+    features = np.array(features)
+    obj = np.array(obj)
+    if testsize > 0.0 and testsize <= 0.5:
+        if randomts:
+            features, test_features, obj, test_obj = train_test_split(features, obj, test_size=testsize, stratify=obj, random_state=randomts)
+        else:
+            features, test_features, obj, test_obj = train_test_split(features, obj, test_size=testsize, stratify=obj)
     else:
-        onx = convert_sklearn(
-            model,
-            initial_types=[('input', FloatTensorType([None, ncol]))]
-        )
-    return onx.SerializeToString()
+        test_features = None
+        test_obj = None
+    dparam = HParam2Dict(hparam)
+    if optimize:
+        dparam, trials = Optimize(features, obj, dparam, scaler, pca, n_components,
+                                  method, nsplits, random, ntrials)
+        hparam = Dict2HParam(dparam)
+    else:
+        trials = {}
+    # test with KFold
+    model = ClassificationModel(dparam, scaler, pca, n_components, method)
+    if random:
+        kf = StratifiedKFold(n_splits=nsplits, shuffle=True, random_state=random)
+    else:
+        kf = StratifiedKFold(n_splits=nsplits)
+    reports = []
+    for i, (train, test) in enumerate(kf.split(features, obj)):
+        xtrain, ytrain = features[train], obj[train]
+        xtest, ytest = features[test], obj[test]
+        model.fit(xtrain, ytrain)
+        pred = model.predict(features)
+        report = classification_report(ytest, pred[test], output_dict=True)
+        report['id'] = i
+        report['train_accuracy'] = accuracy_score(ytrain, pred[train])
+        reports.append(report)
+    accuracies = []
+    train_accuracies = []
+    for report in reports:
+        accuracies.append(report['accuracy'])
+        train_accuracies.append(report['train_accuracy'])
+    mean_accuracy = np.mean(accuracies)
+    mean_train_accuracy = np.mean(train_accuracies)
+    # train
+    model.fit(features, obj)
+    pred = model.predict(features)
+    all_train_accuracy = accuracy_score(obj, pred)
+    if test_features is not None:
+        test_pred = model.predict(test_features)
+        all_report = classification_report(test_obj, test_pred, output_dict=True)
+    coef = ClassificationCoef(model, method)
+    if pca:
+        columns = ['PC{}'.format(i) for i in range(1, n_components + 1)]
+    results = {
+        'reports': reports,
+        'mean_accuracy': mean_accuracy,
+        'mean_train_accuracy': mean_train_accuracy,
+        'all_train_accuracy': all_train_accuracy,
+        'columns': columns,
+        'trials': trials,
+        **coef
+    }
+    if test_features is not None:
+        results['all_report'] = all_report
+    cls = Classification.objects.get(task_id=task_id)
+    cls.hparam = hparam
+    cls.save_model(model)
+    cls.results = json.dumps(results)
+    cls.save()
 
-def RunONNX(onxs, values):
-    sess = InferenceSession(onxs)
-    input_name = sess.get_inputs()[0].name
-    pred_onx = sess.run(None, {input_name: values.astype(np.float32)})[0]
-    return pred_onx.reshape(-1)
-
-def TrainModel(x_train, y_train, dparam, method):
-    if method == 0:
-        model = RidgeClassifier(**dparam)
-    elif method == 1:
-        model = LogisticRegression(max_iter=1000, **dparam)
-    elif method == 2:
-        model = GaussianProcessClassifier(**dparam)
-    elif method == 3:
-        model = GaussianNB(**dparam)
-    elif method == 4:
-        model = KNeighborsClassifier(**dparam)
-    elif method == 5:
-        model = RandomForestClassifier(**dparam)
-    elif method == 6:
-        model = GradientBoostingClassifier(**dparam)
-    elif method == 7:
-        model = LinearSVC(**dparam)
-    elif method == 8:
-        model = SVC(**dparam)
-    elif method == 9:
-        model = MLPClassifier(max_iter=1000, **dparam)
-    elif method == 10:
-        model = XGBClassifier(**dparam)
-    elif method == 11:
-        model = LGBMClassifier(importance_type='gain', verbose=-1, **dparam)
-    model.fit(x_train, y_train)
-    return model
+def ClassSHAPExec(model_data, features, obj, columns, use_kernel, kmeans, nsample, task_id):
+    buf = BytesIO(model_data)
+    buf.write(model_data)
+    model = joblib.load(buf)
+    buf.close()
+    targets = list(set(obj))
+    features = np.array(features)
+    step = 0
+    if model.steps[step][0] == 'minmax' or model.steps[step][0] == 'standard':
+        features = model[step].transform(features)
+        step += 1
+    if model.steps[step][0] == 'pca':
+        features = model[step].transform(features)
+        step += 1
+    obj = np.array(obj)
+    method = model.steps[step][0]
+    if use_kernel and method != 'ridge':
+        summary = shap.kmeans(features, kmeans)
+        if method == 'lsvc' or method == 'svc':
+            explainer = shap.KernelExplainer(model[step].predict, summary)
+        else:
+            explainer = shap.KernelExplainer(model[step].predict_proba, summary)
+        if nsample < obj.shape[0]:
+            x_test = features[:nsample]
+        else:
+            x_test = features
+    elif method == 'ridge' or method == 'logistic':
+        explainer = shap.LinearExplainer(model[step], features)
+        x_test = features
+    elif method == 'rfc' or method == 'xgb' or method == 'lgbm':
+        explainer = shap.TreeExplainer(model[step])
+        x_test = features
+    elif method == 'lsvc' or method == 'svc':
+        summary = shap.kmeans(features, kmeans)
+        explainer = shap.KernelExplainer(model[step].predict, summary)
+        if nsample < obj.shape[0]:
+            x_test = features[:nsample]
+        else:
+            x_test = features
+    else:
+        summary = shap.kmeans(features, kmeans)
+        explainer = shap.KernelExplainer(model[step].predict_proba, summary)
+        if nsample < obj.shape[0]:
+            x_test = features[:nsample]
+        else:
+            x_test = features
+    shap_values = explainer.shap_values(X=x_test)
+    shap_values = np.array(shap_values)
+    results = {
+        'shap_values': shap_values.tolist(),
+        'x_test': x_test.tolist(),
+        'columns': columns,
+        'targets': targets
+    }
+    model = ClassSHAP.objects.get(task_id=task_id)
+    model.results = json.dumps(results)
+    model.save()

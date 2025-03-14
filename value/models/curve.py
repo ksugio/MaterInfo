@@ -43,6 +43,9 @@ class Curve(Created, Updated, Remote, PrefixPtr):
     def get_plot_url(self):
         return reverse('value:curve_plot', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('value:api_curve_update', kwargs={'pk': self.id})
+
     def get_lmmodel(self):
         if self.alias:
             upper = Curve.objects.get(pk=self.alias)

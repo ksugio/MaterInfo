@@ -9,6 +9,7 @@ urlpatterns = [
     path('general/<int:pk>', views.DetailView.as_view(), name='detail'),
     path('general/<int:pk>/update', views.UpdateView.as_view(), name='update'),
     path('general/<int:pk>/delete', views.DeleteView.as_view(), name='delete'),
+    path('general/<int:pk>/move', views.MoveView.as_view(), name='move'),
     path('general/<int:pk>/edit_note', views.EditNoteView.as_view(), name='edit_note'),
     # API
     path('api/<int:pk>/add', views.AddAPIView.as_view(), name='api_add'),

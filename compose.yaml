@@ -2,6 +2,7 @@ services:
   materinfo:
     image: ksugio/materinfo:latest
     #build: .
+    command: uwsgi --ini uwsgi.ini
     environment:
       DEBUG: True
       DATABASE_URL: mysql://materinfouser:materinfopw@db:3306/materinfo
@@ -9,12 +10,39 @@ services:
       MEDIA_ROOT: /data/media
       MEDIA_ACCEL_REDIRECT: True
       REPOS_ROOT: /data/repos
+      MPGRID_WORK: /data/mpgrid_work
+      QE_WORK: /data/qe_work
+      CELERY_BROKER_URL: redis://redis:6379
     ports:
       - "8000:8000"
     volumes:
       - materinfo-data:/data
     depends_on:
       - db
+      - redis
+  celery:
+    image: ksugio/materinfo:latest
+    #build: .
+    command: celery -A config worker -l INFO -Q project,collect --concurrency=1
+    environment:
+      DATABASE_URL: mysql://materinfouser:materinfopw@db:3306/materinfo
+      MEDIA_ROOT: /data/media
+      CELERY_BROKER_URL: redis://redis:6379
+    volumes:
+      - materinfo-data:/data
+    depends_on:
+      - db
+      - redis
+  logger:
+    image: ksugio/materinfo-logger:latest
+    #build: ./logger/server
+    command: python3 cpu.py
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 1
+    depends_on:
+      - redis
   nginx:
     image: ksugio/materinfo-nginx:latest
     #build: ./nginx
@@ -25,7 +53,7 @@ services:
     depends_on:
       - materinfo
   db:
-    image: mariadb:11.3
+    image: mariadb:11.7
     environment:
       MARIADB_ROOT_PASSWORD: root2pass
       MARIADB_DATABASE: materinfo
@@ -33,7 +61,13 @@ services:
       MARIADB_PASSWORD: materinfopw
     volumes:
       - db-data:/var/lib/mysql
+  redis:
+    image: redis:7.4
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data"
 volumes:
-  db-data:
   materinfo-data:
-
+  db-data:
+  redis-data:

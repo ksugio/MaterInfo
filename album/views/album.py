@@ -1,14 +1,10 @@
-from django.utils.module_loading import import_string
-from django.http import HttpResponse
-from django.urls import reverse
 from project.views import base, base_api, remote
 from project.models import Project
-from project.forms import EditNoteForm
+from project.forms import ImportForm
 from ..models.album import Album
 from ..models.item import Item
 from .item import ItemRemote
 from ..serializer import AlbumSerializer
-import urllib
 
 class AddView(base.AddView):
     model = Album
@@ -26,21 +22,22 @@ class AddView(base.AddView):
         model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
         model.created_by = self.request.user
         model.updated_by = self.request.user
-        model.saveimg()
+        model.saveimg(self.request)
         return super().form_valid(form)
 
 class ListView(base.ListView):
     model = Album
     upper = Project
     template_name = "project/default_list.html"
-    navigation = [['Add', 'album:add']]
+    navigation = [['Add', 'album:add'],
+                  ['Import', 'album:import']]
 
 class DetailView(base.DetailView):
     model = Album
     template_name = "album/album_detail.html"
     navigation = []
 
-class UpdateView(base.UpdateView):
+class UpdateView(base.UpdateView, base.FileSearch):
     model = Album
     fields = ('title', 'status', 'note', 'ncol', 'margin', 'bgcolor', 'format')
     template_name = "album/album_update.html"
@@ -51,7 +48,7 @@ class UpdateView(base.UpdateView):
         items = Item.objects.filter(upper=model).order_by('order')
         item_detail = []
         for item in items:
-            item_detail.append((item, item.detail_url()))
+            item_detail.append((item, self.detail_search(item.url)))
         context['item_detail'] = item_detail
         return context
 
@@ -59,7 +56,7 @@ class UpdateView(base.UpdateView):
         model = form.save(commit=False)
         model.updated_by = self.request.user
         prev = model.file.url
-        model.saveimg()
+        model.saveimg(self.request)
         response = super().form_valid(form)
         items = Item.objects.filter(url=prev)
         for item in items:
@@ -67,10 +64,10 @@ class UpdateView(base.UpdateView):
             item.save()
         return response
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Album
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = Album
@@ -121,12 +118,12 @@ class AlbumRemote(remote.FileRemote):
     serializer_class = AlbumSerializer
     child_remote = [ItemRemote]
 
-# class ImportView(remote.ImportView):
-#     model = Album
-#     upper = Project
-#     form_class = ImportForm
-#     remote_class = AlbumRemote
-#     template_name = "project/default_import.html"
-#     title = 'Album Import'
-#     success_name = 'album:list'
-#     view_name = 'album:detail'
+class ImportView(remote.ImportView):
+    model = Album
+    upper = Project
+    form_class = ImportForm
+    remote_class = AlbumRemote
+    template_name = "project/default_import.html"
+    title = 'Album Import'
+    success_name = 'album:list'
+    view_name = 'album:detail'

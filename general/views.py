@@ -1,5 +1,5 @@
 from project.views import base, base_api, remote, prefix
-from project.forms import EditNoteForm, ImportForm
+from project.forms import ImportForm
 from sample.models import Sample
 from .models import General
 from .forms import GeneralAddForm, GeneralUpdateForm
@@ -37,10 +37,14 @@ class DeleteView(base.DeleteManagerView):
     model = General
     template_name = "project/default_delete.html"
 
-class EditNoteView(base.EditNoteView):
+class MoveView(base.MoveManagerView):
     model = General
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    template_name = "project/default_update.html"
+
+class EditNoteView(base.MDEditView):
+    model = General
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class GeneralSearch(base.Search):
     model = General

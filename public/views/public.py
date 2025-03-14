@@ -2,9 +2,10 @@ from django.views import generic
 from django.urls import reverse
 from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, BasePermission
-from config.settings import MEDIA_ACCEL_REDIRECT
 from project.views import base
 from ..models import Public, PublicArticle, PublicMenu, PublicFile, RandomString
 from ..serializer import PublicSerializer
@@ -73,25 +74,33 @@ class ReleaseView(base.View):
     def update_files(self, model):
         items = PublicFile.objects.filter(upper=model)
         for item in items:
-            item.set_filename()
+            if not item.header or model.header_image:
+                item.set_file(self.request)
             item.save()
 
     def header_params(self, model):
         items = PublicFile.objects.filter(url=model.get_header_image_url())
         if items:
             header_image = items[0]
-        else:
+        elif model.header_image:
+            content = model.header_image.read()
+            file = InMemoryUploadedFile(ContentFile(content), None,
+                                        model.header_image.name,None,
+                                        len(content), None)
             header_image = PublicFile.objects.create(upper=model, updated_by=self.request.user,
                                                      url=model.get_header_image_url(),
-                                                     filename=model.header_image.name,
-                                                     key=RandomString())
-        return {
+                                                     key=RandomString(), file=file, header=True)
+        else:
+            header_image = None
+        params = {
             'title': model.title,
             'note': model.note,
             'color': model.header_color,
-            'image': model.header_image,
-            'url': '/public/file/{0}'.format(header_image.key)
+            'image': model.header_image
         }
+        if header_image:
+            params['url'] = '/public/file/{0}'.format(header_image.key)
+        return params
 
     def post(self, request, **kwargs):
         model = self.model.objects.get(pk=self.kwargs['pk'])
@@ -119,7 +128,8 @@ class ReleaseView(base.View):
         for change in changes:
             if change['create']:
                 PublicFile.objects.create(upper=model, updated_by=self.request.user,
-                                          url=change['url'], filename=change['filename'], key=change['key'])
+                                          url=change['url'], key=change['key'],
+                                          file=change['file'])
         return redirect(reverse(self.success_name, kwargs={'path': model.path}))
 
 class DeleteView(base.DeleteView):

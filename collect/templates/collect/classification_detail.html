@@ -3,6 +3,13 @@
 
 {% block title %}{{ brand_name }} {{ object.title }}{% endblock %}
 
+{% block script %}
+
+    {% include 'mathjax.html' %}
+    {% include 'highlight.html' %}
+
+{% endblock %}
+
 {% block contents %}
 
 <div class="container">
@@ -27,10 +34,16 @@
         {% endif %}
     </div>
     <div class="row mt-3 g-0">
+        <div class="col-6">Task ID : {{ object.task_id }}</div>
+        <div class="col">Task Status : {{ task_status }}</div>
+        <div class="col">Task Time : {{ task_time }}</div>
+    </div>
+    <div class="row mt-3 g-0">
         <div class="col">{{ object.note | markdown2html | safe }}</div>
     </div>
     <div class="row mt-3 g-0">
         <div class="col">Method : {{ object.get_method_display }}</div>
+        <div class="col">Test Size : {{ object.testsize }}</div>
         <div class="col">Scaler : {{ object.get_scaler_display }}</div>
         <div class="col">PCA : {{ object.pca }}</div>
         <div class="col">PCA n_components : {{ object.n_components }}</div>
@@ -42,9 +55,10 @@
         <div class="col-3">Objective : {{ object.objective }}</div>
         <div class="col">Drop columns : {{ object.drop }}</div>
     </div>
-    {% if object.file_type == 1 %}
+    {% if object.file %}
     <div class="row mt-3 g-0">
-        <div class="col">ONNX File : {% url 'collect:classification_file' object.id %} <a href="{% url 'collect:classification_file' object.id %}">{% include 'cloud-download-icon.html' %}</a></div>
+        <div class="col">Model File : {% url 'collect:classification_file' object.id %} <a href="{% url 'collect:classification_file' object.id %}">{% include 'cloud-download-icon.html' %}</a></div>
+        {% if object.file_type == 0 %}<div class="col"><a href="{% url 'collect:classification_onnx' object.id %}">ONNX</a></div>{% endif %}
     </div>
     {% endif %}
     <table class="table mt-3 border-bottom">
@@ -57,16 +71,28 @@
         </thead>
         <tbody>
         {% for rep in results.reports %}
+            {% if rep.id >= 0 %}
             <tr>
                 <td><a href="{% url 'collect:classification_report' object.id rep.id %}">KFold{{ rep.id }}</a></td>
                 <td>{{ rep.train_accuracy }}</td>
                 <td>{{ rep.accuracy }}</td>
             </tr>
+            {% endif %}
         {% endfor %}
             <tr>
                 <td>Mean</td>
                 <td>{{ results.mean_train_accuracy }}</td>
                 <td>{{ results.mean_accuracy }}</td>
+            </tr>
+            <tr>
+                {%  if results.all_report %}
+                <td><a href="{% url 'collect:classification_report' object.id 99999 %}">All</a></td>
+                <td>{{ results.all_train_accuracy }}</td>
+                <td>{{ results.all_report.accuracy }}</td>
+                {% else %}
+                <td>All</td>
+                <td>{{ results.all_train_accuracy }}</td>
+                {% endif %}
             </tr>
         </tbody>
     </table>
@@ -86,8 +112,10 @@
     <div class="mt-3">
         <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
         <a class="btn btn-primary btn-sm" href="{% url 'collect:classification_edit_note' object.id %}">Edit Note</a>
-        {% if object.get_delete_url %}
-        <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
+        {% if task_status == 'STARTED' %}
+            <a class="btn btn-primary btn-sm" href="{% url 'collect:classification_revoke' object.id %}">Revoke</a>
+        {% elif object.get_delete_url %}
+            <a class="btn btn-primary btn-sm" href="{{ object.get_delete_url }}">Delete</a>
         {% endif %}
     </div>
     <div class="mt-3">

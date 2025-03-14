@@ -13,7 +13,6 @@ class Density(Created, Updated, Remote, PrefixPtr):
     UnitChoices = ((0, 'SI'), (1, 'CGS'), (2, 'Percent'))
     unit = models.PositiveSmallIntegerField(verbose_name='Unit', choices=UnitChoices, default=0)
     measured = models.FloatField(verbose_name='Measured')
-    theoretical = models.FloatField(verbose_name='Theoretical', blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -30,8 +29,8 @@ class Density(Created, Updated, Remote, PrefixPtr):
     def get_delete_url(self):
         return reverse('density:delete', kwargs={'pk': self.id})
 
-    def pathname(self):
-        return '%s' % (self.upper)
+    def get_apiupdate_url(self):
+        return reverse('density:api_update', kwargs={'pk': self.id})
 
     def recent_updated_at(self):
         return self.updated_at
@@ -40,9 +39,32 @@ class Density(Created, Updated, Remote, PrefixPtr):
         if self.unit == 2:
             return self.measured
         elif self.theoretical:
-            return self.measured / self.theoretical
+            return self.measured / self.theoretical()
         else:
             return None
+
+    def theoretical(self):
+        material = Material.objects.filter(upper=self)
+        if len(material) == 0:
+            return 1.0
+        nc = 0
+        tot = 0.0
+        for mat in material:
+            if mat.fraction is not None:
+                tot += mat.fraction
+            else:
+                nc += 1
+        if nc > 0:
+            res = (100.0 - tot) / nc
+        else:
+            res = 0.0
+        density = 0
+        for mat in material:
+            if mat.fraction is not None:
+                density += mat.fraction / 100 * mat.density
+            else:
+                density += res / 100 * mat.density
+        return density
 
     def unit_density(self, unit):
         if unit == 0:
@@ -62,16 +84,35 @@ class Density(Created, Updated, Remote, PrefixPtr):
         if self.status or self.upper.status:
             return {}
         else:
+            upper_feature = self.upper.feature()
             prefix = self.prefix_display()
             return {
-                'Project_id': self.upper.upper.id,
-                'Project_title': self.upper.upper.title,
-                'Sample_id': self.upper.id,
-                'Sample_title': self.upper.title,
+                **upper_feature,
                 'Model': self.__class__.__name__,
                 'Model_id': self.id,
                 'Category': 'property',
                 prefix+'_SI': self.unit_density(0),
                 prefix+'_CGS': self.unit_density(1),
-                prefix+'_Percent': self.unit_density(2)
+                prefix+'_RD': self.unit_density(2)
             }
+
+class Material(Updated, Remote):
+    upper = models.ForeignKey(Density, verbose_name='Material', on_delete=models.CASCADE)
+    name = models.CharField(verbose_name='Name', max_length=100)
+    density = models.FloatField(verbose_name='Density')
+    fraction = models.FloatField(verbose_name='Fraction', blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+    def title(self):
+        return '%s : %s' % (self.upper.title, self.name)
+
+    def get_detail_url(self):
+        return reverse('density:update', kwargs={'pk': self.upper.id})
+
+    def get_update_url(self):
+        return reverse('density:material_update', kwargs={'pk': self.id})
+
+    def get_delete_url(self):
+        return reverse('density:material_delete', kwargs={'pk': self.id})

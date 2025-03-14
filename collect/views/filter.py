@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from config.settings import COLLECT_FILTER_PROCESS, COLLECT_FILTER_LOWER
 from project.views import base, base_api, remote
-from project.forms import EditNoteForm, ImportForm
+from project.forms import ImportForm
 from ..models.collect import Collect
 from ..models.filter import Filter
 from ..models.process import Process
@@ -83,10 +83,10 @@ class UpdateView(base.UpdateView):
         model.savefile()
         return super().form_valid(form)
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Filter
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = Filter

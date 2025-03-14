@@ -46,6 +46,9 @@ class Filter(Created, Updated, Remote, Unique):
     def get_table_url(self):
         return reverse('collect:filter_table', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('collect:api_filter_update', kwargs={'pk': self.id})
+
     def process_updated_at(self):
         cls = import_string('collect.models.process.Process')
         updated_at = self.upper.updated_at

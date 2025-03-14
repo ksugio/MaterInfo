@@ -4,5 +4,6 @@ from .models import Sample
 class SampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sample
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'title', 'status', 'note')
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
+                  'title', 'status', 'note', 'design')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')

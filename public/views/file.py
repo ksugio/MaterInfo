@@ -23,7 +23,7 @@ class AddView(base.AddView):
         model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
         model.key = RandomString()
         model.updated_by = self.request.user
-        model.set_filename()
+        model.set_file(self.request)
         return super().form_valid(form)
 
 class ListView(base.ListView):
@@ -51,7 +51,7 @@ class UpdateView(base.UpdateView):
         model = form.save(commit=False)
         model.key = RandomString()
         model.updated_by = self.request.user
-        model.set_filename()
+        model.set_file(self.request)
         return super().form_valid(form)
 
 class DeleteView(base.DeleteView):
@@ -69,18 +69,16 @@ class FileView(generic.View):
         if not model:
             raise Http404
         model = model[0]
-        basename = os.path.basename(model.filename)
+        basename = os.path.basename(model.file.name)
         if MEDIA_ACCEL_REDIRECT:
             response = HttpResponse()
             response["Content-Type"] = mimetypes.guess_type(basename)[0]
             response["Content-Disposition"] = "inline; filename={0}".format(basename)
-            response['X-Accel-Redirect'] = "/media/{0}".format(model.filename)
+            response['X-Accel-Redirect'] = "/media/{0}".format(model.file.name)
             return response
         else:
-            path = "{0}/{1}".format(MEDIA_ROOT, model.filename)
-            if not os.path.isfile(path):
-                raise Http404
-            return FileResponse(open(path, "rb"), as_attachment=False, filename=basename)
+            return FileResponse(model.file.open('rb'),
+                                as_attachment=False, filename=basename)
 
 # API
 class IsManager(BasePermission):

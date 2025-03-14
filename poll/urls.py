@@ -14,6 +14,7 @@ urlpatterns = [
     path('poll/<int:pk>/token/<int:ind>', poll.TokenView.as_view(), name='token'),
     path('poll/<int:pk>/pull', poll.PullView.as_view(), name='pull'),
     path('poll/<int:pk>/push', poll.PushView.as_view(), name='push'),
+    path('poll/<int:pk>/log', poll.LogView.as_view(), name='log'),
     path('poll/<int:pk>/set_remote', poll.SetRemoteView.as_view(), name='set_remote'),
     path('poll/<int:pk>/clear_remote', poll.ClearRemoteView.as_view(), name='clear_remote'),
     path('poll/<int:pk>/question/add', question.AddView.as_view(), name='question_add'),

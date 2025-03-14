@@ -1,11 +1,12 @@
 from django.shortcuts import render
-from project.views import base, base_api, remote
-from project.forms import EditNoteForm
+from project.views import base, base_api, remote, task
 from ..models.filter import Filter
 from ..models.regression import Regression
 from ..models.inverse import Inverse
 from ..forms import InverseAddForm, InverseUpdateForm
+from ..tasks import InverseTask
 from ..serializer import InverseSerializer
+import pandas as pd
 
 def GetCandidate(filter):
     regs = Regression.objects.filter(upper=filter).filter(status=0)
@@ -14,7 +15,7 @@ def GetCandidate(filter):
         candidate.append((reg.unique, reg.title))
     return candidate
 
-class AddView(base.AddView):
+class AddView(task.AddView):
     model = Inverse
     upper = Filter
     form_class = InverseAddForm
@@ -29,13 +30,13 @@ class AddView(base.AddView):
         form.fields['regression3'].choices = GetCandidate(upper)
         return form
 
-    def form_valid(self, form):
-        model = form.save(commit=False)
-        model.upper = self.upper.objects.get(pk=self.kwargs['pk'])
-        model.created_by = self.request.user
-        model.updated_by = self.request.user
-        model.optimize()
-        return super().form_valid(form)
+    def start_task(self, form, model):
+        regdata, suggests = model.regression_data()
+        if regdata is not None:
+            model.task_id = InverseTask.delay(
+                regdata, suggests, model.seed, model.ntrials,
+                request_user_id=self.request.user.id
+            )
 
 class ListView(base.ListView):
     model = Inverse
@@ -43,11 +44,12 @@ class ListView(base.ListView):
     template_name = "project/default_list.html"
     navigation = [['Add', 'collect:inverse_add'],]
 
-class DetailView(base.DetailView):
+class DetailView(task.DetailView):
     model = Inverse
     template_name = "collect/inverse_detail.html"
+    result_fields = ('file',)
 
-class UpdateView(base.UpdateView):
+class UpdateView(task.UpdateView):
     model = Inverse
     form_class = InverseUpdateForm
     template_name = "project/default_update.html"
@@ -63,21 +65,30 @@ class UpdateView(base.UpdateView):
         form.fields['regression3'].initial = model.regression3
         return form
 
-    def form_valid(self, form):
-        model = form.save(commit=False)
-        model.updated_by = self.request.user
+    def start_task(self, form, model):
         if form.cleaned_data['optimize']:
-            model.optimize()
-        return super().form_valid(form)
+            regdata, suggests = model.regression_data()
+            if regdata is not None:
+                model.task_id = InverseTask.delay(
+                    regdata, suggests, model.seed, model.ntrials,
+                    request_user_id=self.request.user.id
+                )
+                if model.file:
+                    model.file.delete()
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Inverse
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
-class DeleteView(base.DeleteView):
+class DeleteView(task.DeleteView):
     model = Inverse
     template_name = "project/default_delete.html"
+
+class RevokeView(task.RevokeView):
+    model = Inverse
+    template_name = "project/default_revoke.html"
+    success_name = 'collect:inverse_detail'
 
 class FileView(base.FileView):
     model = Inverse

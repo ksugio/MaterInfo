@@ -1,20 +1,18 @@
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.module_loading import import_string
-from django.db.models import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from config.settings import PROJECT_LOWER
 from accounts.models import CustomUser
 from . import base, base_api, remote
 from ..models import Project
-from ..forms import EditNoteForm, SearchForm
+from ..forms import CloneForm, TokenForm, SetRemoteForm, SearchForm, ProjectAddForm, ProjectUpdateForm
 from ..serializer import ProjectSerializer, MemberSerializer
-import requests
 
 class NewView(base.AddView):
     model = Project
-    fields = ('title', 'note', 'member')
+    form_class = ProjectAddForm
     template_name ="project/default_add.html"
     title = 'Project New'
 
@@ -37,6 +35,7 @@ class ListView(base.ListView):
         if self.request.user.is_manager:
             context['navigation_list'] = [
                 base.Link('New', reverse('project:new')),
+                base.Link('Clone', reverse('project:clone')),
                 base.Link('All', reverse('project:list_all')),
                 base.Link('Search', reverse('project:search')),
             ]
@@ -79,17 +78,17 @@ class DetailView(base.DetailView):
 
 class UpdateView(base.UpdateView):
     model = Project
-    fields = ('title', 'status', 'note', 'member')
+    form_class = ProjectUpdateForm
     template_name = "project/default_update.html"
 
     def test_func(self):
          model = get_object_or_404(self.model, id=self.kwargs['pk'])
          return self.request.user == model.created_by or self.request.user.is_manager
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Project
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
     def test_func(self):
          model = get_object_or_404(self.model, id=self.kwargs['pk'])
@@ -132,7 +131,7 @@ class ProjectRemote(remote.Remote):
 
     def member_list(self, rid, **kwargs):
         url = '%s%s' % (kwargs['rooturl'], reverse(self.member_name, kwargs={'pk': rid}))
-        response = requests.get(url, headers=self.headers(**kwargs))
+        response = self.requests_get(url, **kwargs)
         if response.status_code != 200:
             return []
         member = []
@@ -159,6 +158,8 @@ class ProjectRemote(remote.Remote):
             'created_by': self.created_by(data, user, **kwargs),
             'updated_by': self.updated_by(data, user, **kwargs),
             'remoteurl': kwargs['rooturl'],
+            'remoteauth': kwargs['auth'],
+            'remotelink': kwargs['linkurl'],
             'remoteid': data['id'],
             'remoteat': data['updated_at']
         }
@@ -177,6 +178,8 @@ class ProjectRemote(remote.Remote):
             option = {
                 'updated_by': self.updated_by(data, user, **kwargs),
                 'remoteurl': kwargs['rooturl'],
+                'remoteauth': kwargs['auth'],
+                'remotelink': kwargs['linkurl'],
                 'remoteid': data['id'],
                 'remoteat': data['updated_at']
             }
@@ -189,65 +192,75 @@ class ProjectRemote(remote.Remote):
         object.save(localupd=False)
         return object, kwargs
 
-# class CloneView(remote.CloneView):
-#     model = Project
-#     form_class = CloneForm
-#     remote_class = ProjectRemote
-#     title = 'Project Clone'
-#     success_name = 'project:list'
-#     view_name = 'project:detail'
-#
-#     def test_func(self):
-#         return self.request.user.is_manager
-#
-#     def get_success_url(self):
-#         return reverse(self.success_name)
+class CloneView(remote.CloneView):
+    model = Project
+    form_class = CloneForm
+    remote_class = ProjectRemote
+    remote_name = 'project.views.project.ProjectRemote'
+    title = 'Project Clone'
+    template_name = "project/default_clone.html"
+    success_name = 'project:list'
+    view_name = 'project:detail'
+    celery_task = True
 
-# class TokenView(remote.TokenView):
-#     model = Project
-#     form_class = TokenForm
-#     success_names = ['project:pull', 'project:push']
-#     view_name = 'project:detail'
-#
-#     def test_func(self):
-#         return self.request.user.is_manager
+    def test_func(self):
+        return self.request.user.is_manager
 
-# class PullView(remote.PullView):
-#     model = Project
-#     remote_class = ProjectRemote
-#     success_name = 'project:detail'
-#     fail_name = 'project:token'
-#
-#     def test_func(self):
-#         return self.request.user.is_manager
+    def get_success_url(self):
+        return reverse(self.success_name)
 
-# class PushView(remote.PushView):
-#     model = Project
-#     remote_class = ProjectRemote
-#     success_name = 'project:detail'
-#     fail_name = 'project:token'
-#
-#     def test_func(self):
-#         return self.request.user.is_manager
+class TokenView(remote.TokenView):
+    model = Project
+    form_class = TokenForm
+    success_names = ['project:pull', 'project:push']
+    view_name = 'project:detail'
 
-# class SetRemoteView(remote.SetRemoteView):
-#     model = Project
-#     form_class = SetRemoteForm
-#     remote_class = ProjectRemote
-#     title = 'Project Set Remote'
-#     success_name = 'project:detail'
-#     view_name = 'project:detail'
-#
-#     def test_func(self):
-#         return self.request.user.is_manager
+    def test_func(self):
+        return self.request.user.is_manager
 
-# class ClearRemoteView(remote.ClearRemoteView):
-#     model = Project
-#     remote_class = ProjectRemote
-#     success_name = 'project:detail'
-#
-#     def test_func(self):
-#         return self.request.user.is_manager
+class PullView(remote.PullView):
+    model = Project
+    remote_class = ProjectRemote
+    remote_name = 'project.views.project.ProjectRemote'
+    success_name = 'project:detail'
+    fail_name = 'project:token'
+    celery_task = True
+
+    def test_func(self):
+        return self.request.user.is_manager
+
+class PushView(remote.PushView):
+    model = Project
+    remote_class = ProjectRemote
+    remote_name = 'project.views.project.ProjectRemote'
+    success_name = 'project:detail'
+    fail_name = 'project:token'
+    celery_task = True
+
+    def test_func(self):
+        return self.request.user.is_manager
+
+class LogView(remote.LogView):
+    model = Project
+
+class SetRemoteView(remote.SetRemoteView):
+    model = Project
+    form_class = SetRemoteForm
+    remote_class = ProjectRemote
+    title = 'Project Set Remote'
+    success_name = 'project:detail'
+    view_name = 'project:detail'
+
+    def test_func(self):
+        return self.request.user.is_manager
+
+class ClearRemoteView(remote.ClearRemoteView):
+    model = Project
+    remote_class = ProjectRemote
+    success_name = 'project:detail'
+
+    def test_func(self):
+        return self.request.user.is_manager
 
 # API
 class ListAPIView(generics.ListAPIView):
@@ -259,6 +272,11 @@ class ListAPIView(generics.ListAPIView):
         return self.model.objects.filter(member=self.request.user).order_by('-created_at')
 
 class RetrieveAPIView(base_api.RetrieveAPIView):
+    model = Project
+    serializer_class = ProjectSerializer
+
+class UpdateAPIView(base_api.UpdateAPIView):
+    permission_classes = (IsAuthenticated, base_api.IsManagerOrCreateUser)
     model = Project
     serializer_class = ProjectSerializer
 

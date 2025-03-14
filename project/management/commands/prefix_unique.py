@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from project.models import Prefix, UniqueID
+from project.models import Prefix, UniqueStr
 from general.models import General
 from material.models import Material
 from density.models import Density
@@ -28,7 +28,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['set-unique']:
             for prefix in Prefix.objects.all():
-                prefix.unique = UniqueID()
+                prefix.unique = UniqueStr()
                 prefix.save()
                 self.stdout.write('Prefix %d %s %s' % (prefix.id, prefix.prefix, prefix.unique), ending="\n")
         else:

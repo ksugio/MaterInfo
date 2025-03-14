@@ -9,6 +9,8 @@ from .models.classification import Classification
 from .models.regression import Regression
 from .models.classshap import ClassSHAP
 from .models.regreshap import RegreSHAP
+from. models.regrepred import RegrePred
+from. models.classpred import ClassPred
 from .models.inverse import Inverse
 
 class CollectSerializer(serializers.ModelSerializer):
@@ -55,39 +57,54 @@ class ClusteringSerializer(serializers.ModelSerializer):
 class ClassificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Classification
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
-                  'title', 'status', 'note', 'scaler', 'pca', 'n_components', 'method', 'hparam',
-                  'objective', 'drop', 'nsplits', 'random', 'ntrials', 'nplot', 'file', 'file_type',
-                  'results', 'unique')
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
+                  'title', 'status', 'note', 'testsize', 'randomts', 'scaler', 'pca', 'n_components',
+                  'method', 'hparam', 'objective', 'drop', 'nsplits', 'random', 'ntrials', 'nplot',
+                  'file', 'file_type', 'results', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class RegressionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Regression
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
-                  'title', 'status', 'note', 'scaler', 'pca', 'n_components', 'method', 'hparam',
-                  'objective', 'drop', 'nsplits', 'random', 'ntrials', 'nplot', 'file', 'file2',
-                  'results', 'unique')
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
+                  'title', 'status', 'note', 'testsize', 'randomts', 'scaler', 'pca', 'n_components',
+                  'method', 'hparam', 'objective', 'drop', 'nsplits', 'random', 'ntrials', 'nplot',
+                  'file', 'file2', 'results', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class ClassSHAPSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassSHAP
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
                   'title', 'status', 'note', 'nsample', 'use_kernel', 'results')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
+
+class ClassPredSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassPred
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
+                  'title', 'status', 'note', 'file', 'objective', 'drop')
+        read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
+
 
 class RegreSHAPSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegreSHAP
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
-                  'title', 'status', 'note', 'nsample', 'use_kernel', 'results')
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
+                  'title', 'status', 'note', 'use_kernel', 'kmeans', 'nsample', 'results')
+        read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
+
+class RegrePredSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegrePred
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
+                  'title', 'status', 'note', 'file', 'objective', 'drop')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class InverseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Inverse
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id', 'task_time',
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
                   'title', 'status', 'note', 'regression1', 'target1', 'regression2', 'target2',
                   'regression3', 'target3', 'ntrials', 'seed', 'file')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')

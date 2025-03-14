@@ -59,8 +59,8 @@ class Material(Created, Updated, Remote, PrefixPtr):
     def get_delete_url(self):
         return reverse('material:delete', kwargs={'pk': self.id})
 
-    def pathname(self):
-        return '%s' % (self.upper)
+    def get_apiupdate_url(self):
+        return reverse('material:api_update', kwargs={'pk': self.id})
 
     def basename(self):
         return os.path.basename(self.file.name)
@@ -127,14 +127,12 @@ class Material(Created, Updated, Remote, PrefixPtr):
         if self.status or self.upper.status:
             return {}
         else:
+            upper_feature = self.upper.feature()
             comp = self.composition()
             if comp is None:
                 return {}
             dic = {
-                'Project_id': self.upper.upper.id,
-                'Project_title': self.upper.upper.title,
-                'Sample_id': self.upper.id,
-                'Sample_title': self.upper.title,
+                **upper_feature,
                 'Model': self.__class__.__name__,
                 'Model_id': self.id,
                 'Category': 'process'

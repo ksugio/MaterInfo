@@ -1,12 +1,9 @@
 from django.db import models
 from django.utils.module_loading import import_string
 from django.urls import reverse
-from django.utils import timezone
-from django.utils.crypto import get_random_string
 from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from .image import Image
 from io import BytesIO
-import os
 import cv2
 import numpy as np
 import PIL
@@ -58,6 +55,9 @@ class Filter(Created, Updated, Remote, Unique):
 
     def get_delete_url(self):
         return reverse('image:filter_delete', kwargs={'pk': self.id})
+
+    def get_apiupdate_url(self):
+        return reverse('image:api_filter_update', kwargs={'pk': self.id})
 
     def entity_id(self):
         if self.alias:
@@ -124,7 +124,7 @@ class Filter(Created, Updated, Remote, Unique):
         if sizeprocess:
             for process in processes:
                 if hasattr(process.entity(), 'sizeprocess'):
-                    img, kwargs = process.process(img, **kwargs)
+                    img, kwargs = process.entity().sizeprocess(img, **kwargs)
                 if process.id == procid:
                     break
         else:
@@ -140,13 +140,26 @@ class Filter(Created, Updated, Remote, Unique):
         self.save_img(img)
         self.pixelsize = kwargs['pixelsize']
 
-    def sizeprocess(self, img, **kwargs):
-        for proc in kwargs['sizeprocess']:
-            if proc['type'] == 'resize':
-                img = cv2.resize(img, (proc['width'], proc['height']))
-            elif proc['type'] == 'trim':
-                img = img[proc['starty']:proc['endy'], proc['startx']:proc['endx']]
-        return img
+    # def sizeprocess(self, img, **kwargs):
+    #     for proc in kwargs['sizeprocess']:
+    #         if proc['type'] == 'resize':
+    #             img = cv2.resize(img, (proc['width'], proc['height']))
+    #         elif proc['type'] == 'trim':
+    #             img = img[proc['starty']:proc['endy'], proc['startx']:proc['endx']]
+    #     return img
+
+    def procparams(self):
+        cls = import_string('image.models.process.Process')
+        if self.alias:
+            source = Filter.objects.get(pk=self.alias)
+            processes = cls.objects.filter(upper=source).order_by('order')
+        else:
+            processes = cls.objects.filter(upper=self).order_by('order')
+        params = {}
+        for process in processes:
+            if hasattr(process.entity(), 'parameters'):
+                    params.update(process.entity().parameters())
+        return params
 
     def get_image(self, **kwargs):
         img = self.upper.read_img()
@@ -154,6 +167,20 @@ class Filter(Created, Updated, Remote, Unique):
             procid = kwargs['procid']
             img, kwargs = self.procimg(img, procid)
             return cv2PIL(img)
+
+    def previous_proc(self, proc):
+        cls = import_string('image.models.process.Process')
+        if self.alias:
+            source = Filter.objects.get(pk=self.alias)
+            processes = cls.objects.filter(upper=source).order_by('order')
+        else:
+            processes = cls.objects.filter(upper=self).order_by('order')
+        prev_proc = None
+        for process in processes:
+            if process.id == proc.id:
+                break
+            prev_proc = process
+        return prev_proc
 
     def feature(self):
         return {

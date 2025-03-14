@@ -1,7 +1,6 @@
 import pandas as pd
 from django.http import HttpResponse
 from project.views import base, base_api, remote
-from project.forms import EditNoteForm
 from ..models.filter import Filter
 from ..models.correlation import Correlation
 from ..serializer import CorrelationSerializer
@@ -55,10 +54,10 @@ class UpdateView(base.UpdateView):
         model.calc_corr()
         return super().form_valid(form)
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = Correlation
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = Correlation

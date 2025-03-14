@@ -1,12 +1,9 @@
-from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from project.views import base
 from ..models.filter import Filter
 from ..models.process import Process, Fillna, Drop, Select, Dropna, Agg, Query, Exclude, PCAF
 from ..forms import FillnaForm, DropForm, SelectForm, ExcludeForm, PCAFForm
 from io import StringIO
-import numpy as np
-import json
 
 class AddView(base.AddView):
     model = Process

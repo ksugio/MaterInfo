@@ -15,6 +15,7 @@ urlpatterns = [
     path('schedule/<int:pk>/token/<int:ind>', schedule.TokenView.as_view(), name='token'),
     path('schedule/<int:pk>/pull', schedule.PullView.as_view(), name='pull'),
     path('schedule/<int:pk>/push', schedule.PushView.as_view(), name='push'),
+    path('schedule/<int:pk>/log', schedule.LogView.as_view(), name='log'),
     path('schedule/<int:pk>/set_remote', schedule.SetRemoteView.as_view(), name='set_remote'),
     path('schedule/<int:pk>/clear_remote', schedule.ClearRemoteView.as_view(), name='clear_remote'),
     #  Schedule API

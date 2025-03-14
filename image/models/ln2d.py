@@ -163,6 +163,9 @@ class LN2D(Created, Updated, Remote, LN2DMixin):
     def get_delete_url(self):
         return reverse('image:ln2d_delete', kwargs={'pk': self.id})
 
+    def get_apiupdate_url(self):
+        return reverse('image:api_ln2d_update', kwargs={'pk': self.id})
+
     # def basename(self):
     #     return os.path.basename(self.file.name)
     #

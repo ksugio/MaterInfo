@@ -6,11 +6,11 @@ class DensityAddForm(forms.ModelForm):
 
     class Meta:
         model = Density
-        fields = ('title', 'note', 'prefix', 'unit', 'measured', 'theoretical')
+        fields = ('title', 'note', 'prefix', 'unit', 'measured')
 
 class DensityUpdateForm(forms.ModelForm):
     prefix = forms.fields.ChoiceField(label='Prefix')
 
     class Meta:
         model = Density
-        fields = ('title', 'status', 'note', 'prefix', 'unit', 'measured', 'theoretical')
+        fields = ('title', 'status', 'note', 'prefix', 'unit', 'measured')

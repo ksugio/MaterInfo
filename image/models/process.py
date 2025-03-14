@@ -8,6 +8,7 @@ from .filter import Filter, cv2PIL, PIL2cv
 from PIL import ImageDraw, ImageFont
 import cv2
 import numpy as np
+import json
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -21,6 +22,9 @@ ColorChoices = ((0, 'White'), (1, 'Olive'), (2, 'Yellow'), (3, 'Fuchsia'),
                 (4, 'Silver'), (5, 'Aqua'), (6, 'Lime'), (7, 'Red'),
                 (8, 'Gray'), (9, 'Blue'), (10, 'Green'), (11, 'Purple'),
                 (12, 'Black'), (13, 'Navy'), (14, 'Teal'), (15, 'Maroon'))
+
+def RGB2BGR(rgb):
+    return rgb[2], rgb[1], rgb[0]
 
 class Process(Updated, Remote):
     upper = models.ForeignKey(Filter, verbose_name='Filter', on_delete=models.CASCADE)
@@ -84,6 +88,9 @@ class Resize(Process):
     def sizeprocess(self, src, **kwargs):
         return self.process(src, **kwargs)
 
+    def parameters(self):
+        return {'Resize': {'width': self.width, 'height': self.height }}
+
     def get_update_url(self):
         return reverse('image:resize_update', kwargs={'pk': self.id})
 
@@ -104,8 +111,15 @@ class Trim(Process):
     def sizeprocess(self, src, **kwargs):
         return self.process(src, **kwargs)
 
+    def parameters(self):
+        return {'Trim': { 'startx': self.startx, 'starty': self.starty,
+                          'endx': self.endx, 'endy': self.endy }}
+
     def get_update_url(self):
-        return reverse('image:trim_update', kwargs={'pk': self.id})\
+        return reverse('image:trim_update', kwargs={'pk': self.id})
+
+    def get_apiupdate_url(self):
+        return reverse('image:api_trim_update', kwargs={'pk': self.id})
 
 def CheckOdd(value):
     if value % 2 == 0:
@@ -143,7 +157,7 @@ class Threshold(Process):
 
     def process(self, src, **kwargs):
         if len(src.shape) == 3:
-            src = cv2.cvtColor(src, cv2.COLOR_RGB2GRAY)
+            src = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
         if self.invert:
             sty = cv2.THRESH_BINARY_INV
         else:
@@ -350,11 +364,32 @@ class Transform(Process):
     def get_update_url(self):
         return reverse('image:transform_update', kwargs={'pk': self.id})
 
-#class Watershed(Process):
-#    fgurl = models.CharField(verbose_name='Foreground URL', max_length=256)
-#
-#    def process(self, src, **kwargs):
-#        return src, kwargs
-#
-#    def get_update_url(self):
-#        return reverse('image:watershed_update', kwargs={'pk': self.id})
+class Draw(Process):
+    data = models.TextField(verbose_name='Data', blank=True)
+
+    def process(self, src, **kwargs):
+        if self.data:
+            data = json.loads(self.data)
+            for item in data:
+                if item['type'] == 'line':
+                    cv2.line(src, item['pt1'], item['pt2'], RGB2BGR(item['color']), thickness=item['thickness'])
+                elif item['type'] == 'arrow':
+                    cv2.arrowedLine(src, item['pt1'], item['pt2'], RGB2BGR(item['color']), thickness=item['thickness'])
+                elif item['type'] == 'rectangle':
+                    cv2.rectangle(src, item['pt1'], item['pt2'], RGB2BGR(item['color']), thickness=item['thickness'])
+                elif item['type'] == 'circle':
+                    cv2.circle(src, item['pt1'], item['radius'], RGB2BGR(item['color']), thickness=item['thickness'])
+        return src, kwargs
+
+    def get_update_url(self):
+        return reverse('image:draw_update', kwargs={'pk': self.id})
+
+    def get_apiupdate_url(self):
+        return reverse('image:api_draw_update', kwargs={'pk': self.id})
+
+    def ndata(self):
+        if self.data:
+            data = json.loads(self.data)
+            return len(data)
+        else:
+            return 0

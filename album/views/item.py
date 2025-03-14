@@ -1,12 +1,8 @@
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
 from project.views import base, base_api, remote
 from ..models.album import Album
 from ..models.item import Item
 from ..forms import ItemForm
 from ..serializer import ItemSerializer
-from io import BytesIO
-import urllib
 
 class AddView(base.AddView):
     model = Item
@@ -28,24 +24,17 @@ class DeleteView(base.DeleteView):
     model = Item
     template_name = 'project/default_delete.html'
 
-class ImageView(base.View):
+class ImageView(base.ImageView):
     model = Item
-
-    def get(self, request, **kwargs):
-        item = self.model.objects.get(pk=kwargs['pk'])
-        pilimg = item.get_image()
-        if pilimg is None:
-            return HttpResponse('Cannot get image.')
-        buf = BytesIO()
-        pilimg.save(buf, format='png')
-        response = HttpResponse(buf.getvalue(), content_type='image/png')
-        buf.close()
-        return response
 
 # API
 class AddAPIView(base_api.AddAPIView):
     upper = Album
     serializer_class = ItemSerializer
+
+    def perform_create(self, serializer):
+        upper = self.upper.objects.get(pk=self.kwargs['pk'])
+        serializer.save(updated_by=self.request.user, upper=upper)
 
 class ListAPIView(base_api.ListAPIView):
     upper = Album

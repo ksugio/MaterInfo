@@ -1,15 +1,12 @@
 from django.http import HttpResponse
 from django.urls import reverse
 from project.views import base, base_api, remote, prefix
-from project.forms import EditNoteForm
-from plot.views.item import Item
 from ..models.filter import Filter
 from ..models.ln2d import LN2D
 from ..serializer import LN2DSerializer
 from ..forms import LN2DPlotForm, LN2DAddForm, LN2DUpdateForm
 from io import BytesIO
 from random import randint
-import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -69,10 +66,10 @@ class UpdateView(prefix.UpdatePrefixView):
         model.measure()
         return super().form_valid(form)
 
-class EditNoteView(base.EditNoteView):
+class EditNoteView(base.MDEditView):
     model = LN2D
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class DeleteView(base.DeleteView):
     model = LN2D

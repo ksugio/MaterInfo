@@ -2,11 +2,14 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from config.settings import RANDOM_STRING_LENGTH
 from accounts.models import CustomUser
-from project.models import Created, Updated, FileSearch
+from project.models import Created, Updated
 from article.models import Article
 import os
+import requests
 
 def HeaderImageUploadTo(instance, filename):
     split = os.path.splitext(os.path.basename(filename))
@@ -42,7 +45,28 @@ class Public(Created, Updated):
     def get_header_image_url(self):
         return reverse('public:header_image', kwargs={'pk': self.id})
 
-class PublicArticle(models.Model, FileSearch):
+def GetPublicFile(url, request):
+    response = requests.get(request._current_scheme_host + url,
+                            headers=request.headers)
+    if response.status_code == 200 and 'image' in response.headers['Content-Type']:
+        ctype = response.headers['Content-Type']
+        if ctype == 'image/jpeg':
+            fname = 'PublicFile.jpg'
+        elif ctype == 'image/png':
+            fname = 'PublicFile.png'
+        elif ctype == 'image/bmp':
+            fname = 'PublicFile.bmp'
+        elif ctype == 'image/tiff':
+            fname = 'PublicFile.tif'
+        else:
+            fname = ''
+        if fname:
+            return InMemoryUploadedFile(ContentFile(response.content), None, fname,
+                                        None, len(response.content), None)
+        else:
+            return None
+
+class PublicArticle(models.Model):
     upper = models.ForeignKey(Public, verbose_name='Public', on_delete=models.CASCADE)
     article = models.ForeignKey(Article, verbose_name='Article', on_delete=models.CASCADE)
     posted_by = models.ForeignKey(CustomUser, verbose_name='Posted by', on_delete=models.PROTECT)
@@ -78,22 +102,21 @@ class PublicArticle(models.Model, FileSearch):
             if st >= 0 and ed >= 0:
                 url = line[st+2:ed]
                 if not url.startswith('http') and self.check_url(url, changes):
-                    items = PublicFile.objects.filter(url=url)
+                    items = PublicFile.objects.filter(upper=self.upper).filter(url=url)
                     if items:
                         params = {
                             'url': items[0].url,
-                            'filename': items[0].filename,
                             'key': items[0].key,
                             'create': False
                         }
                         changes.append(params)
                     else:
-                        file = self.file_search(url)
+                        file = GetPublicFile(url, request)
                         if file:
                             params = {
                                 'url': url,
-                                'filename': file.name,
                                 'key': get_random_string(length=RANDOM_STRING_LENGTH),
+                                'file': file,
                                 'create': True
                             }
                             changes.append(params)
@@ -123,11 +146,12 @@ class PublicMenu(Updated):
 def RandomString():
     return get_random_string(length=RANDOM_STRING_LENGTH)
 
-class PublicFile(Updated, FileSearch):
+class PublicFile(Updated):
     upper = models.ForeignKey(Public, verbose_name='Public', on_delete=models.CASCADE)
     url = models.CharField(verbose_name='URL', max_length=100)
     key = models.CharField(verbose_name='Key', max_length=100)
-    filename = models.CharField(verbose_name='Filename', max_length=100, blank=True)
+    file = models.ImageField(verbose_name='Image', upload_to=PublicUploadTo, blank=True, null=True)
+    header = models.BooleanField(verbose_name='Header', default=False)
 
     def title(self):
         return self.url
@@ -144,7 +168,7 @@ class PublicFile(Updated, FileSearch):
     def get_delete_url(self):
         return reverse('public:file_delete', kwargs={'pk': self.id})
 
-    def set_filename(self):
-        filename = self.file_search(self.url)
-        if filename:
-            self.filename = filename
+    def set_file(self, request):
+        file = GetPublicFile(self.url, request)
+        if file:
+            self.file = file

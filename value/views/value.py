@@ -2,10 +2,8 @@ from django.http import HttpResponse
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from config.settings import VALUE_LOWER
-from django.shortcuts import render
 from project.views import base, base_api, remote
-from project.forms import EditNoteForm, ImportForm, SearchForm
-from project.models import FileSearch
+from project.forms import ImportForm, SearchForm
 from sample.models import Sample
 from ..models.value import Value
 from ..serializer import ValueSerializer
@@ -36,6 +34,7 @@ class AddView(base.FormView):
         header = form.cleaned_data['header']
         startstring = form.cleaned_data['startstring']
         endstring = form.cleaned_data['endstring']
+        sheetname = form.cleaned_data['sheetname']
         datatype = form.cleaned_data['datatype']
         disp_head = form.cleaned_data['disp_head']
         disp_tail = form.cleaned_data['disp_tail']
@@ -44,11 +43,11 @@ class AddView(base.FormView):
             self.model.objects.create(created_by=self.request.user, updated_by=self.request.user, upper=upper,
                                       title=title, note=note, file=file, delimiter=delimiter, encoding=encoding,
                                       skiprows=skiprows, skipends=skipends, header=header,
-                                      startstring=startstring, endstring=endstring,
+                                      startstring=startstring, endstring=endstring, sheetname=sheetname,
                                       datatype=datatype, disp_head=disp_head, disp_tail=disp_tail)
         return super().form_valid(form)
 
-class GetView(base.FormView, FileSearch):
+class GetView(base.FormView):
     model = Value
     upper = Sample
     form_class = ValueGetForm
@@ -59,17 +58,13 @@ class GetView(base.FormView, FileSearch):
     def get_file(self, url):
         if url.startswith('http'):
             response = requests.get(url)
-            if response.status_code != 200:
-                return None
-            else:
-                data = response.content
         else:
-            file = self.file_search(url)
-            if file is None:
-                return None
-            else:
-                with file.open('r') as f:
-                    data = f.read()
+            response = requests.get(self.request._current_scheme_host + url,
+                                    headers=self.request.headers)
+        if response.status_code != 200:
+            return None
+        else:
+            data = response.content
         return InMemoryUploadedFile(ContentFile(data), None,
                                     'Value.csv', None, len(data), None)
 
@@ -132,7 +127,7 @@ class GenerateView(base.FormView):
         elif int(type) == 3:
             dat = np.random.normal(mean, std, num)
         fname = 'Gen%s.csv' % (base.DateToday()[2:])
-        cols = GenerateForm.TYPE_CHOICES[int(type)][1]
+        cols = ValueGenerateForm.TYPE_CHOICES[int(type)][1]
         file = base.DataFrame2UploadedFile(pd.DataFrame(dat, columns=[cols]), fname)
         self.model.objects.create(created_by=self.request.user, updated_by=self.request.user, upper=upper,
                                   title=title, note=note, file=file, skiprows=1)
@@ -169,10 +164,14 @@ class DeleteView(base.DeleteManagerView):
     model = Value
     template_name = "project/default_delete.html"
 
-class EditNoteView(base.EditNoteView):
+class MoveView(base.MoveManagerView):
     model = Value
-    form_class = EditNoteForm
-    template_name = "project/default_edit_note.html"
+    template_name = "project/default_update.html"
+
+class EditNoteView(base.MDEditView):
+    model = Value
+    text_field = 'note'
+    template_name = "project/default_mdedit.html"
 
 class FileView(base.FileView):
     model = Value
