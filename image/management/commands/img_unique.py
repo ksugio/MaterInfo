@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from project.models import UniqueStr
 from image.models.image import Image
 from image.models.filter import Filter

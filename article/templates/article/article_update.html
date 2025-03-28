@@ -30,9 +30,10 @@
         <div class="row mt-1 g-0">
             <div class="col">
                 <div class="row border ms-0 me-0">
-                    <div class="col-8">Updated by {{ diff.updated_by }} at {{ diff.updated_at }}</div>
-                    <div class="col-2"><a href="{% url 'article:diff_previous' diff.id %}">Previous</a></div>
-                    <div class="col-2"><a href="{% url 'article:diff_diff' diff.id %}">Diff</a></div>
+                    <div class="col-4">Updated by {{ diff.updated_by }} at {{ diff.updated_at }}</div>
+                    <div class="col">{{ diff.comment }}</div>
+                    <div class="col-1"><a href="{% url 'article:diff_previous' diff.id %}">Previous</a></div>
+                    <div class="col-1"><a href="{% url 'article:diff_diff' diff.id %}">Diff</a></div>
                 </div>
             </div>
         </div>

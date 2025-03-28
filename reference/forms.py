@@ -12,6 +12,9 @@ class DOIForm(forms.Form):
 class BibtexForm(forms.Form):
     file = forms.fields.FileField(label='File')
 
+class ZipForm(forms.Form):
+    file = forms.fields.FileField(label='File')
+
 class ArticleUpdateForm(forms.ModelForm):
     class Meta:
         model = Article
@@ -30,7 +33,7 @@ class TextUpdateForm(forms.ModelForm):
         fields = ('title', 'note', 'start', 'end')
 
 class TranslateAddForm(forms.ModelForm):
-    api_key = forms.CharField(label='API Key', required=False,
+    api_key = forms.CharField(label='API Key', required=True,
                               widget=forms.Textarea(attrs={'cols': '100', 'rows': '1'}))
 
     class Meta:

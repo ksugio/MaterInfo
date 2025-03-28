@@ -57,8 +57,16 @@
     </div>
     {% if object.file %}
     <div class="row mt-3 g-0">
-        <div class="col">Model File : {% url 'collect:classification_file' object.id %} <a href="{% url 'collect:classification_file' object.id %}">{% include 'cloud-download-icon.html' %}</a></div>
-        {% if object.file_type == 0 %}<div class="col"><a href="{% url 'collect:classification_onnx' object.id %}">ONNX</a></div>{% endif %}
+        <div class="col">
+            Model File : {% url 'collect:classification_file' object.id %}
+            <a href="{% url 'collect:classification_file' object.id %}" class="btn btn-link btn-sm">
+                {% include 'cloud-download-icon.html' %}</a>
+        </div>
+        {% if object.file_type == 0 %}
+            <div class="col">
+                <a href="{% url 'collect:classification_onnx' object.id %}">ONNX</a>
+            </div>
+        {% endif %}
     </div>
     {% endif %}
     <table class="table mt-3 border-bottom">

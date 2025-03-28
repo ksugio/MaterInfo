@@ -60,7 +60,13 @@
     </table>
     {% endif %}
     <div class="row mt-3 g-0">
-        <div class="col">File : {% url 'collect:reduction_file' object.unique %} <a href="{% url 'collect:reduction_file' object.unique %}">{% include 'cloud-download-icon.html' %}</a></div>
+        <div class="col">
+            File : <span id="urlText">{% url 'collect:reduction_file' object.unique %}</span>
+            <button type="button" class="btn btn-link btn-sm" id="urlCopyButton" title="Copy to clipboard">
+                {% include 'clipboard-icon.html' %}</button>
+            <a href="{% url 'collect:reduction_file' object.unique %}" class="btn btn-link btn-sm">
+                {% include 'cloud-download-icon.html' %}</a>
+        </div>
     </div>
     <div class="row mt-3 g-0">
         <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
@@ -81,4 +87,14 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block script2 %}
+    <script>
+        document.getElementById('urlCopyButton').addEventListener('click', () => {
+            navigator.clipboard.writeText(
+                document.getElementById('urlText').textContent
+            );
+        });
+    </script>
 {% endblock %}

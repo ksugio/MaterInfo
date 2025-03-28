@@ -1,6 +1,6 @@
 from django.db import models
 from django.urls import reverse
-from project.models import Created, Updated, Remote, Task, ModelUploadTo
+from project.models import Created, Updated, Remote, Task, ModelUploadTo, Unique
 from .filter import Filter
 from .regression import Regression
 from io import BytesIO
@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-class Inverse(Created, Updated, Remote, Task):
+class Inverse(Created, Updated, Remote, Task, Unique):
     upper = models.ForeignKey(Filter, verbose_name='Filter', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))

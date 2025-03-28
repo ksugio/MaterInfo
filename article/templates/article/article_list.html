@@ -15,16 +15,15 @@
         <div class="row mt-1 border g-0">
             <div class="col">
                 <div class="row ms-0 me-0">
-                    <div class="col-10">
+                    <div class="col">
                         <a href="{{ object.get_detail_url }}">{{ object.title }}</a>
                     </div>
-                    {% if object.get_status_display %}
-                        <div class="col-2">{{ object.get_status_display }}</div>
-                    {% endif %}
+                    <div class="col-2">{{ object.get_status_display }}</div>
                 </div>
                 <div class="row ms-0 me-0">
-                    <div class="col">Category : {{ object.get_category_display }}</div>
-                    <div class="col">Public : {{ object.public }}</div>
+                    <div class="col">Type : {{ object.get_type_display }}</div>
+                    <div class="col-4">Category : {{ object.get_category_display }}</div>
+                    <div class="col-2">Public : {{ object.public }}</div>
                 </div>
                 <div class="row ms-0 me-0">
                     <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>

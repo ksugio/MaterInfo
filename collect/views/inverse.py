@@ -93,6 +93,7 @@ class RevokeView(task.RevokeView):
 class FileView(base.FileView):
     model = Inverse
     attachment = True
+    use_unique = True
 
 class TableView(base.TableView):
     model = Inverse

@@ -32,7 +32,13 @@
     </div>
     {% if object.file %}
     <div class="row mt-3 g-0">
-        <div class="col">File : {% url 'collect:filter_file' object.unique %} <a href="{% url 'collect:filter_file' object.unique %}">{% include 'cloud-download-icon.html' %}</a></div>
+        <div class="col">
+            File : <span id="urlText">{% url 'collect:filter_file' object.unique %}</span>
+            <button type="button" class="btn btn-link btn-sm" id="urlCopyButton" title="Copy to clipboard">
+                {% include 'clipboard-icon.html' %}</button>
+            <a href="{% url 'collect:filter_file' object.unique %}" class="btn btn-link btn-sm">
+                {% include 'cloud-download-icon.html' %}</a>
+        </div>
     </div>
     {% endif %}
     <div class="row mt-3 g-0">
@@ -70,4 +76,14 @@
     </table>
 </div>
 
+{% endblock %}
+
+{% block script2 %}
+    <script>
+        document.getElementById('urlCopyButton').addEventListener('click', () => {
+            navigator.clipboard.writeText(
+                document.getElementById('urlText').textContent
+            );
+        });
+    </script>
 {% endblock %}

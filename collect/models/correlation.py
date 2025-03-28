@@ -1,9 +1,8 @@
 from django.db import models
 from django.urls import reverse
-from project.models import Created, Updated, Remote, ModelUploadTo
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from .filter import Filter
 from io import BytesIO
-import os
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -14,7 +13,7 @@ import matplotlib.pyplot as plt
 def CorrelationUploadTo(instance, filename):
     return filename
 
-class Correlation(Created, Updated, Remote):
+class Correlation(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Filter, verbose_name='Filter', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))

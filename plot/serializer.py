@@ -7,7 +7,8 @@ class PlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plot
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'ncol', 'sizex', 'sizey')
+                  'title', 'status', 'note', 'ncol', 'sizex', 'sizey', 'format',
+                  'file', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class AreaSerializer(serializers.ModelSerializer):

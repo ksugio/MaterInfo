@@ -1,18 +1,22 @@
 from django.http import HttpResponse
 from django.db.models import Q
 from django.urls import reverse
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from project.views import base, base_api, remote
 from project.forms import ImportForm
 from ..models.reference import Reference
 from ..models.article import Article, ArticleQueryset
-from ..forms import DOIForm, BibtexForm, ArticleUpdateForm
+from ..forms import DOIForm, BibtexForm, ZipForm, ArticleUpdateForm
 from ..serializer import ArticleSerializer
 from .text import TextRemote
 from .image import ImageRemote
 from .clip import ClipRemote
 from crossref.restful import Works
+from zipfile import ZipFile
 import datetime
 import bibtexparser
+import json
 
 class AddView(base.AddView):
     model = Article
@@ -170,6 +174,38 @@ class BibtexView(base.FormView):
         return reverse(self.success_name,
                        kwargs={'pk': self.kwargs['pk'], 'order': upper.order, 'size': upper.pagesize})
 
+class ZipView(base.FormView):
+    model = Article
+    upper = Reference
+    form_class = ZipForm
+    template_name = "project/default_add.html"
+    title = 'Zip Add'
+    success_name = 'reference:article_list'
+
+    def form_valid(self, form):
+        upper = self.upper.objects.get(pk=self.kwargs['pk'])
+        with ZipFile(form.cleaned_data['file'], 'r') as zip:
+            namelist = zip.namelist()
+            if 'reference.json' in namelist:
+                with zip.open('reference.json', 'r') as fp:
+                    content = fp.read().decode('utf-8')
+                    data = json.loads(content)
+                for dat in data:
+                    filename = dat.pop('filename')
+                    if filename in namelist:
+                        with zip.open(filename, 'r') as fp:
+                            file_content = fp.read()
+                        dat['file'] = InMemoryUploadedFile(ContentFile(file_content), None, filename,
+                                                           None, len(file_content), None)
+                    self.model.objects.create(created_by=self.request.user, updated_by=self.request.user,
+                                              upper=upper, **dat)
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        upper = self.upper.objects.get(pk=self.kwargs['pk'])
+        return reverse(self.success_name,
+                       kwargs={'pk': self.kwargs['pk'], 'order': upper.order, 'size': upper.pagesize})
+
 class ListView(base.ListView):
     model = Article
     upper = Reference
@@ -177,6 +213,7 @@ class ListView(base.ListView):
     navigation = [['Add', 'reference:article_add'],
                   ['DOI', 'reference:article_doi'],
                   ['BibTex', 'reference:article_bibtex'],
+                  ['Zip', 'reference:article_zip'],
                   ['Import', 'reference:article_import']]
     paginate_by = 10
 

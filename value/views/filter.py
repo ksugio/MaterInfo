@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from django.forms import HiddenInput
 from rest_framework import views, status, response
 from config.settings import VALUE_FILTER_PROCESS, VALUE_FILTER_LOWER
@@ -10,10 +9,6 @@ from ..models.filter import Filter
 from ..models.process import Process
 from ..serializer import FilterSerializer, FilterAliasSerializer, FilterImportSerializer
 from .process_api import ProcessRemote
-import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 class AddView(base.AddView):
     model = Filter

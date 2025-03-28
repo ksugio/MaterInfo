@@ -20,7 +20,7 @@ class AddView(base.AddView):
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class=form_class)
-        articles = Article.objects.filter(public=True)
+        articles = Article.objects.filter(public=True, type=0)
         candidate = []
         for article in articles:
             candidate.append((article.id, article.title))
@@ -83,7 +83,7 @@ class UpdateView(base.UpdateView):
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class=form_class)
-        articles = Article.objects.filter(public=True)
+        articles = Article.objects.filter(public=True, type=0)
         candidate = []
         for article in articles:
             candidate.append((article.id, article.title))

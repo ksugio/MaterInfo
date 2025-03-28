@@ -1,13 +1,13 @@
 from django.db import models
 from django.urls import reverse
-from project.models import Created, Updated, Remote, ModelUploadTo
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from .classification import Classification, RunONNX
 from .collect import HeadColumns
 from sklearn.metrics import accuracy_score
 import pandas as pd
 import json
 
-class ClassPred(Created, Updated, Remote):
+class ClassPred(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Classification, verbose_name='Classification', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_name }} {{ title }}{% endblock %}
+
+{% block contents %}
+
+<div class="container">
+    {% include 'breadcrumb.html' %}
+    <h1>{{ title }}</h1>
+    {% if navigation_list %}
+        {% include 'navigation.html' %}
+    {% endif %}
+    <div class="mt-3">
+        {% for object in object_list %}
+        <div class="row mt-1 border g-0">
+            <div class="col">
+                <div class="row ms-0 me-0">
+                    <div class="col-4">{{ object.name }}</div>
+                    {% if object.file %}
+                        <div class="col">File : {% url 'article:file_file' object.unique %}
+                            <a href="{% url 'article:file_file' object.unique %}" class="btn btn-link btn-sm">
+                                {% include 'eye-icon.html' %}</a>
+                        </div>
+                    {% elif object.url %}
+                        <div class="col">URL : {{ object.url }}
+                            <a href="{{ object.url }}" class="btn btn-link btn-sm">
+                                {% include 'eye-icon.html' %}</a>
+                        </div>
+                    {% endif %}
+                    {% if object.upper.type == 1 %}
+                    <div class="col-2">
+                        SVG2PDF : {{ object.svg2pdf }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col">{{ object.note|truncatechars:200 }}</div>
+                </div>
+                <div class="row ms-0 me-0">
+                    <div class="col-10">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
+                    <div class="col-1"><a href="{% url 'article:file_update' object.id %}">Update</a></div>
+                    <div class="col-1"><a href="{% url 'article:file_delete' object.id %}">Delete</a></div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="mt-3">
+            <a class="btn btn-primary btn-sm" href="{% url 'article:file_add' upper.id %}">Add</a>
+            <a class="btn btn-primary btn-sm" href="{{ upper.get_detail_url }}">Back</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,171 +1,128 @@
 # About MaterInfo
 MaterInfo is a web application for materials informatics.
-This application can be used to collect data, extract features, collect features,
-select features, machine learning, and perform inverse analysis.
-It also has extensive research support functions such as diagram creation,
-reference management, document version control, schedule management,
-questionnaire functions, and bulletin boards.
+This application can be used for data collection, feature extraction, feature collection, feature selection, machine learning, and inverse analysis.
+In addition, it has a full range of research support functions such as diagram creation, reference management, text version management, schedule management, questionnaire function, bulletin board, and so on.
 
 [Japanese version README](README-ja.md)
 
 # Run on Windows
 
-Download and install Docker Desktop for Windows from [site](https://www.docker.com/products/docker-desktop/).
+Download and install Docker Desktop for Windows from [site](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/windows/install/).
 
 Download [compose.yaml](https://github.com/ksugio/MaterInfo/blob/main/compose.yaml)
 and place it in an appropriate location.
-Launch a command prompt, move to the folder where compose.yaml is located,
-Create and start a Docker container with the following command.
+Open a command prompt, go to the folder where compose.yaml is located, and run the following commands to create a container.
 ```
 docker compose up -d
 ```
-Once the container has been successfully created and started, launch the materinfo shell.
-````
+After the container is successfully created and started, launch the materinfo shell.
+```
 docker compose exec materinfo /bin/bash
-````
-Perform migration, create administrative users, and collect static files.
-````
+```
+Run migrate, create admin user, and collect static files.
+```
 (materinfo) python manage.py migrate
 (materinfo) python manage.py createsuperuser
 (materinfo) python manage.py collectstatic
-````
-Restart the Docker container.
+```
 When you access [http://localhost:8080/](http://localhost:8080/),
 a login screen will appear, so log in with the administrator user you created.
 
 # Deploy to Ubuntu22.04LTS
 
-Python3 and git are installed.
-Install nginx and mariaDB.
-````
+Python3 and git should be already installed.
+Install Nginx, MariaDB and Redis.
+```
 sudo apt update
 sudo apt upgrade
 sudo apt install nginx
 sudo apt install mariadb-server
+sudo apt install redis-server
 sudo apt install default-libmysqlclient-dev
-````
-Create a virtual environment and migrate to a virtual environment.
-````
+sudo apt install pkg-config
+```
+Create a virtual environment and migrate to the virtual environment.
+```
 python3 -m venv venv
 cd venv
 source bin/activate
-````
-Install the required libraries to the virtual environment.
 ```
-(venv) pip install --upgrade pip
-(venv) pip install wheel
-(venv) pip install Django==4.2
-(venv) pip install MPLn23d
-(venv) pip install MPImfp
-(venv) pip install django-bootstrap5
-(venv) pip install opencv-python
-(venv) pip install pillow
-(venv) pip install pandas
-(venv) pip install matplotlib
-(venv) pip install seaborn
-(venv) pip install scikit-learn
-(venv) pip install djangorestframework
-(venv) pip install markdown
-(venv) pip install django-filter
-(venv) pip install djangorestframework-simplejwt
-(venv) pip install djoser
-(venv) pip install ldap3
-(venv) pip install django-mdeditor
-(venv) pip install diff-match-patch
-(venv) pip install django_cleanup
-(venv) pip install pybeads
-(venv) pip install lmfit
-(venv) pip install GitPython
-(venv) pip install xgboost
-(venv) pip install lightgbm
-(venv) pip install optuna
-(venv) pip install umap-learn
-(venv) pip install skl2onnx
-(venv) pip install onnxmltools
-(venv) pip install onnxruntime
-(venv) pip install shap
-(venv) pip install django-environ
-(venv) pip install mysqlclient==2.1.0
-(venv) pip install uwsgi
-```
-Download source code.
+Download the source code.
 ```
 git clone https://github.com/ksugio/MaterInfo.git
 ```
-Create a database.
+Install the necessary libraries into the virtual environment.
+```
+(venv) pip install --upgrade pip
+(venv) cd MaterInfo
+(venv) pip install -r requirements.txt
+``` 
+Create the database.
 ```
 sudo mysql -u root
 mysql> create user 'materinfouser'@'localhost' identified by 'materinfopw';
-mysql> create database materinfo;
+mysql> create database materinfo;.
 mysql> grant all privileges on materinfo.* to 'materinfouser'@'localhost';
-mysql> flush privileges;
+mysql> flush privileges; mysql> flush privileges;
 ```
-Change the database name (materinfo), user name (materinfouser),
-and password (materinfopw) as appropriate.
-Since MariaDB is used, comment out the sqlite3 setting in DATABASES in settings.py
-and enable the mysql setting by using  the database name, user name,
-and password that you registered earlier.
+Change the database name (materinfo), the user name (materinfouser) and the password (materinfopw) as appropriate.
+
+Prepare the placement of the static, media, repos, and temp files.
+````
+mkdir /home/ubuntu/data/static
+mkdir /home/ubuntu/data/media
+mkdir /home/ubuntu/data/repos
+mkdir /home/ubuntu/data/temp
+````
+Create an .env file in the MaterInfo directory with the following contents.
 ```
-DATABASES = {
-    #'default': {
-    #    'ENGINE': 'django.db.backends.sqlite3',
-    #    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    #}
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'materinfo',
-        'USER': 'materinfouser',
-        'PASSWORD': 'materinfopw',
-        'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-        }
-    }
-}
+SECRET_KEY=v7u0e4hc403+rzi213ylbd5r@_oyrt-vtkf1aqpc9t=w-)0tkn
+DEBUG=False
+DATABASE_URL=mysql://materinfouser:materinfopw@localhost:3306/materinfo
+STATIC_ROOT=/home/ubuntu/data/static
+MEDIA_ROOT=/home/ubuntu/data/media
+MEDIA_ACCEL_REDIRECT=True
+REPOS_ROOT=/home/ubuntu/data/repos
+TEMP_ROOT=/home/ubuntu/data/temp
+USE_LOCAL_HOST_CHECK=True
+USE_LOCAL_HOST_HOSTS=https://host.name
+USE_LOCAL_HOST_LOCALHOST=http://localhost:8000
 ```
 Change SECRET_KEY to an appropriate value and set DEBUG to False.
+Set the database name, user name, and password in DATABASE_URL to the ones you have just registered.
+Set STATIC_ROOT, MEDIA_ROOT, REPOS_ROOT, and TEMP_ROOT to the prepared directories.
+If you use Nginx's X-Accel-Redirect, set MEDIA_ACCEL_REDIRECT to True.
+If USE_LOCAL_HOST_CHECK is set to True, URLs are reread internally.
+The URL specified by USE_LOCAL_HOST_HOSTS is replaced by the URL specified by USE_LOCAL_HOST_LOCALHOST.
+This is a setting to complete processing using APIs in the local host.
+
+To use e-mail, prepare a mail server and add the following configuration to .env.
 ```
-SECRET_KEY = 'v7u0e4hc403+rzi213ylbd5r@_oyrt-vtkf1aqpc9t=w-)0tkn'
-DEBUG = False
+EMAIL_ACTIVE=True
+EMAIL_HOST=email.host
+EMAIL_HOST_USER=user@email.host
+EMAIL_HOST_PASSWORD=password
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+DEFAULT_FROM_EMAIL=user@email.host
 ```
-To change the data storage destination to /home/ubuntu/data, write as follows.
+Perform migrate, create admin user, and static file collection.
 ```
-#DATA_DIR = BASE_DIR
-DATA_DIR = '/home/ubuntu/data'
-```
-Also, configure as follows to use Nginx X-Accel-Redirect.
-```
-#MEDIA_ACCEL_REDIRECT = False
-MEDIA_ACCEL_REDIRECT = True
-```
-When creating new migration files, run makemigrations for all applications.
-Also, create an administrative user after migrating.
-```
-(venv) cd MaterInfo
-(venv) python manage.py makemigrations accounts album article calendars collect \
- comment density document general hardness image material plot poll project \
- public reference repository sample schedule value
 (venv) python manage.py migrate
 (venv) python manage.py createsuperuser
-```
-Run makemigrations and migrate if migration files already exist.
-```
-(venv) cd MaterInfo
-(venv) python manage.py makemigrations
-(venv) python manage.py migrate
+(venv) python manage.py collectstatic
 ```
 Change chdir in uwsgi.ini to the MaterInfo installation directory.
-If MaterInfo is installed in /home/ubuntu/venv/MaterInfo, change as follows.
-```
-[uwsgi]
+When MaterInfo is installed in /home/ubuntu/venv/MaterInfo, change as follows.
+````
+[uwsgi].
 chdir = /home/ubuntu/venv/MaterInfo
 module = config.wsgi:application
 http = :8000
 processes = 4
-```
-If you start the uwsgi server, access localhost:8000 in your browser,
-and the login screen appears, the first step is successful.
+````
+If the uwsgi server is up and running, access localhost:8000 with a browser and the login screen appears, the first step is successful.
 ```
 (venv) uwsgi --ini uwsgi.ini
 ```
@@ -173,17 +130,17 @@ Next, change /etc/nginx/sites-available/default as follows.
 ```
 server {
     listen 80;
-    server_name 192.168.1.10;
+    server_name host.name;
 
     client_max_body_size 50m;
 
     location /static {
-        alias /home/ubuntu/data/static;
+        alias /home/ubuntu/data/static; }
     }
 
     location /media {
-        internal;
-        alias /home/ubuntu/data/media;
+        internal; }
+        alias /home/ubuntu/data/media; }
     }
 
     location / {
@@ -191,18 +148,19 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_pass http://localhost:8000;
-        include /home/ubuntu/venv/MaterInfo/uwsgi_params;
+        include /home/ubuntu/venv/MaterInfo/nginx/uwsgi_params;
     }
 }
 ```
+where host.name, /home/ubuntu/data/static, /home/ubuntu/data/media, and /home/ubuntu/venv/MaterInfo/uwsgi_params are set according to the environment.
+
 Restart Nginx.
 ```
 sudo systemctl restart nginx
 ```
-Add a file (uwsgi.service) with the following content to /etc/systemd/system
-to automatically start the service.
+Add a file (uwsgi.service) to /etc/systemd/system with the following contents to start the service automatically.
 ```
-[Unit]
+[Unit].
 Description=uWSGI service for MaterInfo
 
 [Service]
@@ -214,9 +172,34 @@ KillSignal=SIGOUT
 [Install]
 WantedBy=multi-user.target
 ```
-Start uwsgi(MaterInfo).
+where /home/ubuntu/venv/bin/activate and /home/ubuntu/venv/MaterInfo/uwsgi.ini should be set according to your environment.
+
+Enable automatic start-up of uwsgi (application server). Also start.
 ```
+sudo systemctl enable uwsgi
 sudo systemctl start uwsgi
 ```
-If you access the server with a browser and the top page is displayed,
-the deployment is successful, and you can log in with the administrator user you created.
+Also, add a file (celery.service) to /etc/systemd/system with the following contents to start the worker automatically.
+```
+Description=Celery service for MaterInfo
+After=network.target
+
+[Service].
+WorkingDirectory=/home/ubuntu/venv/MaterInfo
+ExecStart=/bin/bash -c 'source /home/ubuntu/venv/bin/activate; celery -A config worker -Q project,collect --concurrency=1'
+ExecStop=/bin/kill -INT ${MAINPID}
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
+```
+where /home/ubuntu/venv/MaterInfo and /home/ubuntu/venv/bin/activate should be set according to your environment.
+
+Enable automatic start-up of celery (worker). Also start.
+```
+sudo systemctl enable celery
+sudo systemctl start celery
+```
+Access the server with a browser, and if the top page is displayed, the deployment has succeeded.
+Log in as the created administrative user.

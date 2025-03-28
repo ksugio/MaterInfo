@@ -29,7 +29,13 @@
         <div class="col">DataType : {{ object.get_datatype_display }}</div>
     </div>
     <div class="row mt-3 g-0">
-        <div class="col">File : {% url 'value:file' object.unique %} <a href="{% url 'value:file' object.unique %}">{% include 'cloud-download-icon.html' %}</a></div>
+        <div class="col">
+            File : <span id="urlText">{% url 'value:file' object.unique %}</span>
+            <button type="button" class="btn btn-link btn-sm" id="urlCopyButton" title="Copy to clipboard">
+                {% include 'clipboard-icon.html' %}</button>
+            <a href="{% url 'value:file' object.unique %}" class="btn btn-link btn-sm">
+                {% include 'cloud-download-icon.html' %}</a>
+        </div>
         <div class="col">File Ext. : {{ object.file_ext }}</div>
     </div>
     <div class="row mt-3 g-0">
@@ -49,4 +55,14 @@
      </div>
 </div>
 
+{% endblock %}
+
+{% block script2 %}
+    <script>
+        document.getElementById('urlCopyButton').addEventListener('click', () => {
+            navigator.clipboard.writeText(
+                document.getElementById('urlText').textContent
+            );
+        });
+    </script>
 {% endblock %}

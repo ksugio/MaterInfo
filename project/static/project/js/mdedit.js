@@ -26,16 +26,12 @@ function init() {
     let preview = document.getElementById('Preview');
     let previewbox = document.getElementById('PreviewBox');
     let selectview = document.getElementById('selectView');
-    setText(editor, preview);
     previewbox.style.display = 'none';
+    setText(editor, preview);
     editor.addEventListener('keyup', function(e) {
         if (previewbox.style.display == 'block') {
             setText(editor, preview);
         }
-    });
-    editor.addEventListener('scroll', function(e) {
-        let ratio = editor.scrollTop / (editor.scrollHeight - editorHeight);
-        previewbox.scrollTop = ratio * (previewbox.scrollHeight - editorHeight);
     });
     editor.addEventListener('scroll', function(e) {
         let ratio = editor.scrollTop / (editor.scrollHeight - editorHeight);

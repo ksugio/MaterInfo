@@ -386,40 +386,6 @@ class View(LoginRequiredMixin, UserPassesTestMixin, generic.View):
         else:
             return BreadcrumbDetail(model)
 
-class EditNoteView(LoginRequiredMixin, UserPassesTestMixin, generic.FormView):
-    model = None
-    form_class = None
-    template_name = "project/default_edit_note.html"
-
-    def test_func(self):
-        model = get_object_or_404(self.model, id=self.kwargs['pk'])
-        return self.request.user in ProjectMember(model)
-
-    def get_form(self, form_class=None):
-        model = self.model.objects.get(pk=self.kwargs['pk'])
-        form = super().get_form(form_class=form_class)
-        form.fields['note'].initial = model.note
-        return form
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['brand_name'] = BrandName()
-        model = self.model.objects.get(pk=self.kwargs['pk'])
-        context['object'] = model
-        context['breadcrumb_list'] = BreadcrumbList(model)
-        return context
-
-    def form_valid(self, form):
-        model = self.model.objects.get(pk=self.kwargs['pk'])
-        model.note = form.cleaned_data['note']
-        model.updated_by = self.request.user
-        model.save()
-        self.object = model
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return self.object.get_detail_url()
-
 class MDEditView(LoginRequiredMixin, UserPassesTestMixin, generic.TemplateView):
     model = None
     text_field = ''

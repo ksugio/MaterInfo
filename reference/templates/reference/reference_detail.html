@@ -33,6 +33,20 @@
     <div class="row mt-3 g-0">
         <div class="col">{{ object.note | markdown2html | safe }}</div>
     </div>
+    {% if object.data %}
+    <div class="row mt-3 g-0">
+        <div class="col">
+            Bibtex : <span id="urlText">{% url 'reference:bibtex' object.unique %}</span>
+            <button type="button" class="btn btn-link btn-sm" id="urlCopyButton" title="Copy to clipboard">
+                {% include 'clipboard-icon.html' %}</button>
+            <a href="{% url 'reference:bibtex' object.unique %}" class="btn btn-link btn-sm">
+                {% include 'cloud-download-icon.html' %}</a>
+        </div>
+        <div class="col">
+            <a href="{% url 'reference:docx' object.id %}">Docx</a>
+        </div>
+    </div>
+    {% endif %}
     <div class="row mt-3 g-0">
         <div class="col">Created by {{ object.created_by }} at {{ object.created_at }}</div>
         <div class="col">Updated by {{ object.updated_by }} at {{ object.updated_at }}</div>
@@ -46,7 +60,7 @@
         <a class="btn btn-primary btn-sm" href="{{ object.get_update_url }}">Update</a>
         <a class="btn btn-primary btn-sm" href="{% url 'reference:edit_note' object.id %}">Edit Note</a>
         <a class="btn btn-primary btn-sm" href="{% url 'reference:merge_pdf' object.id %}">Merge PDF</a>
-        <a class="btn btn-primary btn-sm" href="{% url 'reference:bibtex' object.id %}">BibTex</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'reference:download_zip' object.id %}">Download Zip</a>
         {% if object.remoteurl %}
         <a class="btn btn-primary btn-sm" href="{% url 'reference:pull' object.id %}">Pull</a>
         <a class="btn btn-primary btn-sm" href="{% url 'reference:push' object.id %}">Push</a>
@@ -67,26 +81,22 @@
         {% endfor %}
     </div>
     <div class="mt-3">
-        {% if model_data.lines %}
-            <div class="row mt-3 g-0">
-                <div class="col">
-                    <a href="{% url 'reference:docx' object.id %}">Docx</a>
-                </div>
-            </div>
-        {% endif %}
         <div class="row mt-3 g-0">
             {% for line in model_data.lines %}
                 {{ line.0 }}<br>
             {% endfor %}
         </div>
-        {% if model_data.lines and summary.narticles >= 20 %}
-            <div class="row mt-3 g-0">
-                <div class="col">
-                    <a href="{% url 'reference:docx' object.id %}">Docx</a>
-                </div>
-            </div>
-        {% endif %}
     </div>
 </div>
 
+{% endblock %}
+
+{% block script2 %}
+    <script>
+        document.getElementById('urlCopyButton').addEventListener('click', () => {
+            navigator.clipboard.writeText(
+                document.getElementById('urlText').textContent
+            );
+        });
+    </script>
 {% endblock %}

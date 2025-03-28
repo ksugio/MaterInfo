@@ -1,10 +1,10 @@
 from django.db import models
 from django.urls import reverse
-from project.models import Created, Updated, RemoteRoot, Project
+from project.models import Created, Updated, RemoteRoot, Project, ModelUploadTo, Unique
 
 default_template = '[{{ id }}] {{ author }}, "{{ title }}", {{ journal }}, Vol. {{ volume }}{% if number %}, {{ number }}{% endif %} ({{ year }}) pp. {{ pages }}{% if doi %}, {{ doi }}{% endif %}'
 
-class Reference(Created, Updated, RemoteRoot):
+class Reference(Created, Updated, RemoteRoot, Unique):
     upper = models.ForeignKey(Project, verbose_name='Project', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))

@@ -31,13 +31,14 @@ Dockerコンテナを再起動して
 
 # Ubuntu22.04LTSへのデプロイ
 
-Python3およびgitはインストール済み。
-nginxおよびmariaDBをインストールする。
+Python3およびgitはインストール済みとする。
+Nginx, MariaDB および Redis をインストールする。
 ```
 sudo apt update
 sudo apt upgrade
 sudo apt install nginx
 sudo apt install mariadb-server
+sudo apt install redis-server
 sudo apt install default-libmysqlclient-dev
 sudo apt install pkg-config
 ```
@@ -66,55 +67,52 @@ mysql> grant all privileges on materinfo.* to 'materinfouser'@'localhost';
 mysql> flush privileges;
 ```
 データベース名 materinfo，ユーザー名 materinfouser および パスワード materinfopw は適当に変更してください。
+
+static, media, repos, temp ファイルの置き場所を準備する。
+```
+mkdir /home/ubuntu/data/static
+mkdir /home/ubuntu/data/media
+mkdir /home/ubuntu/data/repos
+mkdir /home/ubuntu/data/temp
+```
 MaterInfo ディレクトリに 以下の内容で .env ファイルを作成する。
 ```
 SECRET_KEY=v7u0e4hc403+rzi213ylbd5r@_oyrt-vtkf1aqpc9t=w-)0tkn
 DEBUG=False
 DATABASE_URL=mysql://materinfouser:materinfopw@localhost:3306/materinfo
-STATIC_ROOT=/home/ksugio/static
-MEDIA_ROOT=/home/ksugio/media
+STATIC_ROOT=/home/ubuntu/data/static
+MEDIA_ROOT=/home/ubuntu/data/media
 MEDIA_ACCEL_REDIRECT=True
-REPOS_ROOT=/home/ksugio/repos
-TEMP_ROOT=/home/ksugio/temp
-CELERY_BROKER_URL=redis://localhost:6379
-
+REPOS_ROOT=/home/ubuntu/data/repos
+TEMP_ROOT=/home/ubuntu/data/temp
 USE_LOCAL_HOST_CHECK=True
-USE_LOCAL_HOST_HOSTS=https://mi.matphys.hiroshima-u.ac.jp
+USE_LOCAL_HOST_HOSTS=https://host.name
 USE_LOCAL_HOST_LOCALHOST=http://localhost:8000
 ```
 SECRET_KEYは適当な値に変更し， DEBUG を Falseに設定する。
 DATABASE_URLのデータベース名，ユーザー名およびパスワードは先ほど登録したものを設定する。
-STATIC_ROOT, MEDIA_ROOT, REPOS_ROOT, TEMP_ROOT を任意のディレクトリに設定する。
-nginx の X-Accel-Redirect を使う場合は、MEDIA_ACCEL_REDIRECT=True とする。
+STATIC_ROOT, MEDIA_ROOT, REPOS_ROOT, TEMP_ROOT を準備したディレクトリに設定する。
+Nginx の X-Accel-Redirect を使う場合は、MEDIA_ACCEL_REDIRECT を True とする。
+USE_LOCAL_HOST_CHECK を True にすると、内部でURLの読み替えを行う。
+USE_LOCAL_HOST_HOSTS で指定したURLは USE_LOCAL_HOST_LOCALHOST で指定したURLに読み替えられる。
+これは，ローカルホスト内のAPI を使った処理をローカルホスト内で完結させるための設定である。
 
-
-
-
-データの保存先を /home/ubuntu/data に変更する場合は以下のように記述する。
+電子メールを使用する場合はメールサーバーを準備して、 .env に以下の設定を追加する。
 ```
-#DATA_DIR = BASE_DIR
-DATA_DIR = '/home/ubuntu/data'
+EMAIL_ACTIVE=True
+EMAIL_HOST=email.host
+EMAIL_HOST_USER=user@email.host
+EMAIL_HOST_PASSWORD=password
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+DEFAULT_FROM_EMAIL=user@email.host
 ```
-また，NginxのX-Accel-Redirectを利用するために以下のように設定する。
+マイグレート，管理ユーザー作成，静的ファイル収集を実行する。
 ```
-#MEDIA_ACCEL_REDIRECT = False
-MEDIA_ACCEL_REDIRECT = True
-```
-マイグレーションファイルを新規作成する場合はすべてのアプリケーションに対して makemigrations を実行する。
-また，migrate の後，管理ユーザーを作成する。
-```
-(venv) cd MaterInfo
-(venv) python manage.py makemigrations accounts album article calendars collect \
- comment density document general hardness image material plot poll project \
- public reference repository sample schedule value
 (venv) python manage.py migrate
 (venv) python manage.py createsuperuser
-```
-マイグレーションファイルが既に存在する場合は makemigrations および migrate を実行する。
-```
-(venv) cd MaterInfo
-(venv) python manage.py makemigrations
-(venv) python manage.py migrate
+(venv) python manage.py collectstatic
 ```
 uwsgi.ini の chdir を MaterInfo のインストールディレクトリに変更する。
 MaterInfo が /home/ubuntu/venv/MaterInfo にインストールされている場合，以下のように変更する。
@@ -133,7 +131,7 @@ uwsgi サーバーを立ち上げ，ブラウザで localhost:8000 にアクセ�
 ```
 server {
     listen 80;
-    server_name 192.168.1.10;
+    server_name host.name;
 
     client_max_body_size 50m;
 
@@ -151,10 +149,12 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_pass http://localhost:8000;
-        include /home/ubuntu/venv/MaterInfo/uwsgi_params;
+        include /home/ubuntu/venv/MaterInfo/nginx/uwsgi_params;
     }
 }
 ```
+ここで，host.name, /home/ubuntu/data/static, /home/ubuntu/data/media, /home/ubuntu/venv/MaterInfo/uwsgi_params は環境に合わせて設定する。
+
 Nginx を再起動する。
 ```
 sudo systemctl restart nginx
@@ -173,8 +173,33 @@ KillSignal=SIGOUT
 [Install]
 WantedBy=multi-user.target
 ```
-uwsgi(MaterInfo)を起動する。
+ここで，/home/ubuntu/venv/bin/activate, /home/ubuntu/venv/MaterInfo/uwsgi.ini は環境に合わせて設定する。
+
+uwsgi(アプリケーション・サーバー)の自動起動を有効化する。また、起動する。
 ```
+sudo systemctl enable uwsgi
 sudo systemctl start uwsgi
 ```
-ブラウザでサーバーにアクセスしてトップページが表示されればデプロイは成功， 作成した管理ユーザーでログインする。
+また，ワーカーを自動起動するために /etc/systemd/system に以下の内容でファイル（celery.service）を追加する。
+```
+Description=Celery service for MaterInfo
+After=network.target
+
+[Service]
+WorkingDirectory=/home/ubuntu/venv/MaterInfo
+ExecStart=/bin/bash -c 'source /home/ubuntu/venv/bin/activate; celery -A config worker -Q project,collect --concurrency=1'
+ExecStop=/bin/kill -INT ${MAINPID}
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
+```
+ここで，/home/ubuntu/venv/MaterInfo, /home/ubuntu/venv/bin/activate  は環境に合わせて設定する。
+
+celery(ワーカー)の自動起動を有効化する。また、起動する。
+```
+sudo systemctl enable celery
+sudo systemctl start celery
+```
+ブラウザでサーバーにアクセスしてトップページが表示されればデプロイは成功。 作成した管理ユーザーでログインする。

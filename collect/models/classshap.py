@@ -44,6 +44,7 @@ class ClassSHAP(Created, Updated, Remote, Task):
                 shap_values = []
                 for value in results['shap_values']:
                     shap_values.append(np.array(value))
+                shap_values = np.array(shap_values)
             x_test = np.array(results['x_test'])
             columns = results['columns']
             targets = results['targets']

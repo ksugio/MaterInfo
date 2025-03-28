@@ -42,7 +42,8 @@ class CorrelationSerializer(serializers.ModelSerializer):
         model = Correlation
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
                   'title', 'status', 'note',  'method', 'drop', 'mincorr',
-                  'sizex', 'sizey', 'colormap', 'colorbar', 'annotate', 'label', 'file')
+                  'sizex', 'sizey', 'colormap', 'colorbar', 'annotate', 'label',
+                  'file', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class ClusteringSerializer(serializers.ModelSerializer):
@@ -83,7 +84,7 @@ class ClassPredSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassPred
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
-                  'title', 'status', 'note', 'file', 'objective', 'drop')
+                  'title', 'status', 'note', 'file', 'objective', 'drop', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 
@@ -98,7 +99,7 @@ class RegrePredSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegrePred
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
-                  'title', 'status', 'note', 'file', 'objective', 'drop')
+                  'title', 'status', 'note', 'file', 'objective', 'drop', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class InverseSerializer(serializers.ModelSerializer):
@@ -106,7 +107,7 @@ class InverseSerializer(serializers.ModelSerializer):
         model = Inverse
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
                   'title', 'status', 'note', 'regression1', 'target1', 'regression2', 'target2',
-                  'regression3', 'target3', 'ntrials', 'seed', 'file')
+                  'regression3', 'target3', 'ntrials', 'seed', 'file', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class ProcessSerializer(serializers.ModelSerializer):

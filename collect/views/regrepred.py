@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from project.views import base, base_api, remote
 from ..models.regression import Regression
 from ..models.regrepred import RegrePred
@@ -73,8 +74,12 @@ class TableView(base.TableView):
 class DownloadView(base.View):
     model = RegrePred
 
+    def test_func(self):
+        model = get_object_or_404(self.model, unique=self.kwargs['unique'])
+        return self.request.user in base.ProjectMember(model)
+
     def get(self, request, **kwargs):
-        model = self.model.objects.get(pk=kwargs['pk'])
+        model = self.model.objects.get(unique=kwargs['unique'])
         df = model.disp_table()
         buf = io.StringIO()
         df.to_csv(buf)

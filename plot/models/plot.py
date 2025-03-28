@@ -1,8 +1,8 @@
 from django.db import models
-from project.models import Project, Created, Updated, Remote
+from project.models import Project, Created, Updated, Remote, ModelUploadTo, Unique
 from django.urls import reverse
 
-class Plot(Created, Updated, Remote):
+class Plot(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Project, verbose_name='Project', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))
@@ -11,6 +11,9 @@ class Plot(Created, Updated, Remote):
     ncol = models.PositiveSmallIntegerField(verbose_name='N Column', default=1)
     sizex = models.FloatField(verbose_name='Size X', default=6.4)
     sizey = models.FloatField(verbose_name='Size Y', default=4.8)
+    FormatChoices = ((0, 'SVG'), (1, 'PNG'), (2, 'JPEG'), (3, 'PDF'), (4, 'EPS'))
+    format = models.PositiveSmallIntegerField(verbose_name='Format', choices=FormatChoices, default=0)
+    file = models.FileField(verbose_name='File', upload_to=ModelUploadTo, blank=True, null=True)
 
     def __str__(self):
         return self.title

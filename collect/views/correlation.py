@@ -66,6 +66,7 @@ class DeleteView(base.DeleteView):
 class FileView(base.FileView):
     model = Correlation
     attachment = True
+    use_unique = True
 
 class HeatmapView(base.PlotView):
     model = Correlation

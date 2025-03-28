@@ -1,4 +1,4 @@
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import InMemoryUploadedFile

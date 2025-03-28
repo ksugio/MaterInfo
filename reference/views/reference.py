@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.urls import reverse
+from django.shortcuts import get_object_or_404
 from django.template import Template, Context
 from project.views import base, base_api, remote
 from project.models import Project
@@ -11,6 +12,8 @@ from .article import ArticleRemote
 from Levenshtein import distance
 from pypdf import PdfWriter
 from docx import Document
+from io import BytesIO
+from zipfile import ZipFile
 import datetime
 import os
 import io
@@ -37,7 +40,6 @@ def ArticleSummary(upper):
     return {
         'narticles': len(articles)
     }
-
 
 class DetailView(base.DetailView):
     model = Reference
@@ -101,6 +103,14 @@ def checkSimilar(lines):
                 similar.append([i, j, sim])
     return similar
 
+def BibtexText(model):
+    entries = []
+    for art in ArticleQueryset(model, model.order):
+        entries.append(art.bibentry())
+    db = bibtexparser.bibdatabase.BibDatabase()
+    db.entries = entries
+    return bibtexparser.dumps(db)
+
 class UpdateView(base.UpdateView):
     model = Reference
     fields = ('title', 'status', 'note', 'order', 'pagesize', 'template', 'startid')
@@ -110,9 +120,11 @@ class UpdateView(base.UpdateView):
         model = form.save(commit=False)
         model.updated_by = self.request.user
         lines = RenderText(model)
+        bibtex = BibtexText(model)
         params = {
             'lines': lines,
-            'similar': checkSimilar(lines)
+            'similar': checkSimilar(lines),
+            'bibtex': bibtex
         }
         model.data = json.dumps(params)
         return super().form_valid(form)
@@ -149,15 +161,14 @@ class MergePDFView(base.View):
 class BibtexView(base.View):
     model = Reference
 
+    def test_func(self):
+        model = get_object_or_404(self.model, unique=self.kwargs['unique'])
+        return self.request.user in base.ProjectMember(model)
+
     def get(self, request, **kwargs):
-        model = self.model.objects.get(pk=kwargs['pk'])
-        entries = []
-        for art in ArticleQueryset(model, model.order):
-            entries.append(art.bibentry())
-        db = bibtexparser.bibdatabase.BibDatabase()
-        db.entries = entries
-        bibstr = bibtexparser.dumps(db)
-        response = HttpResponse(bibstr, content_type="text/plain")
+        model = self.model.objects.get(unique=kwargs['unique'])
+        data = json.loads(model.data)
+        response = HttpResponse(data['bibtex'], content_type="text/plain")
         now = datetime.datetime.now()
         filename = 'Reference%s.bib' % (now.strftime('%Y%m%d%H%M%S')[2:])
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'{}'.format(filename)
@@ -182,81 +193,28 @@ class DocxView(base.View):
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'{}'.format(filename)
         return response
 
-# class DownloadCSVView(base.View):
-#     model = Reference
-#
-#     def get(self, request, **kwargs):
-#         model = self.model.objects.get(pk=kwargs['pk'])
-#         response = HttpResponse(content_type="text/csv; charset=UTF-8")
-#         now = datetime.datetime.now()
-#         filename = 'Refefence%s.csv' % (now.strftime('%Y%m%d%H%M%S')[2:])
-#         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'{}'.format(filename)
-#         writer = csv.writer(response)
-#         writer.writerow(['ID', 'Type', 'Title', 'Author', 'Journal', 'Volume', 'Number', 'Year', 'Page', 'Conference', 'Published',
-#                         'Cited', 'Impact', 'URL', 'Filename', 'key', 'Note'])
-#         for i, art in enumerate(ArticleQueryset(model, model.order)):
-#             writer.writerow([i + model.startid, art.get_type_display(), art.title, art.author, art.journal, art.volume, art.number,
-#                              art.year, art.page, art.conference, art.published, art.cited, art.impact, art.url, art.file.name,
-#                              art.key, art.note])
-#         return response
+class DownloadZipView(base.View):
+    model = Reference
 
-# class UploadCSVView(base.FormView):
-#     model = Reference
-#     form_class = CSVFileForm
-#     template_name = "reference/reference_upload.html"
-#     success_name = 'reference:detail'
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         model = self.model.objects.get(pk=self.kwargs['pk'])
-#         context['title'] = model.title + ' : Upload CSV'
-#         context['object'] = model
-#         return context
-#
-#     def form_valid(self, form):
-#         model = self.model.objects.get(pk=self.kwargs['pk'])
-#         csvfile = io.TextIOWrapper(form.cleaned_data['csv_file'])
-#         reader = csv.reader(csvfile)
-#         next(reader)
-#         for row in reader:
-#             try:
-#                 ref = Article.objects.get(pk=row[0], upper=model)
-#             except:
-#                 ref = Article.objects.create(created_by=self.request.user, updated_by=self.request.user, upper=model)
-#             updated = False
-#             if ref.get_type_word() != row[1]:
-#                 ref.set_type_word(row[1])
-#                 updated = True
-#             if ref.title != row[2]:
-#                 ref.title = row[2]
-#                 updated = True
-#             if ref.author != row[3]:
-#                 ref.author = row[3]
-#                 updated = True
-#             if ref.journal != row[4]:
-#                 ref.journal = row[4]
-#                 updated = True
-#             if ref.volume != row[5]:
-#                 ref.volume = row[5]
-#                 updated = True
-#             if ref.number != row[6]:
-#                 ref.number = row[6]
-#                 updated = True
-#             if ref.year != row[7]:
-#                 ref.year = row[7]
-#                 updated = True
-#             if ref.page != row[8]:
-#                 ref.page = row[8]
-#                 updated = True
-#             if ref.url != row[9]:
-#                 ref.url = row[9]
-#                 updated = True
-#             if ref.note != row[10]:
-#                 ref.note = row[10]
-#                 updated = True
-#             if updated:
-#                 ref.save()
-#         return super().form_valid(form)
+    def get(self, request, **kwargs):
+        model = self.model.objects.get(pk=kwargs['pk'])
+        articles = Article.objects.filter(upper=model)
+        buf = BytesIO()
+        zipf = ZipFile(buf, 'w')
+        data = []
+        for art in articles:
+            data.append(art.get_data())
+            if art.file:
+                filename = os.path.basename(art.file.name)
+                zipf.writestr(filename, art.file.read())
+        zipf.writestr('reference.json', json.dumps(data, indent=2))
+        zipf.close()
+        response = HttpResponse(buf.getvalue(), content_type='application/zip')
+        buf.close()
+        now = datetime.datetime.now()
+        filename = 'Reference%s.zip' % (now.strftime('%Y%m%d%H%M%S')[2:])
+        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'{}'.format(filename)
+        return response
 
 class SearchView(base.SearchView):
     model = Reference
@@ -286,12 +244,17 @@ class UpdateAPIView(base_api.UpdateAPIView):
     model = Reference
     serializer_class = ReferenceSerializer
 
-class ReferenceRemote(remote.Remote):
+class FileAPIView(base_api.FileAPIView):
+    model = Reference
+    attachment = False
+
+class ReferenceRemote(remote.FileRemote):
     model = Reference
     add_name = 'reference:api_add'
     list_name = 'reference:api_list'
     retrieve_name = 'reference:api_retrieve'
     update_name = 'reference:api_update'
+    file_fields_names = [('file', 'reference:api_file')]
     serializer_class = ReferenceSerializer
     lower_remote = [ArticleRemote]
 

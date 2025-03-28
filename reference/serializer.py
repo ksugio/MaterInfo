@@ -11,7 +11,8 @@ class ReferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reference
         fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
-                  'title', 'status', 'note', 'order', 'template', 'startid', 'data')
+                  'title', 'status', 'note', 'order', 'template', 'startid', 'data',
+                  'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class ArticleSerializer(serializers.ModelSerializer):

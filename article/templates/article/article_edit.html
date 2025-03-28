@@ -13,62 +13,78 @@
 
 {% block contents %}
 
-<div class="container">
-    {% include 'breadcrumb.html' %}
-    <h1>{{ object.title }}</h1>
-    <div class="mt-3">
-        Last updated by {{ object.updated_by }} at {{ object.updated_at }}
-    </div>
-    <form>
-        <div class="row mt-3">
-            <div class="col-2">
-                <select class="form-select" id="selectView">
-                    <option value="">Edit</option>
-                    <option value="">Edit & Preview</option>
-                    <option value="">Preview</option>
-                </select>
-            </div>
-            <div class="col-2">
-                {% if object.get_apiupdate_url %}
-                <button type="button" class="btn btn-outline-secondary" id="buttonSave">Save</button>
+<div class="container-fluid">
+    <div class="row mt-3">
+        <div class="col-2">
+            <select class="form-select" id="selectView">
+                <option value="">Edit</option>
+                <option value="">Edit & Preview</option>
+                <option value="">Preview</option>
+                {% if object.type == 1 %}
+                    <option value="">Log</option>
                 {% endif %}
-                <a class="btn btn-outline-secondary" href="{{ object.get_detail_url }}">Cancel</a>
-            </div>
+            </select>
         </div>
-    </form>
+        <div class="col-4">
+            {% if object.type == 1 %}
+                <button type="button" class="btn btn-outline-secondary" id="buttonCompile">Compile</button>
+            {% endif %}
+            <button type="button" class="btn btn-outline-secondary" id="buttonSave">Save</button>
+            <a class="btn btn-outline-secondary" href="{{ object.get_detail_url }}">Cancel</a>
+        </div>
+        <div class="col d-flex justify-content-end">
+            {{ object.title }} : Last updated by {{ object.updated_by }} at {{ object.updated_at }}
+        </div>
+    </div>
     <div class="row mt-3">
         <div class="col" id="EditorBox">
             <textarea name="article" id="Editor" cols="30" rows="30" class="form-control">{{ object.text }}</textarea>
         </div>
-        <div class="col border" id="PreviewBox">
-            <div id="Preview"></div>
+        {% if object.type == 0 %}
+            <div class="col border" id="PreviewBox">
+                <div id="Preview"></div>
+            </div>
+        {% elif object.type == 1 %}
+            <div class="col border" id="PreviewBox">
+                <embed class="col" type="application/pdf" width="100%" height="100%" id="Preview">
+            </div>
+        {% endif %}
+        <div class="col border" id="LogBox">
+            <div id="Log"></div>
         </div>
     </div>
-    <div class="mt-3 border-top">
-        <h2 class="mt-3">Files</h2>
+    <div class="mt-3">
+        <h3 class="mt-3">Comment</h3>
+        <textarea name="comment" id="Comment" class="form-control" >{{ object.comment }}</textarea>
+    </div>
+    <div class="mt-3">
+        <h3 class="mt-3">File</h3>
         {% for file in article_files %}
         <div class="row mt-1 border g-0">
             <div class="col">
                 <div class="row ms-0 me-0">
-                    <div class="col">{{ file.title }}</div>
-                    <div class="col">File : {% url 'article:file_file' file.unique %} <a href="{% url 'article:file_file' file.unique %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
-                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
-                            <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-                        </svg>
-                    </a></div>
-                </div>
-                <div class="row ms-0 me-0">
-                    <div class="col-10">Updated by {{ file.updated_by }} at {{ file.updated_at }}</div>
-                    <div class="col-1"><a href="{% url 'article:file_update' file.id %}">Update</a></div>
-                    <div class="col-1"><a href="{% url 'article:file_delete' file.id %}">Delete</a></div>
+                    <div class="col-2">{{ file.name }}</div>
+                    {% if file.file %}
+                        <div class="col-4">File : <span id="urlText{{ forloop.counter0 }}">{% url 'article:file_file' file.unique %}</span>
+                            <button type="button" class="btn btn-link btn-sm" id="urlCopyButton{{ forloop.counter0 }}" title="Copy to clipboard">
+                                {% include 'clipboard-icon.html' %}</button>
+                        </div>
+                    {% elif file.url %}
+                        <div class="col-4">URL : <span id="urlText{{ forloop.counter0 }}">{{ file.url }}</span>
+                            <button type="button" class="btn btn-link btn-sm" id="urlCopyButton{{ forloop.counter0 }}" title="Copy to clipboard">
+                                {% include 'clipboard-icon.html' %}</button>
+                        </div>
+                    {% endif %}
+                    {% if object.type == 1 %}
+                    <div class="col-2">
+                        SVG2PDF : {{ file.svg2pdf }}
+                    </div>
+                    {% endif %}
+                    <div class="col">{{ file.note|truncatechars:200 }}</div>
                 </div>
             </div>
         </div>
         {% endfor %}
-        <div class="mt-3">
-        <a class="btn btn-primary btn-sm" href="{% url 'article:file_add' object.id %}">Upload</a>
-        </div>
     </div>
 </div>
 
@@ -84,15 +100,26 @@
             overflow: scroll;
             height: 768px;
         }
+        #LogBox {
+            overflow: scroll;
+            height: 768px;
+        }
     </style>
 
     <script>
         const csrfToken = '{{ csrf_token }}';
         const apiupdateURL = '{{ object.get_apiupdate_url }}';
-        const textField = '{{ text_field }}';
+        const apipdfURL = '{{ object.get_apipdf_url }}';
         const detailURL = '{{ object.get_detail_url }}';
+        const articleType = '{{ object.type }}';
         let editorHeight = 768;
+        {% for file in article_files %}
+            document.getElementById('urlCopyButton{{ forloop.counter0 }}').addEventListener('click', () => {
+                navigator.clipboard.writeText(
+                    document.getElementById('urlText{{ forloop.counter0 }}').textContent
+                );
+            });
+        {% endfor %}
     </script>
-    <script src="{% static 'project/js/mdedit.js' %}"></script>
-
+    <script src="{% static 'article/js/edit.js' %}"></script>
 {% endblock %}

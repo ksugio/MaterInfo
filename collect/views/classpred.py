@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from project.views import base, base_api, remote
 from ..models.classification import Classification
 from ..models.classpred import ClassPred
@@ -73,15 +74,19 @@ class TableView(base.TableView):
 class DownloadView(base.View):
     model = ClassPred
 
+    def test_func(self):
+        model = get_object_or_404(self.model, unique=self.kwargs['unique'])
+        return self.request.user in base.ProjectMember(model)
+
     def get(self, request, **kwargs):
-        model = self.model.objects.get(pk=kwargs['pk'])
+        model = self.model.objects.get(unique=kwargs['unique'])
         df = model.disp_table()
         buf = io.StringIO()
         df.to_csv(buf)
         response = HttpResponse(buf.getvalue(), content_type='text/csv; charset=Shift-JIS')
         buf.close()
         now = datetime.datetime.now()
-        filename = 'RegrePred_%s.csv' % (now.strftime('%Y%m%d_%H%M%S'))
+        filename = 'ClassPred_%s.csv' % (now.strftime('%Y%m%d_%H%M%S'))
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'{}'.format(filename)
         return response
 

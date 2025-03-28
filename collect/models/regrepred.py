@@ -1,6 +1,6 @@
 from django.db import models
 from django.urls import reverse
-from project.models import Created, Updated, Remote, ModelUploadTo
+from project.models import Created, Updated, Remote, ModelUploadTo, Unique
 from .regression import Regression, RunONNX
 from .collect import HeadColumns
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import json
 
-class RegrePred(Created, Updated, Remote):
+class RegrePred(Created, Updated, Remote, Unique):
     upper = models.ForeignKey(Regression, verbose_name='Regression', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))

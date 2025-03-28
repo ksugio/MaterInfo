@@ -42,7 +42,8 @@
                     <div class="col">
                         [{{ forloop.counter0|add:startid }}] <a href="{{ article.get_detail_url }}">{{ article.title }}</a>
                     </div>
-                    <div class="col-2">{{ article.get_type_display }}</div>
+                    <div class="col-1">{{ article.get_type_display }}</div>
+                    <div class="col-1">{{ article.key }}</div>
                 </div>
                 {% if article.author %}
                 <div class="row ms-0 me-0">

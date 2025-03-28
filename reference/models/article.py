@@ -3,7 +3,6 @@ from django.urls import reverse
 from project.models import Created, Updated, Remote, ModelUploadTo
 from .reference import Reference
 import os
-import bibtexparser
 
 def ReferenceUploadTo(instance, filename):
     return filename
@@ -129,6 +128,30 @@ class Article(Created, Updated, Remote):
         if self.note:
             entry['note'] = self.note
         return entry
+
+    def get_data(self):
+        return {
+            'type': self.type,
+            'key': self.key,
+            'title': self.title,
+            'author': self.author,
+            'journal': self.journal,
+            'volume': self.volume,
+            'number': self.number,
+            'month': self.month,
+            'year': self.year,
+            'pages': self.pages,
+            'cited': self.cited,
+            'impact': self.impact,
+            'booktitle': self.booktitle,
+            'publisher': self.publisher,
+            'address': self.address,
+            'doi': self.doi,
+            'url': self.url,
+            'abstract': self.abstract,
+            'note': self.note,
+            'filename': os.path.basename(self.file.name)
+        }
 
 def ArticleQueryset(upper, order):
     if order == 0:
