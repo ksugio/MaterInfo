@@ -2,12 +2,12 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from accounts.models import CustomUser
-from project.models import Created, Updated, Remote, Project, ModelUploadTo, UpperModelUploadTo, Unique
+from project.models import Created, Updated, Remote, RemoteRoot, Project, ModelUploadTo, UpperModelUploadTo, Unique
 
 def ArticleUploadTo(instance, filename):
     return filename
 
-class Article(Created, Updated, Remote):
+class Article(Created, Updated, RemoteRoot):
     upper = models.ForeignKey(Project, verbose_name='Project', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Writing'), (1, 'Reviewing'), (2, 'Revising'), (3, 'Finish'))

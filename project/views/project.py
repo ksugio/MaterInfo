@@ -5,7 +5,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from config.settings import PROJECT_LOWER
 from accounts.models import CustomUser
-from . import base, base_api, remote
+from . import base, base_api, remote, task
 from ..models import Project
 from ..forms import CloneForm, TokenForm, SetRemoteForm, SearchForm, ProjectAddForm, ProjectUpdateForm
 from ..serializer import ProjectSerializer, MemberSerializer
@@ -22,46 +22,102 @@ class NewView(base.AddView):
 class ListView(base.ListView):
     model = Project
     template_name = "project/default_list.html"
+    change_order = True
+    change_paginate = True
     title = 'Project'
 
     def test_func(self):
         return True
 
     def get_queryset(self):
-        return self.model.objects.filter(member=self.request.user).order_by('-created_at')
+        if self.kwargs['size'] == 0:
+            self.paginate_by = 10
+        elif self.kwargs['size'] == 1:
+            self.paginate_by = 20
+        elif self.kwargs['size'] == 2:
+            self.paginate_by = 50
+        elif self.kwargs['size'] == 3:
+            self.paginate_by = 100
+        elif self.kwargs['size'] == 4:
+            self.paginate_by = 200
+        elif self.kwargs['size'] == 5:
+            self.paginate_by = 500
+        order = self.kwargs['order']
+        if order == 0 and hasattr(self.model, 'created_by'):
+            return self.model.objects.filter(member=self.request.user).order_by('-created_at')
+        elif order == 1 and hasattr(self.model, 'created_by'):
+            return self.model.objects.filter(member=self.request.user).order_by('created_at')
+        elif order == 2 and hasattr(self.model, 'updated_by'):
+            return self.model.objects.filter(member=self.request.user).order_by('-updated_at')
+        elif order == 3 and hasattr(self.model, 'updated_by'):
+            return self.model.objects.filter(member=self.request.user).order_by('updated_at')
+        elif order == 4 and hasattr(self.model, 'title'):
+            return self.model.objects.filter(member=self.request.user).order_by('title')
+        elif order == 5 and hasattr(self.model, 'title'):
+            return self.model.objects.filter(member=self.request.user).order_by('-title')
+        else:
+            return self.model.objects.filter(member=self.request.user).order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_manager:
             context['navigation_list'] = [
                 base.Link('New', reverse('project:new')),
-                base.Link('Clone', reverse('project:clone')),
-                base.Link('All', reverse('project:list_all')),
-                base.Link('Search', reverse('project:search')),
+                # base.Link('Clone', reverse('project:clone')),
+                base.Link('All', reverse('project:list_all', kwargs={'order': 0, 'size': 0})),
+                base.Link('Search', reverse('project:search'))
             ]
         return context
 
 class ListAllView(base.ListView):
     model = Project
     template_name = "project/default_list.html"
+    change_order = True
+    change_paginate = True
     title = 'Project All'
 
     def test_func(self):
         return self.request.user.is_manager
 
     def get_queryset(self):
-        return self.model.objects.all().order_by('-created_at')
+        if self.kwargs['size'] == 0:
+            self.paginate_by = 10
+        elif self.kwargs['size'] == 1:
+            self.paginate_by = 20
+        elif self.kwargs['size'] == 2:
+            self.paginate_by = 50
+        elif self.kwargs['size'] == 3:
+            self.paginate_by = 100
+        elif self.kwargs['size'] == 4:
+            self.paginate_by = 200
+        elif self.kwargs['size'] == 5:
+            self.paginate_by = 500
+        order = self.kwargs['order']
+        if order == 0 and hasattr(self.model, 'created_by'):
+            return self.model.objects.all().order_by('-created_at')
+        elif order == 1 and hasattr(self.model, 'created_by'):
+            return self.model.objects.all().order_by('created_at')
+        elif order == 2 and hasattr(self.model, 'updated_by'):
+            return self.model.objects.all().order_by('-updated_at')
+        elif order == 3 and hasattr(self.model, 'updated_by'):
+            return self.model.objects.all().order_by('updated_at')
+        elif order == 4 and hasattr(self.model, 'title'):
+            return self.model.objects.all().order_by('title')
+        elif order == 5 and hasattr(self.model, 'title'):
+            return self.model.objects.all().order_by('-title')
+        else:
+            return self.model.objects.all().order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_manager:
             context['navigation_list'] = [
                 base.Link('New', reverse('project:new')),
-                base.Link('Member', reverse('project:list')),
+                base.Link('Member', reverse('project:list', kwargs={'order': 0, 'size': 0})),
             ]
         return context
 
-class DetailView(base.DetailView):
+class DetailView(task.DetailView):
     model = Project
     template_name = "project/project_detail.html"
 
@@ -101,6 +157,7 @@ class SearchView(base.SearchView):
     title = 'Project Search'
     session_name = 'project_search'
     back_name = "project:list"
+    back_kwargs = {'order': 0, 'size': 0}
     lower_items = PROJECT_LOWER
 
     def test_func(self):
@@ -200,6 +257,7 @@ class CloneView(remote.CloneView):
     title = 'Project Clone'
     template_name = "project/default_clone.html"
     success_name = 'project:list'
+    success_kwargs = {'order': 0, 'size': 0}
     view_name = 'project:detail'
     celery_task = True
 
@@ -207,7 +265,7 @@ class CloneView(remote.CloneView):
         return self.request.user.is_manager
 
     def get_success_url(self):
-        return reverse(self.success_name)
+        return reverse(self.success_name, kwargs=self.success_kwargs)
 
 class TokenView(remote.TokenView):
     model = Project

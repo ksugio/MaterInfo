@@ -13,6 +13,7 @@ urlpatterns = [
     path('plot/<int:pk>/update', plot.UpdateView.as_view(), name='update'),
     path('plot/<int:pk>/edit_note', plot.EditNoteView.as_view(), name='edit_note'),
     path('plot/<int:pk>/delete', plot.DeleteView.as_view(), name='delete'),
+    path('plot/<str:unique>/file', plot.FileView.as_view(), name='file'),
     path('plot/<int:pk>/plot', plot.PlotView.as_view(), name='plot'),
     # Plot API
     path('api/<int:pk>/add', plot.AddAPIView.as_view(), name='api_add'),
@@ -20,6 +21,7 @@ urlpatterns = [
     path('api/plot/<int:pk>', plot.RetrieveAPIView.as_view(), name='api_retrieve'),
     path('api/plot/<int:pk>/update', plot.UpdateAPIView.as_view(), name='api_update'),
     path('api/plot/<int:pk>/delete', plot.DeleteAPIView.as_view(), name='api_delete'),
+    path('api/plot/<int:pk>/file', plot.FileAPIView.as_view(), name='api_file'),
     # Area
     path('plot/<int:pk>/area/add', area.AddView.as_view(), name='area_add'),
     path('area/<int:pk>/update', area.UpdateView.as_view(), name='area_update'),

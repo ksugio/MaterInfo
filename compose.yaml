@@ -10,11 +10,10 @@ services:
       MEDIA_ROOT: /data/media
       MEDIA_ACCEL_REDIRECT: True
       REPOS_ROOT: /data/repos
-      MPGRID_WORK: /data/mpgrid_work
-      QE_WORK: /data/qe_work
+      TEMP_ROOT: /data/temp
       CELERY_BROKER_URL: redis://redis:6379
     ports:
-      - "8000:8000"
+      - ":8000"
     volumes:
       - materinfo-data:/data
     depends_on:
@@ -64,7 +63,7 @@ services:
   redis:
     image: redis:7.4
     ports:
-      - "6379:6379"
+      - ":6379"
     volumes:
       - redis-data:/data"
 volumes:

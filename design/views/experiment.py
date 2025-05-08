@@ -75,6 +75,7 @@ class ListView(base.ListView):
     model = Experiment
     upper = Design
     template_name = "design/experiment_list.html"
+    paginate_by = 1000
     navigation = [['Add', 'design:experiment_add'],
                   ['D-Optimal', 'design:experiment_doptimal'],
                   ['Bayesian', 'design:experiment_bayesian']]

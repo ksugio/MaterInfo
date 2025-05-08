@@ -40,6 +40,8 @@ sudo apt install mariadb-server
 sudo apt install redis-server
 sudo apt install default-libmysqlclient-dev
 sudo apt install pkg-config
+sudo apt install texlive-latex-extra texlive-science texlive-publishers latexmk
+sudo apt install texlive-lang-japanese
 ```
 Create a virtual environment and migrate to the virtual environment.
 ```

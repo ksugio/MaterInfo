@@ -2,7 +2,7 @@ from django.utils.module_loading import import_string
 from config.settings import SAMPLE_LOWER
 from project.views import base, base_api, remote
 from project.models import Project
-from project.forms import ImportForm, SearchForm
+from project.forms import ImportForm, CloneForm, TokenForm, SetRemoteForm, SearchForm
 from .models import Sample
 from .serializer import SampleSerializer
 
@@ -16,8 +16,11 @@ class ListView(base.ListView):
     model = Sample
     upper = Project
     template_name = "project/default_list.html"
+    change_order = True
+    change_paginate = True
     navigation = [['Add', 'sample:add'],
                   ['Import', 'sample:import'],
+                  ['Clone', 'sample:clone'],
                   ['Search', 'sample:search']]
 
 class DetailView(base.DetailView):
@@ -105,47 +108,53 @@ class ImportView(remote.ImportView):
     template_name = "project/default_import.html"
     title = 'Sample Import'
     success_name = 'sample:list'
+    success_kwargs = {'order': 0, 'size': 0}
     view_name = 'sample:detail'
     hidden_lower = False
     default_lower = True
 
-# class CloneView(remote.CloneView):
-#     model = Sample
-#     upper = Project
-#     form_class = CloneForm
-#     remote_name = 'sample.views.SampleRemote'
-#     upper_name = 'project.models.Project'
-#     template_name = "project/default_clone.html"
-#     title = 'Sample Clone'
-#     success_name = 'sample:list'
-#     view_name = 'sample:detail'
-#
-# class TokenView(remote.TokenView):
-#     model = Sample
-#     form_class = TokenForm
-#     success_names = ['sample:pull', 'sample:push']
-#
-# class PullView(remote.PullView):
-#     model = Sample
-#     remote_class = SampleRemote
-#     success_name = 'sample:detail'
-#     fail_name = 'sample:token'
-#
-# class PushView(remote.PushView):
-#     model = Sample
-#     remote_class = SampleRemote
-#     success_name = 'sample:detail'
-#     fail_name = 'sample:token'
-#
-# class SetRemoteView(remote.SetRemoteView):
-#     model = Sample
-#     form_class = SetRemoteForm
-#     remote_class = SampleRemote
-#     title = 'Sample Set Remote'
-#     success_name = 'sample:detail'
-#     view_name = 'sample:detail'
-#
-# class ClearRemoteView(remote.ClearRemoteView):
-#     model = Sample
-#     remote_class = SampleRemote
-#     success_name = 'sample:detail'
+class CloneView(remote.CloneView):
+    model = Sample
+    upper = Project
+    form_class = CloneForm
+    remote_class = SampleRemote
+    remote_name = 'sample.views.SampleRemote'
+    upper_name = 'project.models.Project'
+    template_name = "project/default_clone.html"
+    title = 'Sample Clone'
+    success_name = 'sample:list'
+    success_kwargs = {'order': 0, 'size': 0}
+    view_name = 'sample:detail'
+
+class TokenView(remote.TokenView):
+    model = Sample
+    form_class = TokenForm
+    success_names = ['sample:pull', 'sample:push']
+
+class PullView(remote.PullView):
+    model = Sample
+    remote_class = SampleRemote
+    success_name = 'sample:detail'
+    fail_name = 'sample:token'
+
+class PushView(remote.PushView):
+    model = Sample
+    remote_class = SampleRemote
+    success_name = 'sample:detail'
+    fail_name = 'sample:token'
+
+class LogView(remote.LogView):
+    model = Sample
+
+class SetRemoteView(remote.SetRemoteView):
+    model = Sample
+    form_class = SetRemoteForm
+    remote_class = SampleRemote
+    title = 'Sample Set Remote'
+    success_name = 'sample:detail'
+    view_name = 'sample:detail'
+
+class ClearRemoteView(remote.ClearRemoteView):
+    model = Sample
+    remote_class = SampleRemote
+    success_name = 'sample:detail'

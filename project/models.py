@@ -123,7 +123,7 @@ class Project(Created, Updated, RemoteRoot, Task):
         return self.title
 
     def get_list_url(self):
-        return reverse('project:list')
+        return reverse('project:list', kwargs={'order': 0, 'size': 0})
 
     def get_detail_url(self):
         return reverse('project:detail', kwargs={'pk': self.id})

@@ -22,6 +22,7 @@ class AddView(base.FormView):
     template_name = "project/default_add.html"
     title = 'Value Add'
     success_name = 'value:list'
+    success_kwargs = {'order': 0, 'size': 0}
 
     def form_valid(self, form):
         upper = self.upper.objects.get(pk=self.kwargs['pk'])
@@ -54,6 +55,7 @@ class GetView(base.FormView):
     template_name = "project/default_add.html"
     title = 'Value Get'
     success_name = 'value:list'
+    success_kwargs = {'order': 0, 'size': 0}
 
     def get_file(self, url):
         if url.startswith('http'):
@@ -99,6 +101,7 @@ class GenerateView(base.FormView):
     template_name = "project/default_add.html"
     title = 'Value Generate'
     success_name = 'value:list'
+    success_kwargs = {'order': 0, 'size': 0}
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class=form_class)
@@ -137,6 +140,8 @@ class ListView(base.ListView):
     model = Value
     upper = Sample
     template_name = "project/default_list.html"
+    change_order = True
+    change_paginate = True
     navigation = [['Add', 'value:add'],
                   ['Get', 'value:get'],
                   ['Generate', 'value:generate'],
@@ -205,6 +210,7 @@ class SearchView(base.SearchView):
     title = 'Value Search'
     session_name = 'value_search'
     back_name = "value:list"
+    back_kwargs = {'order': 0, 'size': 0}
     lower_items = VALUE_LOWER
 
 # API
@@ -247,6 +253,7 @@ class ImportView(remote.ImportView):
     template_name = "project/default_import.html"
     title = 'Value Import'
     success_name = 'value:list'
+    success_kwargs = {'order': 0, 'size': 0}
     view_name = 'value:detail'
     hidden_lower = False
     default_lower = False

@@ -1,9 +1,9 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.module_loading import import_string
-from project.models import Created, Updated, Remote, Task, Project
+from project.models import Created, Updated, RemoteRoot, Task, Project
 
-class Sample(Created, Updated, Remote, Task):
+class Sample(Created, Updated, RemoteRoot, Task):
     upper = models.ForeignKey(Project, verbose_name='Project', on_delete=models.CASCADE)
     title = models.CharField(verbose_name='Title', max_length=100)
     StatusChoices = ((0, 'Valid'), (1, 'Invalid'), (2, 'Pending'))
@@ -15,7 +15,7 @@ class Sample(Created, Updated, Remote, Task):
         return self.title
 
     def get_list_url(self):
-        return reverse('sample:list', kwargs={'pk': self.upper.id})
+        return reverse('sample:list', kwargs={'pk': self.upper.id, 'order': 0, 'size': 0})
 
     def get_detail_url(self):
         return reverse('sample:detail', kwargs={'pk': self.id})

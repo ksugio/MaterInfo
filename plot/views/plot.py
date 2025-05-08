@@ -154,13 +154,18 @@ class DeleteAPIView(base_api.DeleteAPIView):
     model = Plot
     serializer_class = PlotSerializer
 
-class PlotRemote(remote.Remote):
+class FileAPIView(base_api.FileAPIView):
+    model = Plot
+    attachment = False
+
+class PlotRemote(remote.FileRemote):
     model = Plot
     add_name = 'plot:api_add'
     list_name = 'plot:api_list'
     retrieve_name = 'plot:api_retrieve'
     update_name = 'plot:api_update'
     delete_name = 'plot:api_delete'
+    file_fields_names = [('file', 'plot:api_file')]
     serializer_class = PlotSerializer
     child_remote = [AreaRemote]
 

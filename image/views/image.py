@@ -20,6 +20,7 @@ class AddView(base.FormView):
     template_name ="project/default_add.html"
     title = 'Image Add'
     success_name = 'image:list'
+    success_kwargs = {'order': 0, 'size': 0}
 
     def form_valid(self, form):
         upper = self.upper.objects.get(pk=self.kwargs['pk'])
@@ -42,6 +43,7 @@ class GetView(base.FormView):
     template_name = "project/default_add.html"
     title = 'Image Get'
     success_name = 'image:list'
+    success_kwargs = {'order': 0, 'size': 0}
 
     def get_file(self, url):
         if url.startswith('http'):
@@ -87,6 +89,8 @@ class ListView(base.ListView):
     model = Image
     upper = Sample
     template_name = "project/default_list.html"
+    change_order = True
+    change_paginate = True
     navigation = [['Add', 'image:add'],
                   ['Get', 'image:get'],
                   ['Import', 'image:import'],
@@ -151,6 +155,7 @@ class SearchView(base.SearchView):
     title = 'Image Search'
     session_name = 'image_search'
     back_name = "image:list"
+    back_kwargs = {'order': 0, 'size': 0}
     lower_items = IMAGE_LOWER
 
 # API
@@ -192,6 +197,7 @@ class ImportView(remote.ImportView):
     template_name = "project/default_import.html"
     title = 'Image Import'
     success_name = 'image:list'
+    success_kwargs = {'order': 0, 'size': 0}
     view_name = 'image:detail'
     hidden_lower = False
     default_lower = False

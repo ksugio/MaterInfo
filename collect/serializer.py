@@ -83,10 +83,9 @@ class ClassSHAPSerializer(serializers.ModelSerializer):
 class ClassPredSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassPred
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
-                  'title', 'status', 'note', 'file', 'objective', 'drop', 'unique')
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
+                  'title', 'status', 'note', 'file', 'objective', 'drop', 'results', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
-
 
 class RegreSHAPSerializer(serializers.ModelSerializer):
     class Meta:
@@ -98,8 +97,8 @@ class RegreSHAPSerializer(serializers.ModelSerializer):
 class RegrePredSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegrePred
-        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at', 'task_id',
-                  'title', 'status', 'note', 'file', 'objective', 'drop', 'unique')
+        fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at',
+                  'title', 'status', 'note', 'file', 'objective', 'drop', 'results', 'unique')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_by', 'updated_at')
 
 class InverseSerializer(serializers.ModelSerializer):

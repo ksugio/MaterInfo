@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import environ
 from datetime import timedelta
+from django.urls import reverse_lazy
 
 os.environ['TF_ENABLE_ONEDNN_OPTS']='0'
 
@@ -163,8 +164,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 LOGIN_URL = 'accounts:login'
-LOGIN_REDIRECT_URL = 'project:list'
-INDEX_URL = ['project:list', None]
+LOGIN_REDIRECT_URL = reverse_lazy('project:list', kwargs={'order': 0, 'size': 0})
+INDEX_URL = ['project:list', {'order': 0, 'size': 0}]
 #INDEX_URL = ['public:home', {'path': 'index'}]
 
 #SECURE_SSL_REDIRECT = True
@@ -197,6 +198,8 @@ MEDIA_ROOT = env('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
 MEDIA_ACCEL_REDIRECT = env('MEDIA_ACCEL_REDIRECT', cast=bool, default=False)
 
 REPOS_ROOT = env('REPOS_ROOT', default=os.path.join(BASE_DIR, 'repos'))
+
+TEMP＿ROOT = env('TEMP_ROOT', default=os.path.join(BASE_DIR, 'temp'))
 
 MPGRID_WORK = env('MPGRID_WORK', default=os.path.join(BASE_DIR, 'mpgrid_work'))
 MPGRID_PLATFORM = env('MPGRID_PLATFORM', cast=int, default=-1)
@@ -320,7 +323,7 @@ BRAND_NAME = env('BRAND_NAME', default='MaterInfo')
 
 PROJECT_LOWER = [
     {
-        'ListName': ('Sample', 'sample:list'),
+        'ListName': ('Sample', 'sample:list', {'order': 0, 'size': 0}),
         'Remote': 'sample.views.SampleRemote',
         'RemoteOrder': 2,
         'Search': 'sample.views.SearchView'
@@ -431,12 +434,12 @@ SAMPLE_LOWER = [
         'Search': 'hardness.views.hardness.HardnessSearch'
     },
     {
-        'ListName': ('Value', 'value:list'),
+        'ListName': ('Value', 'value:list', {'order': 0, 'size': 0}),
         'Remote': 'value.views.value.ValueRemote',
         'Search': 'value.views.value.SearchView'
     },
     {
-        'ListName': ('Image', 'image:list'),
+        'ListName': ('Image', 'image:list', {'order': 0, 'size': 0}),
         'Remote': 'image.views.image.ImageRemote',
         'Search': 'image.views.image.SearchView'
     },

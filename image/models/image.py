@@ -27,7 +27,7 @@ class Image(Created, Updated, Remote, Unique):
         return self.title
 
     def get_list_url(self):
-        return reverse('image:list', kwargs={'pk': self.upper.id})
+        return reverse('image:list', kwargs={'pk': self.upper.id, 'order': 0, 'size': 0})
 
     def get_detail_url(self):
         return reverse('image:detail', kwargs={'pk': self.id})

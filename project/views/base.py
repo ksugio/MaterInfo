@@ -137,26 +137,70 @@ class ListView(LoginRequiredMixin, UserPassesTestMixin, generic.ListView):
     template_name = "project/default_list.html"
     navigation = []
     title = ''
+    paginate_by = 10
+    change_order = False
+    change_paginate = False
 
     def test_func(self):
         upper = get_object_or_404(self.upper, id=self.kwargs['pk'])
         return self.request.user in ProjectMember(upper)
 
     def get_queryset(self):
+        if self.change_paginate:
+            if self.kwargs['size'] == 0:
+                self.paginate_by = 10
+            elif self.kwargs['size'] == 1:
+                self.paginate_by = 20
+            elif self.kwargs['size'] == 2:
+                self.paginate_by = 50
+            elif self.kwargs['size'] == 3:
+                self.paginate_by = 100
+            elif self.kwargs['size'] == 4:
+                self.paginate_by = 200
+            elif self.kwargs['size'] == 5:
+                self.paginate_by = 500
+        if self.change_order:
+            order = self.kwargs['order']
+        else:
+            order = 0
         if self.upper is not None:
             upper = self.upper.objects.get(pk=self.kwargs['pk'])
-            if hasattr(self.model, 'created_by'):
+            if order == 0 and hasattr(self.model, 'created_by'):
                 return self.model.objects.filter(upper=upper).order_by('-created_at')
+            elif order == 1 and hasattr(self.model, 'created_by'):
+                return self.model.objects.filter(upper=upper).order_by('created_at')
+            elif order == 2 and hasattr(self.model, 'updated_by'):
+                return self.model.objects.filter(upper=upper).order_by('-updated_at')
+            elif order == 3 and hasattr(self.model, 'updated_by'):
+                return self.model.objects.filter(upper=upper).order_by('updated_at')
+            elif order == 4 and hasattr(self.model, 'title'):
+                return self.model.objects.filter(upper=upper).order_by('title')
+            elif order == 5 and hasattr(self.model, 'title'):
+                return self.model.objects.filter(upper=upper).order_by('-title')
             else:
                 return self.model.objects.filter(upper=upper)
         else:
-            if hasattr(self.model, 'created_by'):
+            if order == 0 and hasattr(self.model, 'created_by'):
                 return self.model.objects.all().order_by('-created_at')
+            elif order == 1 and hasattr(self.model, 'created_by'):
+                return self.model.objects.all().order_by('created_at')
+            elif order == 2 and hasattr(self.model, 'updated_by'):
+                return self.model.objects.all().order_by('-updated_at')
+            elif order == 3 and hasattr(self.model, 'updated_by'):
+                return self.model.objects.all().order_by('updated_at')
+            elif order == 4 and hasattr(self.model, 'title'):
+                return self.model.objects.all().order_by('title')
+            elif order == 5 and hasattr(self.model, 'title'):
+                return self.model.objects.all().order_by('-title')
             else:
                 return self.model.objects.all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if self.change_order:
+            context['change_order'] = True
+        if self.change_paginate:
+            context['change_paginate'] = True
         context['brand_name'] = BrandName()
         if self.title:
             context['title'] = self.title
@@ -291,6 +335,7 @@ class FormView(LoginRequiredMixin, UserPassesTestMixin, generic.FormView):
     template_name = ""
     title = ''
     success_name = ''
+    success_kwargs = {}
     bdcl_remove = 0
 
     def test_func(self):
@@ -324,7 +369,12 @@ class FormView(LoginRequiredMixin, UserPassesTestMixin, generic.FormView):
         return context
 
     def get_success_url(self):
-        return reverse(self.success_name, kwargs={'pk': self.kwargs['pk']})
+        if self.success_kwargs:
+            kwargs = {'pk': self.kwargs['pk']}
+            kwargs.update(self.success_kwargs)
+            return reverse(self.success_name, kwargs=kwargs)
+        else:
+            return reverse(self.success_name, kwargs={'pk': self.kwargs['pk']})
 
 class TemplateView(LoginRequiredMixin, UserPassesTestMixin, generic.TemplateView):
     model = None
@@ -574,6 +624,7 @@ class SearchView(FormView, Search):
     title = ''
     session_name = ''
     back_name = ''
+    back_kwargs = {}
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class=form_class)
@@ -596,10 +647,18 @@ class SearchView(FormView, Search):
         context = super().get_context_data(**kwargs)
         if self.upper:
             upper = self.upper.objects.get(pk=self.kwargs['pk'])
-            context['back_url'] = reverse(self.back_name, kwargs={'pk': upper.id})
+            if self.back_kwargs:
+                kwargs = {'pk': upper.id}
+                kwargs.update(self.back_kwargs)
+                context['back_url'] = reverse(self.back_name, kwargs=kwargs)
+            else:
+                context['back_url'] = reverse(self.back_name, kwargs={'pk': upper.id})
         else:
             upper = None
-            context['back_url'] = reverse(self.back_name)
+            if self.back_kwargs:
+                context['back_url'] = reverse(self.back_name, kwargs=self.back_kwargs)
+            else:
+                context['back_url'] = reverse(self.back_name)
         if self.session_name in self.request.session:
             form_value = self.request.session[self.session_name]
             results = self.search(upper, string=form_value[0],

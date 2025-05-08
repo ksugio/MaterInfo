@@ -60,17 +60,17 @@ def UrlPatternsAPI(views, name):
 app_name = 'project'
 urlpatterns = [
     path('new', project.NewView.as_view(), name='new'),
-    path('clone', project.CloneView.as_view(), name='clone'),
-    path('list', project.ListView.as_view(), name='list'),
-    path('list_all', project.ListAllView.as_view(), name='list_all'),
+    # path('clone', project.CloneView.as_view(), name='clone'),
+    path('list/<int:order>/<int:size>', project.ListView.as_view(), name='list'),
+    path('list_all/<int:order>/<int:size>', project.ListAllView.as_view(), name='list_all'),
     path('project/<int:pk>', project.DetailView.as_view(), name='detail'),
     path('project/<int:pk>/update', project.UpdateView.as_view(), name='update'),
     path('project/<int:pk>/edit_note', project.EditNoteView.as_view(), name='edit_note'),
     path('project/<int:pk>/token/<int:ind>', project.TokenView.as_view(), name='token'),
-    path('project/<int:pk>/pull', project.PullView.as_view(), name='pull'),
-    path('project/<int:pk>/push', project.PushView.as_view(), name='push'),
+    # path('project/<int:pk>/pull', project.PullView.as_view(), name='pull'),
+    # path('project/<int:pk>/push', project.PushView.as_view(), name='push'),
     path('project/<int:pk>/log', project.LogView.as_view(), name='log'),
-    path('project/<int:pk>/set_remote', project.SetRemoteView.as_view(), name='set_remote'),
+    # path('project/<int:pk>/set_remote', project.SetRemoteView.as_view(), name='set_remote'),
     path('project/<int:pk>/clear_remote', project.ClearRemoteView.as_view(), name='clear_remote'),
     path('search', project.SearchView.as_view(), name='search'),
     # API

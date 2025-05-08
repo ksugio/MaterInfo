@@ -25,6 +25,7 @@ class CloneView(base.FormView):
     template_name = "project/default_clone.html"
     title = ''
     success_name = ''
+    success_kwargs = {}
     view_name = ''
     view_args = 1
     scan_lower = True
@@ -180,11 +181,9 @@ class PullView(base.View):
         else:
             access = None
         if self.celery_task:
-            model.task_id = ''
-            model.remotelog = ''
+            model.task_id = PullTask.delay(self.remote_name, self.kwargs['pk'], access, request.COOKIES,
+                                           request_user_id=request.user.id)
             model.save(localupd=False)
-            PullTask.delay(self.remote_name, self.kwargs['pk'], access, request.COOKIES,
-                           request_user_id = request.user.id)
         else:
             self.pull(model, access, request)
         return redirect(self.get_success_url())
@@ -258,11 +257,9 @@ class PushView(base.View):
         else:
             access = None
         if self.celery_task:
-            model.task_id = ''
-            model.remotelog = ''
+            model.task_id = PushTask.delay(self.remote_name, self.kwargs['pk'], access, request.COOKIES,
+                                           request_user_id=request.user.id)
             model.save(localupd=False)
-            PushTask.delay(self.remote_name, self.kwargs['pk'], access, request.COOKIES,
-                           request_user_id=request.user.id)
         else:
             self.push(model, access, request)
         return redirect(self.get_success_url())
@@ -320,6 +317,7 @@ class SetRemoteView(base.FormView):
     template_name = "project/default_set_remote.html"
     title = ''
     success_name = ''
+    success_kwargs = {}
     view_name = ''
     view_args = 1
 
@@ -755,8 +753,6 @@ class Remote():
         model.remotelog = ''
         model.remoteid = None
         model.remoteat = None
-        if hasattr(model, 'remotelog'):
-            model.remotelog = ''
         model.save()
         self.clear_child_lower(model, **kwargs)
 

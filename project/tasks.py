@@ -2,13 +2,11 @@ from django.utils.module_loading import import_string
 from celery import shared_task, current_task
 from accounts.models import CustomUser
 from datetime import datetime
-import time
 import json
 
 @shared_task(name='clone-task', queue='project')
 def CloneTask(remote_name, rooturl, id, access, auth, url, cookies,
               scan_lower, set_remote, upper_name, upper_id, **kwargs):
-    start_time = time.perf_counter()
     option = {
         'rooturl': rooturl,
         'auth': auth,
@@ -37,22 +35,22 @@ def CloneTask(remote_name, rooturl, id, access, auth, url, cookies,
             kwargs, objects = remote.clone_exec(clone_list, upper, request_user, **option)
         else:
             kwargs, objects = remote.clone_exec(clone_list, None, request_user, **option)
-        project = objects[0]
-        project.task_id = current_task.request.id
-        #project.task_time = time.perf_counter() - start_time
-        remotelog = [{
-            'task': 'cloned',
-            'username': request_user.username,
-            'datetime': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'lines': remote.get_pull_list_text(clone_list)
-        }]
-        project.remotelog = json.dumps(remotelog)
-        project.save(localupd=False)
+        model = objects[0]
+        if current_task.request.id:
+            model.task_id = current_task.request.id
+        if hasattr(model, 'remotelog'):
+            remotelog = [{
+                'task': 'cloned',
+                'username': request_user.username,
+                'datetime': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'lines': remote.get_pull_list_text(clone_list)
+            }]
+            model.remotelog = json.dumps(remotelog)
+            model.save(localupd=False)
     return 'Finished'
 
 @shared_task(name='pull-task', queue='project')
 def PullTask(remote_name, id, access, cookies, **kwargs):
-    start_time = time.perf_counter()
     remote = import_string(remote_name)()
     model = remote.model.objects.get(id=id)
     option = {
@@ -76,19 +74,20 @@ def PullTask(remote_name, id, access, cookies, **kwargs):
     }
     request_user = CustomUser.objects.get(id=kwargs['request_user_id'])
     remote.pull_exec(pull_list, model, request_user, **option)
-    model.task_id = current_task.request.id
-    #model.task_time = time.perf_counter() - start_time
-    remotelog = {
-        'task': 'pulled',
-        'lines': remote.get_pull_list_text(pull_list),
-    }
-    model.remotelog = json.dumps(remotelog)
-    model.save(localupd=False)
+    if hasattr(model, 'remotelog'):
+        remotelog = json.loads(model.remotelog)
+        remotelog.append({
+            'task': 'pulled',
+            'username': request_user.username,
+            'datetime': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'lines': remote.get_pull_list_text(pull_list)
+        })
+        model.remotelog = json.dumps(remotelog)
+        model.save(localupd=False)
     return 'Finished'
 
 @shared_task(name='push-task', queue='project')
 def PushTask(remote_name, id, access, cookies, **kwargs):
-    start_time = time.perf_counter()
     remote = import_string(remote_name)()
     model = remote.model.objects.get(id=id)
     option = {
@@ -105,13 +104,16 @@ def PushTask(remote_name, id, access, cookies, **kwargs):
         'cookies': cookies,
         'jwt_access': access
     }
+    request_user = CustomUser.objects.get(id=kwargs['request_user_id'])
     remote.push_exec(push_list, **option)
-    model.task_id = current_task.request.id
-    #model.task_time = time.perf_counter() - start_time
-    remotelog = {
-        'task': 'pushed',
-        'lines': remote.get_push_list_text(push_list)
-    }
-    model.remotelog = json.dumps(remotelog)
-    model.save(localupd=False)
+    if hasattr(model, 'remotelog'):
+        remotelog = json.loads(model.remotelog)
+        remotelog.append({
+            'task': 'pushed',
+            'username': request_user.username,
+            'datetime': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'lines': remote.get_push_list_text(push_list)
+        })
+        model.remotelog = json.dumps(remotelog)
+        model.save(localupd=False)
     return 'Finished'

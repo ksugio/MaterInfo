@@ -114,7 +114,7 @@ urlpatterns = [
     path('correlation/<int:pk>/update', correlation.UpdateView.as_view(), name='correlation_update'),
     path('correlation/<int:pk>/edit_note', correlation.EditNoteView.as_view(), name='correlation_edit_note'),
     path('correlation/<int:pk>/delete', correlation.DeleteView.as_view(), name='correlation_delete'),
-    path('correlation/<int:pk>/file', correlation.FileView.as_view(), name='correlation_file'),
+    path('correlation/<str:unique>/file', correlation.FileView.as_view(), name='correlation_file'),
     path('correlation/<int:pk>/heatmap', correlation.HeatmapView.as_view(), name='correlation_heatmap'),
     path('correlation/<int:pk>/scatter/<str:feat1>/<str:feat2>', correlation.ScatterView.as_view(), name='correlation_scatter'),
     # Correlation API
@@ -192,7 +192,7 @@ urlpatterns = [
     path('inverse/<int:pk>/edit_note', inverse.EditNoteView.as_view(), name='inverse_edit_note'),
     path('inverse/<int:pk>/delete', inverse.DeleteView.as_view(), name='inverse_delete'),
     path('inverse/<int:pk>/revoke', inverse.RevokeView.as_view(), name='inverse_revoke'),
-    path('inverse/<int:pk>/file', inverse.FileView.as_view(), name='inverse_file'),
+    path('inverse/<str:unique>/file', inverse.FileView.as_view(), name='inverse_file'),
     path('inverse/<int:pk>/table', inverse.TableView.as_view(), name='inverse_table'),
     path('inverse/<int:pk>/plot', inverse.PlotView.as_view(), name='inverse_plot'),
     # Inverse API
@@ -241,7 +241,7 @@ urlpatterns = [
     path('regrepred/<int:pk>/edit_note', regrepred.EditNoteView.as_view(), name='regrepred_edit_note'),
     path('regrepred/<int:pk>/delete', regrepred.DeleteView.as_view(), name='regrepred_delete'),
     path('regrepred/<int:pk>/table', regrepred.TableView.as_view(), name='regrepred_table'),
-    path('regrepred/<int:pk>/download', regrepred.DownloadView.as_view(), name='regrepred_download'),
+    path('regrepred/<str:unique>/download', regrepred.DownloadView.as_view(), name='regrepred_download'),
     # RegrePred API
     path('api/regression/<int:pk>/regrepred/add', regrepred.AddAPIView.as_view(), name='api_regrepred_add'),
     path('api/regression/<int:pk>/regrepred/list', regrepred.ListAPIView.as_view(), name='api_regrepred_list'),
@@ -257,7 +257,7 @@ urlpatterns = [
     path('classpred/<int:pk>/edit_note', classpred.EditNoteView.as_view(), name='classpred_edit_note'),
     path('classpred/<int:pk>/delete', classpred.DeleteView.as_view(), name='classpred_delete'),
     path('classpred/<int:pk>/table', classpred.TableView.as_view(), name='classpred_table'),
-    path('classpred/<int:pk>/download', classpred.DownloadView.as_view(), name='classpred_download'),
+    path('classpred/<str:unique>/download', classpred.DownloadView.as_view(), name='classpred_download'),
     # ClassPred API
     path('api/classification/<int:pk>/classpred/add', classpred.AddAPIView.as_view(), name='api_classpred_add'),
     path('api/classification/<int:pk>/classpred/list', classpred.ListAPIView.as_view(), name='api_classpred_list'),

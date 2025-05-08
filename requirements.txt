@@ -42,6 +42,7 @@ python-docx
 python-pptx
 GPyOpt
 crossrefapi
+cairosvg
 
 # for server operation
 mysqlclient

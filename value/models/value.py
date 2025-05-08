@@ -113,7 +113,7 @@ class Value(Created, Updated, Remote, Unique, DataFile):
         return self.title
 
     def get_list_url(self):
-        return reverse('value:list', kwargs={'pk': self.upper.id})
+        return reverse('value:list', kwargs={'pk': self.upper.id, 'order': 0, 'size': 0})
 
     def get_detail_url(self):
         return reverse('value:detail', kwargs={'pk': self.id})

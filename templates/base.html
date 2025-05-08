@@ -17,13 +17,13 @@
       <div class="container-fluid">
         {% if brand_name %}
         {% if user.is_authenticated %}
-        <a class="navbar-brand" href="{% url 'project:list' %}">{{ brand_name }}</a>
+        <a class="navbar-brand" href="{% url 'project:list' 0 0 %}">{{ brand_name }}</a>
         {% else %}
         <a class="navbar-brand">{{ brand_name }}</a>
         {% endif %}
         {% else %}
         {% if user.is_authenticated %}
-        <a class="navbar-brand" href="{% url 'project:list' %}">MaterInfo</a>
+        <a class="navbar-brand" href="{% url 'project:list' 0 0 %}">MaterInfo</a>
         {% else %}
         <a class="navbar-brand">MaterInfo</a>
         {% endif %}

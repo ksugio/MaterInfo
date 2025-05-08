@@ -3,7 +3,6 @@ from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.utils.module_loading import import_string
-from django.utils.timezone import localtime
 from config.settings import TASK_MODELS, RESTART_DAEMON
 from config.celery import app
 from accounts.models import CustomUser
@@ -41,7 +40,7 @@ class AddView(base.AddView):
 class DetailView(base.DetailView):
     model = None
     template_name = "collect/regreshap_detail.html"
-    result_fields = None
+    result_fields = ()
 
     def result_saved(self, model):
         for field in self.result_fields:
