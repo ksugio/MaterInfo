@@ -5,9 +5,11 @@ MaterInfo はマテリアルズ・インフォマティクスのためウェブ�
 
 [https://www.youtube.com/@MaterInfo-lm8vk](https://www.youtube.com/@MaterInfo-lm8vk) にて使用法等を解説している。
 
-# Windowsでの実行
+# Dockerでの実行
 
-Docker Desktop for Windowsを[サイト](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/windows/install/)からダウンロードしてインストールする。
+Windowsの場合，Docker Desktop for Windowsを[サイト](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/windows/install/)からダウンロードしてインストールする。
+
+Ubuntuの場合，Docker Engineを[サイト](https://matsuand.github.io/docs.docker.jp.onthefly/engine/install/ubuntu/)を参考にインストールする。
 
 [compose.yaml](https://github.com/ksugio/MaterInfo/blob/main/compose.yaml)
 をダウンロードして， それを適当な場所に配置する。

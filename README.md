@@ -5,9 +5,11 @@ In addition, it has a full range of research support functions such as diagram c
 
 [Japanese version README](README-ja.md)
 
-# Run on Windows
+# Run on Docker
 
-Download and install Docker Desktop for Windows from [site](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/windows/install/).
+For Windows, download and install Docker Desktop for Windows from [site](https://docs.docker.com/desktop/setup/install/windows-install/).
+
+For Ubuntu, install Docker Engine by referring to the website [site](https://docs.docker.com/engine/install/ubuntu/).
 
 Download [compose.yaml](https://github.com/ksugio/MaterInfo/blob/main/compose.yaml)
 and place it in an appropriate location.
