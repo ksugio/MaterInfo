@@ -7,13 +7,13 @@ In addition, it has a full range of research support functions such as diagram c
 
 # Run on Docker
 
-For Windows, download and install Docker Desktop for Windows from [site](https://docs.docker.com/desktop/setup/install/windows-install/).
+For Windows, download and install Docker Desktop for Windows from the [website](https://docs.docker.com/desktop/setup/install/windows-install/).
 
-For Ubuntu, install Docker Engine by referring to the website [site](https://docs.docker.com/engine/install/ubuntu/).
+For Ubuntu, install Docker Engine by referring to the [website](https://docs.docker.com/engine/install/ubuntu/).
 
 Download [compose.yaml](https://github.com/ksugio/MaterInfo/blob/main/compose.yaml)
 and place it in an appropriate location.
-Open a command prompt, go to the folder where compose.yaml is located, and run the following commands to create a container.
+Open a command prompt (a terminal), go to the folder where compose.yaml is located, and run the following commands to create a container.
 ```
 docker compose up -d
 ```

@@ -7,13 +7,13 @@ MaterInfo はマテリアルズ・インフォマティクスのためウェブ�
 
 # Dockerでの実行
 
-Windowsの場合，Docker Desktop for Windowsを[サイト](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/windows/install/)からダウンロードしてインストールする。
+Windowsの場合，Docker Desktop for Windowsを[ウェブサイト](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/windows/install/)からダウンロードしてインストールする。
 
-Ubuntuの場合，Docker Engineを[サイト](https://matsuand.github.io/docs.docker.jp.onthefly/engine/install/ubuntu/)を参考にインストールする。
+Ubuntuの場合，Docker Engineを[ウェブサイト](https://matsuand.github.io/docs.docker.jp.onthefly/engine/install/ubuntu/)を参考にインストールする。
 
 [compose.yaml](https://github.com/ksugio/MaterInfo/blob/main/compose.yaml)
 をダウンロードして， それを適当な場所に配置する。
-コマンドプロンプトを立ち上げ，compose.yamlのあるフォルダに移動して，
+コマンドプロンプト（ターミナル）を立ち上げ，compose.yamlのあるフォルダに移動して，
 以下のコマンドでコンテナを作成・起動する。
 ```
 docker compose up -d
